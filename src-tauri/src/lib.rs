@@ -365,6 +365,22 @@ pub fn run() {
             commands::addon::install_addon_from_staging,
             commands::addon::clear_addon_staging,
             commands::addon::submit_addon_rating,
+            // Reconciliation commands
+            commands::reconciliation::create_reconciliation_session,
+            commands::reconciliation::get_reconciliation_session,
+            commands::reconciliation::get_reconciliation_sessions_by_account,
+            commands::reconciliation::get_reconciliation_summary,
+            commands::reconciliation::complete_reconciliation_session,
+            commands::reconciliation::cancel_reconciliation_session,
+            commands::reconciliation::delete_reconciliation_session,
+            commands::reconciliation::add_reconciliation_item,
+            commands::reconciliation::add_reconciliation_items,
+            commands::reconciliation::get_reconciliation_items,
+            commands::reconciliation::delete_reconciliation_item,
+            commands::reconciliation::calculate_discrepancies,
+            commands::reconciliation::get_discrepancies,
+            commands::reconciliation::resolve_discrepancy,
+            commands::reconciliation::ignore_discrepancy,
             // Device Sync commands in pro version only
             #[cfg(feature = "wealthfolio-pro")]
             commands::sync::get_sync_status,
