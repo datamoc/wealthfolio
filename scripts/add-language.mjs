@@ -136,12 +136,20 @@ function validateLanguageCode(langCode) {
   }
 }
 
-function checkIfLanguageExists(localesDir, langCode) {
+function checkIfLanguageExists(localesDir, langCode, interactive) {
   const langDir = path.join(localesDir, langCode);
   if (fs.existsSync(langDir)) {
-    error(`Language '${langCode}' already exists at ${langDir}`);
-    process.exit(1);
+    if (interactive) {
+      warning(`Language '${langCode}' already exists - will update existing translations`);
+      return true; // Exists, but continue in interactive mode
+    } else {
+      error(`Language '${langCode}' already exists at ${langDir}`);
+      info('Use --interactive flag to update existing translations');
+      info('Example: pnpm run i18n:add-language ' + langCode + ' -i -t');
+      process.exit(1);
+    }
   }
+  return false; // Doesn't exist
 }
 
 async function translateText(text, targetLang, apiUrl) {
@@ -480,7 +488,6 @@ async function main() {
   validateLanguageCode(langCode);
 
   const langName = languageNames[langCode] || langCode.toUpperCase();
-  info(`Adding language: ${langName} (${langCode})\n`);
 
   const projectRoot = path.resolve(__dirname, '..');
   const localesDir = path.join(projectRoot, 'src', 'locales');
@@ -491,7 +498,13 @@ async function main() {
     process.exit(1);
   }
 
-  checkIfLanguageExists(localesDir, langCode);
+  const languageExists = checkIfLanguageExists(localesDir, langCode, flags.interactive);
+
+  if (languageExists) {
+    info(`Updating language: ${langName} (${langCode})\n`);
+  } else {
+    info(`Adding language: ${langName} (${langCode})\n`);
+  }
 
   if (flags.interactive) {
     createReadlineInterface();
