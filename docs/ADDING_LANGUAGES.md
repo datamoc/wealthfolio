@@ -15,12 +15,11 @@ This guide walks you through the process of adding a new language to Wealthfolio
 
 The easiest way to add a new language is using our automated script:
 
-```bash
-# Add a new language (e.g., Spanish)
-pnpm run i18n:add-language es
+### Option 1: Quick Scaffold (Non-Interactive)
 
-# Or for German
-pnpm run i18n:add-language de
+```bash
+# Create language structure with English templates
+pnpm run i18n:add-language es
 ```
 
 This will:
@@ -28,6 +27,33 @@ This will:
 2. Copy English translation files as templates
 3. Create a translation guide (README.md)
 4. Show you the code changes needed
+
+### Option 2: Interactive Mode with Auto-Suggestions (Recommended)
+
+```bash
+# Interactive mode with automatic translation suggestions
+pnpm run i18n:add-language es -i -t
+
+# Or interactive mode without auto-suggestions
+pnpm run i18n:add-language es -i
+```
+
+**Interactive mode features:**
+- Shows English text for each translation key
+- Displays existing translations if updating a language
+- Asks if you want to keep, change, or skip each translation
+- Auto-suggests translations using LibreTranslate API (with `-t` flag)
+- Validates translation variables are preserved
+- Progress tracking through all files
+
+**Example interactive workflow:**
+```
+🔑 welcome_message
+   EN: Welcome to Wealthfolio
+   Fetching suggestion... ✓
+   Suggested: Bienvenido a Wealthfolio
+   Translation (Enter=accept, or type your own): [press Enter or type alternative]
+```
 
 ### Supported Language Codes
 
@@ -255,6 +281,40 @@ Verify all pages and features:
 - [ ] Form validations
 - [ ] Tooltips and help text
 
+## Updating Existing Translations
+
+If you need to update or improve existing translations:
+
+### Using Interactive Mode
+
+```bash
+# Review and update existing translations
+pnpm run i18n:add-language es -i -t
+```
+
+The script will:
+1. Load existing translations from `src/locales/es/`
+2. Show you each current translation
+3. Ask if you want to keep, change, or skip it
+4. Provide auto-suggestions for untranslated keys
+
+**Interactive prompts:**
+- `y` or `Enter` - Keep the current translation
+- `n` - Enter a new translation
+- `skip` - Skip this key (keeps current value)
+
+### Batch Update from English
+
+If English translations have been updated and you want to sync:
+
+```bash
+# Extract new keys (keeps existing translations)
+pnpm run i18n:extract
+
+# Then update manually or use interactive mode
+pnpm run i18n:add-language es -i
+```
+
 ## Common Issues
 
 ### Issue: Keys are being deleted
@@ -283,24 +343,55 @@ Verify all pages and features:
 
 ## Translation Tools
 
-### Recommended Tools
+### Built-in Auto-Translation
+
+Our language tool includes automatic translation suggestions via LibreTranslate:
+
+```bash
+# Enable auto-suggestions with -t flag
+pnpm run i18n:add-language es -i -t
+
+# Use custom LibreTranslate instance
+pnpm run i18n:add-language es -i -t --api-url https://your-libretranslate.com
+```
+
+**Features:**
+- Free and open-source translation API
+- No API key required
+- Works offline if you host your own instance
+- Skips strings with variables (e.g., `{count}`) to avoid breaking interpolation
+
+**Limitations:**
+- Translations are suggestions only - always review carefully
+- Quality varies by language pair
+- May not handle financial/technical terms well
+- Best for getting a quick first draft
+
+**Best practices:**
+- Use suggestions as a starting point
+- Review every translation for accuracy and naturalness
+- Adapt to your language's cultural context
+- Test with actual data in the application
+
+### External Translation Tools
 
 - **DeepL**: High-quality machine translation (better than Google Translate)
 - **Crowdin**: Translation management platform
 - **i18n Ally**: VS Code extension for translation management
 
-### Automation
+### Translation Management Platforms
 
-Consider using translation management platforms:
+Consider using professional translation platforms:
 - **Crowdin** - https://crowdin.com
 - **Lokalise** - https://lokalise.com
 - **POEditor** - https://poeditor.com
 
 These tools can:
 - Provide translation memory
-- Enable collaboration
-- Offer machine translation suggestions
-- Track translation progress
+- Enable collaboration with multiple translators
+- Offer context-aware translation suggestions
+- Track translation progress and completeness
+- Integrate with your development workflow
 
 ## Contributing
 
