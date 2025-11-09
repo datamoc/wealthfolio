@@ -129,6 +129,17 @@ function question(query) {
   });
 }
 
+function questionWithDefault(query, defaultValue) {
+  return new Promise((resolve) => {
+    escapeCount = 0; // Reset escape count on new question
+    rl.question(query, (answer) => {
+      resolve(answer);
+    });
+    // Prefill the input with the default value
+    rl.write(defaultValue);
+  });
+}
+
 function parseArgs() {
   const args = process.argv.slice(2);
   const flags = {
@@ -262,12 +273,14 @@ async function translateJsonInteractive(
         skippedCount++;
         continue;
       } else if (choice === 'e' || choice === 'edit') {
-        log(`   ${colors.dim}Edit (current: ${existingTranslation})${colors.reset}`);
-        const edited = await question(`   ${colors.yellow}New value: ${colors.reset}`);
-        if (edited.trim()) {
+        const edited = await questionWithDefault(`   ${colors.yellow}Edit: ${colors.reset}`, existingTranslation);
+        if (edited.trim() && edited.trim() !== existingTranslation) {
           result[key] = edited.trim();
           translatedCount++;
           log(`   ${colors.green}✓ Updated${colors.reset}`);
+        } else if (edited.trim() === existingTranslation) {
+          log(`   ${colors.dim}(unchanged)${colors.reset}`);
+          keptCount++;
         } else {
           log(`   ${colors.dim}(keeping current)${colors.reset}`);
           keptCount++;
