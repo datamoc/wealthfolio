@@ -90,7 +90,7 @@ export default function AboutSettingsPage() {
 
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
-          <img src="/logo.svg" alt="Wealthfolio logo" className="h-12 w-12 rounded-md shadow" />
+          <img src="/logo.svg" alt={t("about_app_logo_alt")} className="h-12 w-12 rounded-md shadow" />
           <div className="flex flex-col">
             <CardTitle className="text-xl">{t("about_app_name")}</CardTitle>
             <CardDescription>{t("about_version", { version: version || "N/A" })}</CardDescription>

@@ -403,7 +403,7 @@ export default function PerformancePage() {
                 variant="outline"
                 size="icon"
                 className="bg-secondary/30 hover:bg-muted/80 size-9 flex-shrink-0 rounded-md border-[1.5px] border-none"
-                aria-label="Add item"
+                aria-label={t("add_account")}
               >
                 <Icons.Plus className="h-4 w-4" />
               </Button>

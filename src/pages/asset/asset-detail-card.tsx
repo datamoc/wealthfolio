@@ -6,6 +6,7 @@ import { formatPercent } from "@wealthfolio/ui";
 import { AmountDisplay } from "@wealthfolio/ui";
 import { QuantityDisplay } from "@wealthfolio/ui";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
+import { useTranslation } from "react-i18next";
 
 interface AssetDetail {
   numShares: number;
@@ -36,6 +37,7 @@ interface AssetDetailProps {
 
 const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) => {
   const { isBalanceHidden } = useBalancePrivacy();
+  const { t } = useTranslation("asset");
 
   const {
     numShares,
@@ -127,7 +129,7 @@ const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) =
             <div>
               <div className="grid grid-cols-2 gap-x-6 gap-y-3">
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs">Open</span>
+                  <span className="text-muted-foreground text-xs">{t("open")}</span>
                   <div className="text-sm font-medium">
                     <AmountDisplay
                       value={quote.open}
@@ -137,7 +139,7 @@ const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) =
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-muted-foreground text-xs">Close</span>
+                  <span className="text-muted-foreground text-xs">{t("close")}</span>
                   <div className="text-sm font-medium">
                     <AmountDisplay
                       value={quote.close}
@@ -147,7 +149,7 @@ const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) =
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs">High</span>
+                  <span className="text-muted-foreground text-xs">{t("high")}</span>
                   <div className="text-success text-sm font-medium">
                     <AmountDisplay
                       value={quote.high}
@@ -157,7 +159,7 @@ const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) =
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-muted-foreground text-xs">Low</span>
+                  <span className="text-muted-foreground text-xs">{t("low")}</span>
                   <div className="text-destructive text-sm font-medium">
                     <AmountDisplay
                       value={quote.low}
@@ -167,7 +169,7 @@ const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) =
                   </div>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground text-xs">Adj Close</span>
+                  <span className="text-muted-foreground text-xs">{t("adj_close")}</span>
                   <div className="text-sm font-medium">
                     <AmountDisplay
                       value={quote.adjclose}
@@ -177,7 +179,7 @@ const AssetDetailCard: React.FC<AssetDetailProps> = ({ assetData, className }) =
                   </div>
                 </div>
                 <div className="flex flex-col items-end">
-                  <span className="text-muted-foreground text-xs">Volume</span>
+                  <span className="text-muted-foreground text-xs">{t("volume")}</span>
                   <span className="text-sm font-medium">
                     {new Intl.NumberFormat().format(quote.volume)}
                   </span>

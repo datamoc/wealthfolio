@@ -188,7 +188,7 @@ export function BenchmarkSymbolSelectorMobile({
               filteredSearchResults.length > 0 &&
               searchQuery.length > 2 && (
                 <div className="mb-6">
-                  <h3 className="text-muted-foreground mb-3 text-sm font-medium">Search Results</h3>
+                  <h3 className="text-muted-foreground mb-3 text-sm font-medium">{t("search_results", { ns: "common" })}</h3>
                   <div className="space-y-2">
                     {filteredSearchResults.slice(0, 8).map((ticker) => (
                       <button

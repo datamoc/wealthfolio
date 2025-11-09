@@ -15,6 +15,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Icons } from "@wealthfolio/ui";
+import { useTranslation } from "react-i18next";
 
 interface DataTableFacetedFilterProps {
   title?: string;
@@ -33,6 +34,7 @@ export function DataTableFacetedFilter({
   selectedValues,
   onFilterChange,
 }: DataTableFacetedFilterProps) {
+  const { t } = useTranslation("common");
   return (
     <Popover>
       <PopoverTrigger asChild>
@@ -79,7 +81,7 @@ export function DataTableFacetedFilter({
         <Command>
           <CommandInput placeholder={title} />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{t("no_results_found")}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => {
                 const isSelected = selectedValues.has(option.value);
@@ -120,7 +122,7 @@ export function DataTableFacetedFilter({
                     onSelect={() => onFilterChange(new Set())}
                     className="text-destructive hover:bg-destructive/10 justify-center text-center text-sm"
                   >
-                    Clear filters
+                    {t("clear_filters")}
                   </CommandItem>
                 </CommandGroup>
               </>

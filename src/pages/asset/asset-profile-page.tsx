@@ -17,6 +17,7 @@ import { useQuery } from "@tanstack/react-query";
 import { AnimatedToggleGroup, Page, PageContent, PageHeader, SwipableView } from "@wealthfolio/ui";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import AssetDetailCard from "./asset-detail-card";
 import AssetHistoryCard from "./asset-history-card";
 import AssetLotsTable from "./asset-lots-table";
@@ -58,6 +59,7 @@ interface AssetDetailData {
 type AssetTab = "overview" | "lots" | "history";
 
 export const AssetProfilePage = () => {
+  const { t } = useTranslation("asset");
   const { symbol: encodedSymbol = "" } = useParams<{ symbol: string }>();
   const symbol = decodeURIComponent(encodedSymbol);
   const location = useLocation();
@@ -281,7 +283,7 @@ export const AssetProfilePage = () => {
 
             <div className="group relative">
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-bold">About</h3>
+                <h3 className="text-lg font-bold">{t("about")}</h3>
                 {!isEditing && (
                   <Button
                     variant="ghost"
@@ -300,7 +302,7 @@ export const AssetProfilePage = () => {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, assetClass: e.target.value }))
                     }
-                    placeholder="Enter asset class"
+                    placeholder={t("asset_class_placeholder")}
                     className="w-[180px]"
                   />
                 ) : (
@@ -316,7 +318,7 @@ export const AssetProfilePage = () => {
                     onChange={(e) =>
                       setFormData((prev) => ({ ...prev, assetSubClass: e.target.value }))
                     }
-                    placeholder="Enter sub-class"
+                    placeholder={t("subclass_placeholder")}
                     className="w-[180px]"
                   />
                 ) : (
@@ -416,7 +418,7 @@ export const AssetProfilePage = () => {
                   <textarea
                     className="mt-12 w-full rounded-md border border-neutral-200 p-2 text-sm"
                     value={formData.notes}
-                    placeholder="Symbol/Company description"
+                    placeholder={t("description_placeholder")}
                     rows={6}
                     onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                   />
@@ -513,7 +515,7 @@ export const AssetProfilePage = () => {
   if (assetProfile?.assetType === "FOREX") {
     return (
       <Page>
-        <PageHeader heading="Quote History" text={symbol} onBack={() => navigate(backTarget)} />
+        <PageHeader heading={t("quote_history")} text={symbol} onBack={() => navigate(backTarget)} />
         <PageContent>
           <QuoteHistoryTable
             data={quoteHistory ?? []}
@@ -566,10 +568,10 @@ export const AssetProfilePage = () => {
             Could not load necessary information for this symbol. Please check the symbol or try
             again later.
           </p>
-          {isHoldingError && <p className="text-sm text-red-500">Holding fetch error.</p>}
-          {isQuotesError && <p className="text-sm text-red-500">Quote fetch error.</p>}
+          {isHoldingError && <p className="text-sm text-red-500">{t("holding_fetch_error")}</p>}
+          {isQuotesError && <p className="text-sm text-red-500">{t("quote_fetch_error")}</p>}
           {isAssetProfileError && (
-            <p className="text-sm text-red-500">Asset profile fetch error.</p>
+            <p className="text-sm text-red-500">{t("asset_fetch_error")}</p>
           )}
         </PageContent>
       </Page>
@@ -596,7 +598,7 @@ export const AssetProfilePage = () => {
               <Input
                 value={formData.name}
                 onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
-                placeholder="Enter asset name"
+                placeholder={t("asset_name_placeholder")}
                 className="font-heading text-xl font-bold tracking-tight"
                 onBlur={() => {
                   setIsEditingTitle(false);
@@ -705,7 +707,7 @@ export const AssetProfilePage = () => {
 
               <div className="group relative">
                 <div className="flex items-center gap-2">
-                  <h3 className="text-lg font-bold">About</h3>
+                  <h3 className="text-lg font-bold">{t("about")}</h3>
                   {!isEditing && (
                     <Button
                       variant="ghost"
@@ -724,7 +726,7 @@ export const AssetProfilePage = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, assetClass: e.target.value }))
                       }
-                      placeholder="Enter asset class"
+                      placeholder={t("asset_class_placeholder")}
                       className="w-[180px]"
                     />
                   ) : (
@@ -740,7 +742,7 @@ export const AssetProfilePage = () => {
                       onChange={(e) =>
                         setFormData((prev) => ({ ...prev, assetSubClass: e.target.value }))
                       }
-                      placeholder="Enter sub-class"
+                      placeholder={t("subclass_placeholder")}
                       className="w-[180px]"
                     />
                   ) : (
@@ -848,7 +850,7 @@ export const AssetProfilePage = () => {
                     <textarea
                       className="mt-12 w-full rounded-md border border-neutral-200 p-2 text-sm"
                       value={formData.notes}
-                      placeholder="Symbol/Company description"
+                      placeholder={t("description_placeholder")}
                       rows={6}
                       onChange={(e) => setFormData((prev) => ({ ...prev, notes: e.target.value }))}
                     />

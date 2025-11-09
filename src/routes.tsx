@@ -1,5 +1,6 @@
 import { Suspense, useEffect, useState } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 import { AppLayout } from "@/pages/layouts/app-layout";
 import { OnboardingLayout } from "@/pages/layouts/onboarding-layout";
@@ -29,6 +30,7 @@ import { getDynamicRoutes, subscribeToNavigationUpdates } from "@/addons/addons-
 import AboutSettingsPage from "./pages/settings/about/about-page";
 
 export function AppRoutes() {
+  const { t } = useTranslation('common');
   useGlobalEventListener();
   const [dynamicRoutes, setDynamicRoutes] = useState<
     { path: string; component: React.LazyExoticComponent<React.ComponentType<unknown>> }[]
@@ -80,7 +82,7 @@ export function AppRoutes() {
               path={path}
               element={
                 <Suspense
-                  fallback={<div className="flex h-64 items-center justify-center">Loading...</div>}
+                  fallback={<div className="flex h-64 items-center justify-center">{t('loading')}</div>}
                 >
                   <Component />
                 </Suspense>
@@ -100,7 +102,7 @@ export function AppRoutes() {
             <Route path="market-data/import" element={<MarketDataImportPage />} />
             <Route path="addons" element={<AddonSettingsPage />} />
           </Route>
-          <Route path="*" element={<h1>Not Found</h1>} />
+          <Route path="*" element={<h1>{t('not_found')}</h1>} />
         </Route>
       </Routes>
     </BrowserRouter>
