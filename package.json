@@ -23,6 +23,7 @@
     "lint:root": "eslint .",
     "lint:i18n": "i18next --fail-on-warnings --fail-on-update",
     "i18n:extract": "i18next",
+    "i18n:add-language": "node scripts/add-language.mjs",
     "format": "prettier --write . && pnpm -r format",
     "format:check": "prettier --check . && pnpm -r format:check",
     "tsc": "tsc -b",
