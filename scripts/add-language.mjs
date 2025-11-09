@@ -68,22 +68,65 @@ const languageNames = {
 };
 
 let rl;
+let escapeCount = 0;
+let escapeTimer = null;
 
 function createReadlineInterface() {
   rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
   });
+
+  // Handle Ctrl+C gracefully
+  rl.on('SIGINT', () => {
+    handleExit();
+  });
+
+  // Handle escape key for double-escape exit
+  process.stdin.on('keypress', (str, key) => {
+    if (key && key.name === 'escape') {
+      escapeCount++;
+      if (escapeTimer) clearTimeout(escapeTimer);
+
+      if (escapeCount === 1) {
+        warning('\nPress Escape again or Ctrl+C to exit...');
+        escapeTimer = setTimeout(() => {
+          escapeCount = 0;
+        }, 2000);
+      } else if (escapeCount >= 2) {
+        handleExit();
+      }
+    }
+  });
+
+  // Enable keypress events
+  if (process.stdin.isTTY) {
+    readline.emitKeypressEvents(process.stdin);
+    process.stdin.setRawMode(true);
+  }
+}
+
+function handleExit() {
+  log('\n\n⚠ Exiting translation process...', 'yellow');
+  info('Progress has been saved to disk.\n');
+  closeReadlineInterface();
+  process.exit(0);
 }
 
 function closeReadlineInterface() {
   if (rl) {
     rl.close();
   }
+  if (process.stdin.isTTY && process.stdin.setRawMode) {
+    process.stdin.setRawMode(false);
+  }
 }
 
 function question(query) {
-  return new Promise((resolve) => rl.question(query, resolve));
+  return new Promise((resolve) => {
+    escapeCount = 0; // Reset escape count on new question
+    rl.question(query, resolve);
+  });
 }
 
 function parseArgs() {
@@ -200,21 +243,41 @@ async function translateJsonInteractive(
     const englishText = sourceData[key];
     const existingTranslation = result[key];
 
-    // Skip if it's the same as English (not translated yet)
+    // Handle existing translation that differs from English
     if (existingTranslation && existingTranslation !== englishText) {
       log(`\n🔑 ${key}`, 'cyan');
       log(`   EN: ${colors.dim}${englishText}${colors.reset}`);
-      log(`   Current: ${colors.green}${existingTranslation}${colors.reset}`);
+      log(`   Current: ${colors.green}${colors.bright}${existingTranslation}${colors.reset}`);
 
       const answer = await question(
-        `   ${colors.yellow}Keep this? (y/n/skip): ${colors.reset}`
+        `   ${colors.yellow}[${colors.green}y${colors.yellow}]keep / [e]dit / [n]ew / [s]kip: ${colors.reset}`
       );
 
-      if (answer.toLowerCase() === 'y' || answer.toLowerCase() === '') {
+      const choice = answer.toLowerCase().trim();
+
+      if (choice === 'y' || choice === '') {
         keptCount++;
         continue;
-      } else if (answer.toLowerCase() === 'skip') {
+      } else if (choice === 's' || choice === 'skip') {
         skippedCount++;
+        continue;
+      } else if (choice === 'e' || choice === 'edit') {
+        log(`   ${colors.dim}Edit (current: ${existingTranslation})${colors.reset}`);
+        const edited = await question(`   ${colors.yellow}New value: ${colors.reset}`);
+        if (edited.trim()) {
+          result[key] = edited.trim();
+          translatedCount++;
+          log(`   ${colors.green}✓ Updated${colors.reset}`);
+        } else {
+          log(`   ${colors.dim}(keeping current)${colors.reset}`);
+          keptCount++;
+        }
+        continue;
+      } else if (choice === 'n' || choice === 'new') {
+        // Fall through to get new translation below
+      } else {
+        log(`   ${colors.dim}(keeping current)${colors.reset}`);
+        keptCount++;
         continue;
       }
     }
@@ -230,14 +293,14 @@ async function translateJsonInteractive(
       suggestion = await translateText(englishText, targetLang, apiUrl);
       if (suggestion) {
         process.stdout.write(`${colors.green}✓${colors.reset}\n`);
-        log(`   Suggested: ${colors.magenta}${suggestion}${colors.reset}`);
+        log(`   Default: ${colors.green}${colors.bright}${suggestion}${colors.reset}`);
       } else {
         process.stdout.write(`${colors.red}✗${colors.reset}\n`);
       }
     }
 
     const prompt = suggestion
-      ? `   ${colors.yellow}Translation (Enter=accept, or type your own): ${colors.reset}`
+      ? `   ${colors.yellow}Translation [${colors.green}Enter${colors.yellow}=use default]: ${colors.reset}`
       : `   ${colors.yellow}Translation: ${colors.reset}`;
 
     const answer = await question(prompt);
@@ -245,9 +308,11 @@ async function translateJsonInteractive(
     if (answer.trim()) {
       result[key] = answer.trim();
       translatedCount++;
+      log(`   ${colors.green}✓ Saved${colors.reset}`);
     } else if (suggestion) {
       result[key] = suggestion;
       translatedCount++;
+      log(`   ${colors.green}✓ Using default${colors.reset}`);
     } else {
       result[key] = englishText; // Keep English as placeholder
       log(`   ${colors.dim}(keeping English as placeholder)${colors.reset}`);
@@ -302,8 +367,15 @@ async function interactiveMode(localesDir, langCode, useTranslate, apiUrl) {
   log('\n📝 Starting interactive translation...\n', 'bright');
   if (useTranslate) {
     info(`Using LibreTranslate API: ${apiUrl}`);
-    info('Note: Translations are suggestions only - please review carefully!\n');
+    info('Note: Translations are suggestions only - please review carefully!');
   }
+
+  log('\n💡 Tips:', 'cyan');
+  info('  • Default/suggested values shown in ' + colors.green + 'green' + colors.reset);
+  info('  • Press ' + colors.green + 'Enter' + colors.reset + ' to accept defaults');
+  info('  • Press ' + colors.yellow + 'e' + colors.reset + ' to edit existing translations');
+  info('  • Press ' + colors.yellow + 'Ctrl+C' + colors.reset + ' or ' + colors.yellow + 'Escape twice' + colors.reset + ' to exit (progress auto-saved)');
+  log('');
 
   for (const file of files) {
     const sourceFile = path.join(sourceDir, file);

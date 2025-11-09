@@ -40,19 +40,35 @@ pnpm run i18n:add-language es -i
 
 **Interactive mode features:**
 - Shows English text for each translation key
-- Displays existing translations if updating a language
-- Asks if you want to keep, change, or skip each translation
+- Displays existing translations in **bright green** (easy to identify defaults)
+- Edit existing translations with `e` command (no need to retype everything)
 - Auto-suggests translations using LibreTranslate API (with `-t` flag)
-- Validates translation variables are preserved
+- Press **Enter** to accept green defaults
+- Press **Ctrl+C** or **Escape twice** to exit safely (progress auto-saved)
 - Progress tracking through all files
+
+**Interactive commands:**
+- `y` or `Enter` - Keep current/default translation (shown in green)
+- `e` - Edit existing translation
+- `n` - Enter completely new translation
+- `s` - Skip this key
 
 **Example interactive workflow:**
 ```
 🔑 welcome_message
    EN: Welcome to Wealthfolio
+   Current: Bienvenue à Wealthfolio
+   [y]keep / [e]dit / [n]ew / [s]kip: e
+   Edit (current: Bienvenue à Wealthfolio)
+   New value: Bienvenue sur Wealthfolio
+   ✓ Updated
+
+🔑 new_feature
+   EN: Portfolio Analysis
    Fetching suggestion... ✓
-   Suggested: Bienvenido a Wealthfolio
-   Translation (Enter=accept, or type your own): [press Enter or type alternative]
+   Default: Analyse du Portefeuille
+   Translation [Enter=use default]: [press Enter]
+   ✓ Using default
 ```
 
 ### Supported Language Codes
