@@ -1,0 +1,18 @@
+{
+  "appearance_font_error": "",
+  "appearance_font_required": "",
+  "appearance_theme_required": "",
+  "cash": "",
+  "currency_select_error": "",
+  "exchange_rates_from_required": "",
+  "exchange_rates_rate_non_negative": "",
+  "exchange_rates_rate_positive": "",
+  "exchange_rates_rate_required": "",
+  "exchange_rates_to_required": "",
+  "market_value": "",
+  "other": "",
+  "others": "",
+  "return": "",
+  "show_full_names": "",
+  "show_symbols": ""
+}

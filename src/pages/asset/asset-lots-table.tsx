@@ -12,6 +12,7 @@ import { formatDate } from "@/lib/utils";
 import { Card, CardContent } from "@/components/ui/card";
 import { GainAmount } from "@wealthfolio/ui";
 import { GainPercent } from "@wealthfolio/ui";
+import { useTranslation } from "react-i18next";
 
 interface AssetLotsTableProps {
   lots: Lot[];
@@ -20,6 +21,8 @@ interface AssetLotsTableProps {
 }
 
 export const AssetLotsTable = ({ lots, currency, marketPrice }: AssetLotsTableProps) => {
+  const { t } = useTranslation("asset");
+
   if (!lots || lots.length === 0) {
     return null;
   }
@@ -35,13 +38,13 @@ export const AssetLotsTable = ({ lots, currency, marketPrice }: AssetLotsTablePr
           <Table>
             <TableHeader className="bg-muted">
               <TableRow>
-                <TableHead className="w-[160px]">Acquired Date</TableHead>
-                <TableHead className="text-right">Quantity</TableHead>
-                <TableHead className="text-right">Acquisition Price</TableHead>
-                <TableHead className="text-right">Fees</TableHead>
-                <TableHead className="text-right">Cost Basis</TableHead>
-                <TableHead className="text-right">Market Value</TableHead>
-                <TableHead className="text-right">Gain/Loss</TableHead>
+                <TableHead className="w-[160px]">{t("acquired_date")}</TableHead>
+                <TableHead className="text-right">{t("quantity")}</TableHead>
+                <TableHead className="text-right">{t("acquisition_price")}</TableHead>
+                <TableHead className="text-right">{t("fees")}</TableHead>
+                <TableHead className="text-right">{t("cost_basis")}</TableHead>
+                <TableHead className="text-right">{t("market_value")}</TableHead>
+                <TableHead className="text-right">{t("gain_loss")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

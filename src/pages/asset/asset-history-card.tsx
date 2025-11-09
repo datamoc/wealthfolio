@@ -19,6 +19,7 @@ import HistoryChart from "@/components/history-chart-symbol";
 import { Quote, TimePeriod, DateRange } from "@/lib/types";
 import { useSyncMarketDataMutation } from "@/hooks/use-sync-market-data";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
+import { useTranslation } from "react-i18next";
 
 interface AssetHistoryProps {
   marketPrice: number;
@@ -41,6 +42,7 @@ const AssetHistoryCard: React.FC<AssetHistoryProps> = ({
 }) => {
   const syncMarketDataMutation = useSyncMarketDataMutation();
   const { isBalanceHidden } = useBalancePrivacy();
+  const { t } = useTranslation("common");
 
   const [selectedIntervalCode, setSelectedIntervalCode] = useState<TimePeriod>("3M");
   const [selectedIntervalDesc, setSelectedIntervalDesc] = useState<string>("past 3 months");
@@ -137,7 +139,7 @@ const AssetHistoryCard: React.FC<AssetHistoryProps> = ({
                 <div className="space-y-2">
                   <h4 className="flex text-sm font-light">
                     <Icons.Calendar className="mr-2 h-4 w-4" />
-                    As of:{" "}
+                    {t("as_of")}{" "}
                     <Badge className="ml-1 font-medium" variant="secondary">
                       {calculatedAt ? `${format(new Date(calculatedAt), "PPpp")}` : "-"}
                     </Badge>
