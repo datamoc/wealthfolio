@@ -264,11 +264,11 @@ class AddonDevServer {
     const { spawn } = require("child_process");
     const isWindows = process.platform === "win32";
 
+    // Use .cmd extension on Windows, no shell needed (prevents DEP0190 warning)
     this.viteWatcher = spawn(isWindows ? "npm.cmd" : "npm", ["run", "dev"], {
       cwd: this.config.addonPath,
       stdio: ["ignore", "pipe", "pipe"],
-      shell: isWindows, // Use shell on Windows for proper process management
-      windowsHide: true, // Hide console window on Windows
+      windowsHide: isWindows, // Hide console window on Windows
     });
 
     this.viteWatcher.stdout.on("data", (data) => {
