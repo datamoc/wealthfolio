@@ -198,7 +198,7 @@ export function BenchmarkSymbolSelector({
             {/* Loading state for search results */}
             {isLoading && searchQuery.length > 2 && (
               <CommandGroup
-                heading="Search Results"
+                heading={t("search_results", { ns: "common" })}
                 className="[&_[cmdk-group-heading]]:bg-popover [&_[cmdk-group-heading]]:border-border/10 [&_[cmdk-group-heading]]:sticky [&_[cmdk-group-heading]]:top-0 [&_[cmdk-group-heading]]:z-10 [&_[cmdk-group-heading]]:border-b"
               >
                 <div className="space-y-2 p-2">
@@ -212,7 +212,7 @@ export function BenchmarkSymbolSelector({
             {/* Error state for search results */}
             {isError && searchQuery.length > 2 && (
               <CommandGroup
-                heading="Search Results"
+                heading={t("search_results", { ns: "common" })}
                 className="[&_[cmdk-group-heading]]:bg-popover [&_[cmdk-group-heading]]:border-border/10 [&_[cmdk-group-heading]]:sticky [&_[cmdk-group-heading]]:top-0 [&_[cmdk-group-heading]]:z-10 [&_[cmdk-group-heading]]:border-b"
               >
                 <div className="text-muted-foreground p-4 text-sm">
@@ -227,7 +227,7 @@ export function BenchmarkSymbolSelector({
               filteredSearchResults.length > 0 &&
               searchQuery.length > 2 && (
                 <CommandGroup
-                  heading="Search Results"
+                  heading={t("search_results", { ns: "common" })}
                   className="[&_[cmdk-group-heading]]:bg-popover [&_[cmdk-group-heading]]:border-border/10 [&_[cmdk-group-heading]]:sticky [&_[cmdk-group-heading]]:top-0 [&_[cmdk-group-heading]]:z-10 [&_[cmdk-group-heading]]:border-b"
                 >
                   {filteredSearchResults.slice(0, 8).map((ticker) => (

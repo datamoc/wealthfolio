@@ -8,6 +8,7 @@ import {
   useRecalculatePortfolioMutation,
 } from "@/hooks/use-calculate-portfolio";
 import { formatDateTime } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 // Rename interface
 interface PortfolioUpdateTriggerProps {
@@ -20,6 +21,7 @@ export function PortfolioUpdateTrigger({
   lastCalculatedAt,
   children,
 }: PortfolioUpdateTriggerProps) {
+  const { t } = useTranslation("common");
   // Instantiate the mutation hooks inside the component
   const updatePortfolioMutation = useUpdatePortfolioMutation();
   const recalculatePortfolioMutation = useRecalculatePortfolioMutation();
@@ -41,7 +43,7 @@ export function PortfolioUpdateTrigger({
           <div className="space-y-2">
             <h4 className="flex text-sm font-light">
               <Icons.Calendar className="mr-2 h-4 w-4" />
-              As of:{" "}
+              {t("as_of")}{" "}
               <Badge className="ml-1 font-medium" variant="secondary">
                 {/* Use lastCalculatedAt prop */}
                 {lastCalculatedAt

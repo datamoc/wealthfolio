@@ -16,6 +16,7 @@ import { Account } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { Icons, type Icon } from "@wealthfolio/ui";
 import { forwardRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 // Custom type for UI purposes that extends the standard AccountType
 type UIAccountType = AccountType | typeof PORTFOLIO_ACCOUNT_ID;
@@ -70,6 +71,7 @@ export const AccountSelectorMobile = forwardRef<HTMLButtonElement, AccountSelect
     },
     ref,
   ) => {
+    const { t } = useTranslation("common");
     const [internalOpen, setInternalOpen] = useState(false);
     const open = controlledOpen ?? internalOpen;
     const setOpen = onOpenChange ?? setInternalOpen;
@@ -145,8 +147,8 @@ export const AccountSelectorMobile = forwardRef<HTMLButtonElement, AccountSelect
         </SheetTrigger>
         <SheetContent side="bottom" className="h-[80vh] p-0">
           <SheetHeader className="border-border border-b px-6 py-4">
-            <SheetTitle>Select Account</SheetTitle>
-            <SheetDescription>Choose an account to add to the comparison</SheetDescription>
+            <SheetTitle>{t('select_account')}</SheetTitle>
+            <SheetDescription>{t('click_to_select_account')}</SheetDescription>
           </SheetHeader>
           <ScrollArea className="h-[calc(80vh-5rem)] px-6 py-4">
             <div className="space-y-6">

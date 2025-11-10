@@ -12,6 +12,8 @@ import performanceEn from "@/locales/en/performance.json";
 import accountEn from "@/locales/en/account.json";
 import goalsEn from "@/locales/en/goals.json";
 import incomeEn from "@/locales/en/income.json";
+import onboardingEn from "@/locales/en/onboarding.json";
+import assetEn from "@/locales/en/asset.json";
 
 import commonFr from "@/locales/fr/common.json";
 import settingsFr from "@/locales/fr/settings.json";
@@ -22,6 +24,8 @@ import performanceFr from "@/locales/fr/performance.json";
 import accountFr from "@/locales/fr/account.json";
 import goalsFr from "@/locales/fr/goals.json";
 import incomeFr from "@/locales/fr/income.json";
+import onboardingFr from "@/locales/fr/onboarding.json";
+import assetFr from "@/locales/fr/asset.json";
 
 export const defaultNS = "common";
 export const resources = {
@@ -35,6 +39,8 @@ export const resources = {
     account: accountEn,
     goals: goalsEn,
     income: incomeEn,
+    onboarding: onboardingEn,
+    asset: assetEn,
   },
   fr: {
     common: commonFr,
@@ -46,6 +52,8 @@ export const resources = {
     account: accountFr,
     goals: goalsFr,
     income: incomeFr,
+    onboarding: onboardingFr,
+    asset: assetFr,
   },
 } as const;
 

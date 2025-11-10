@@ -204,7 +204,7 @@ export const AccountSelector = forwardRef<HTMLButtonElement, AccountSelectorProp
               variant="outline"
               role="combobox"
               aria-expanded={open}
-              aria-label="Select an account"
+              aria-label={t('select_an_account')}
               className={`h-full w-full justify-center rounded-lg border border-dashed p-2 transition-colors ${
                 open
                   ? "border-primary bg-primary/5"
@@ -272,8 +272,8 @@ export const AccountSelector = forwardRef<HTMLButtonElement, AccountSelectorProp
                         exit={{ opacity: 0, y: -5 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <p className="text-xs font-medium">Click to select an account</p>
-                        <p className="text-muted-foreground text-xs">Required for import</p>
+                        <p className="text-xs font-medium">{t('click_to_select_account')}</p>
+                        <p className="text-muted-foreground text-xs">{t('required_for_import')}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -305,7 +305,7 @@ export const AccountSelector = forwardRef<HTMLButtonElement, AccountSelectorProp
                     <span>{selectedAccount.name}</span>
                   </>
                 ) : (
-                  <span className="text-muted-foreground">Select an account</span>
+                  <span className="text-muted-foreground">{t('select_an_account')}</span>
                 )}
               </div>
               <Icons.ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
@@ -335,7 +335,7 @@ export const AccountSelector = forwardRef<HTMLButtonElement, AccountSelectorProp
                     <span className="truncate">{selectedAccount.name}</span>
                   </>
                 ) : (
-                  <span className="text-muted-foreground">Select an account</span>
+                  <span className="text-muted-foreground">{t('select_an_account')}</span>
                 )}
               </div>
               <Icons.ChevronsUpDown className="h-4 w-4 shrink-0 opacity-50" />
@@ -391,7 +391,7 @@ export const AccountSelector = forwardRef<HTMLButtonElement, AccountSelectorProp
                 </div>
               ) : (
                 <>
-                  <CommandEmpty>No accounts found.</CommandEmpty>
+                  <CommandEmpty>{t('no_accounts_found')}</CommandEmpty>
                   {sortedGroups.map(([type, typeAccounts]) => (
                     <CommandGroup key={type} heading={type}>
                       {typeAccounts.map((account) => {

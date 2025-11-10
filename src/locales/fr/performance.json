@@ -9,9 +9,7 @@
   "no_performance_data": "Aucune donnée de performance disponible",
   "no_performance_data_desc": "Ajoutez des activités à votre portefeuille pour voir les métriques de performance.",
   "performance": "Performance",
-  "performance_summary": "Résumé de performance",
   "retry": "Réessayer",
   "total_return": "Rendement total",
-  "total_return_percent": "Rendement total %",
   "volatility": "Volatilité"
 }

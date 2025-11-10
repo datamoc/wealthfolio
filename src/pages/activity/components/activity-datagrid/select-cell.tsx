@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { Check, ChevronDown } from "lucide-react";
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface SelectOption {
   value: string;
@@ -47,6 +48,7 @@ export function SelectCell({
   className,
   disabled = false,
 }: SelectCellProps) {
+  const { t } = useTranslation("common");
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
   const cellRef = useRef<HTMLDivElement>(null);
@@ -160,13 +162,13 @@ export function SelectCell({
       >
         <Command>
           <CommandInput
-            placeholder="Search..."
+            placeholder={t("search_placeholder")}
             value={search}
             onValueChange={setSearch}
             autoFocus
           />
           <CommandList>
-            <CommandEmpty>No results found.</CommandEmpty>
+            <CommandEmpty>{t("no_results_found")}</CommandEmpty>
             <CommandGroup>
               {options.map((option) => (
                 <CommandItem

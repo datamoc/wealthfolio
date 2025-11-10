@@ -18,6 +18,7 @@ import { useQuery } from "@tanstack/react-query";
 import { searchTicker } from "@/commands/market-data";
 import { QueryKeys } from "@/lib/query-keys";
 import type { QuoteSummary } from "@/lib/types";
+import { useTranslation } from "react-i18next";
 
 interface SymbolAutocompleteCellProps {
   value: string;
@@ -38,6 +39,7 @@ export function SymbolAutocompleteCell({
   className,
   disabled = false,
 }: SymbolAutocompleteCellProps) {
+  const { t } = useTranslation("common");
   const [isEditing, setIsEditing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const cellRef = useRef<HTMLDivElement>(null);
@@ -164,7 +166,7 @@ export function SymbolAutocompleteCell({
         <Command shouldFilter={false}>
           <CommandInput
             ref={inputRef}
-            placeholder="Search symbol or company..."
+            placeholder={t("search_symbol_or_company")}
             value={searchQuery}
             onValueChange={setSearchQuery}
             onKeyDown={(e) => {
@@ -179,12 +181,12 @@ export function SymbolAutocompleteCell({
             }}
           />
           <CommandList>
-            {isLoading ? <CommandEmpty>Loading...</CommandEmpty> : null}
+            {isLoading ? <CommandEmpty>{t("loading")}</CommandEmpty> : null}
             {!isLoading && isError ? (
-              <CommandEmpty>Failed to load symbols.</CommandEmpty>
+              <CommandEmpty>{t("failed_to_load_symbols")}</CommandEmpty>
             ) : null}
             {!isLoading && !isError && options.length === 0 ? (
-              <CommandEmpty>No symbols found.</CommandEmpty>
+              <CommandEmpty>{t("no_symbols_found")}</CommandEmpty>
             ) : null}
             {!isLoading && !isError && options.length > 0 ? (
               <CommandGroup>

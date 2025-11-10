@@ -33,6 +33,7 @@ interface SearchResultsProps {
 // Memoize search results component
 const SearchResults = memo(
   ({ results, isLoading, isError, selectedResult, onSelect }: SearchResultsProps) => {
+    const { t } = useTranslation('common');
     return (
       <CommandList>
         {isLoading ? (
@@ -45,9 +46,9 @@ const SearchResults = memo(
           </CommandPrimitive.Loading>
         ) : null}
         {!isError && !isLoading && selectedResult && !results?.length && (
-          <div className="p-4 text-sm">No symbols found</div>
+          <div className="p-4 text-sm">{t('no_symbols_found')}</div>
         )}
-        {isError && <div className="text-destructive p-4 text-sm">Something went wrong</div>}
+        {isError && <div className="text-destructive p-4 text-sm">{t('something_went_wrong')}</div>}
 
         {results?.map((ticker) => {
           return (

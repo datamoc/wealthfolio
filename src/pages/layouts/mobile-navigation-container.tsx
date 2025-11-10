@@ -2,8 +2,10 @@ import { usePullToRefresh } from "@/hooks/use-pull-to-refresh";
 import { Icons, PageScrollContainer } from "@wealthfolio/ui";
 import { AnimatePresence } from "motion/react";
 import { Outlet } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 export function MobileNavigationContainer() {
+  const { t } = useTranslation("common");
   const [isRefreshing, pullToRefreshHandlers, ptr] = usePullToRefresh();
 
   return (
@@ -26,7 +28,7 @@ export function MobileNavigationContainer() {
           <div className="bg-background/80 text-muted-foreground flex items-center gap-2 rounded-full px-3 py-1 text-xs backdrop-blur-sm">
             <Icons.Loader className="size-4 animate-spin" />
 
-            <span>Refreshing…</span>
+            <span>{t("refreshing")}</span>
           </div>
         </div>
       )}
