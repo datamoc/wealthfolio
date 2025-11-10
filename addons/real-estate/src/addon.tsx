@@ -1,5 +1,4 @@
-import React, { useState } from "react";
-import { useTranslation, I18nextProvider } from "react-i18next";
+import React, { useState, useEffect } from "react";
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
   Icons,
@@ -21,12 +20,17 @@ import {
 import { useRealEstateData } from "./hooks/use-real-estate-data";
 import { calculatePropertyMetrics, calculatePortfolioSummary, filterProperties } from "./lib/utils";
 import type { Property } from "./lib/types";
+import { initAddonI18n } from "./lib/i18n";
 
 /**
  * Main Real Estate Tracker Component
  */
 function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
-  const { t } = useTranslation("real-estate");
+  // Initialize i18n for the addon
+  useEffect(() => {
+    initAddonI18n();
+  }, []);
+
   const { data, isLoading, error, saveProperty, deleteProperty, saveLoan, deleteLoan } =
     useRealEstateData(ctx);
 
@@ -63,7 +67,7 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
-    if (confirm(t("delete_confirm"))) {
+    if (confirm("Are you sure you want to delete this property? All associated loans will also be deleted.")) {
       try {
         await deleteProperty(propertyId);
       } catch (error) {
@@ -86,7 +90,7 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
       {properties.length > 0 && (
         <Input
-          placeholder={t("search_placeholder")}
+          placeholder="Search properties..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:w-64"
@@ -94,7 +98,7 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
       )}
       <Button onClick={handleAddProperty}>
         <Icons.Plus className="mr-2 h-4 w-4" />
-        {t("add_property")}
+        Add Property
       </Button>
     </div>
   );
@@ -103,8 +107,11 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
     <PageHeader actions={headerActions}>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold sm:text-xl">{t("title")}</h1>
+          <h1 className="text-lg font-semibold sm:text-xl">Real Estate Portfolio</h1>
         </div>
+        <p className="text-muted-foreground text-sm sm:text-base">
+          Track your properties, mortgages, and equity
+        </p>
       </div>
     </PageHeader>
   );
@@ -150,13 +157,13 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
             <div className="w-full max-w-lg">
               <EmptyPlaceholder className="mt-16">
                 <EmptyPlaceholder.Icon name="Home" />
-                <EmptyPlaceholder.Title>{t("no_properties_title")}</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Title>No Properties Yet</EmptyPlaceholder.Title>
                 <EmptyPlaceholder.Description>
-                  {t("no_properties_description")}
+                  Start tracking your real estate portfolio by adding your first property.
                 </EmptyPlaceholder.Description>
                 <Button onClick={handleAddProperty}>
                   <Icons.Plus className="mr-2 h-4 w-4" />
-                  {t("no_properties_action")}
+                  Add Your First Property
                 </Button>
               </EmptyPlaceholder>
             </div>
@@ -268,17 +275,13 @@ export default function enable(ctx: AddonContext) {
 
     ctx.api.logger.debug("Sidebar navigation item added successfully");
 
-    // Create wrapper component with QueryClientProvider and I18nextProvider
+    // Create wrapper component with QueryClientProvider
     const RealEstateTrackerWrapper = () => {
       const sharedQueryClient = ctx.api.query.getClient() as QueryClient;
-      const i18n = (window as any).__wealthfolio_i18n__;
-
       return (
-        <I18nextProvider i18n={i18n}>
-          <QueryClientProvider client={sharedQueryClient}>
-            <RealEstateTracker ctx={ctx} />
-          </QueryClientProvider>
-        </I18nextProvider>
+        <QueryClientProvider client={sharedQueryClient}>
+          <RealEstateTracker ctx={ctx} />
+        </QueryClientProvider>
       );
     };
 
@@ -303,7 +306,6 @@ export default function enable(ctx: AddonContext) {
   ctx.onDisable(() => {
     ctx.api.logger.info("🛑 Real Estate Tracker addon is being disabled");
 
-    // Remove UI elements
     addedItems.forEach((item) => {
       try {
         item.remove();
@@ -311,14 +313,6 @@ export default function enable(ctx: AddonContext) {
         ctx.api.logger.error("Error removing sidebar item: " + (error as Error).message);
       }
     });
-
-    // Clean up localStorage data
-    try {
-      localStorage.removeItem("real-estate-data");
-      ctx.api.logger.info("Cleaned up real estate data from localStorage");
-    } catch (error) {
-      ctx.api.logger.error("Error cleaning up localStorage: " + (error as Error).message);
-    }
 
     ctx.api.logger.info("Real Estate Tracker addon disabled successfully");
   });
