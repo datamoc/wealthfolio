@@ -14,8 +14,13 @@ function startVite() {
   console.log("🚀 Starting Vite dev server...");
 
   const isWindows = process.platform === "win32";
-  // Use .cmd extension on Windows, no shell needed
-  viteProcess = spawn(isWindows ? "npx.cmd" : "npx", ["vite"], {
+
+  // On Windows, use cmd.exe to properly execute npx
+  // On Unix, use npx directly
+  const command = isWindows ? "cmd.exe" : "npx";
+  const args = isWindows ? ["/c", "npx", "vite"] : ["vite"];
+
+  viteProcess = spawn(command, args, {
     stdio: "inherit",
     windowsHide: isWindows,
   });
