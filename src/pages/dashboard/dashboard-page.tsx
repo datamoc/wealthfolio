@@ -2,6 +2,7 @@ import { HistoryChart } from "@/components/history-chart";
 import { PrivacyToggle } from "@/components/privacy-toggle";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useHoldings } from "@/hooks/use-holdings";
+import { useRealEstateSummary } from "@/hooks/use-real-estate-summary";
 import { useValuationHistory } from "@/hooks/use-valuation-history";
 import { PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
 import { useSettingsContext } from "@/lib/settings-provider";
@@ -48,14 +49,19 @@ export default function DashboardPage() {
 
   const { holdings, isLoading: isHoldingsLoading } = useHoldings(PORTFOLIO_ACCOUNT_ID);
 
-  const totalValue = useMemo(() => {
-    return holdings?.reduce((acc, holding) => acc + (holding.marketValue?.base ?? 0), 0) ?? 0;
-  }, [holdings]);
-
-  const { valuationHistory, isLoading: isValuationHistoryLoading } = useValuationHistory(dateRange);
-
   const { settings } = useSettingsContext();
   const baseCurrency = settings?.baseCurrency ?? "USD";
+
+  // Get real estate summary
+  const { data: realEstateSummary } = useRealEstateSummary(baseCurrency);
+
+  const totalValue = useMemo(() => {
+    const holdingsValue = holdings?.reduce((acc, holding) => acc + (holding.marketValue?.base ?? 0), 0) ?? 0;
+    const realEstateEquity = realEstateSummary?.totalEquity ?? 0;
+    return holdingsValue + realEstateEquity;
+  }, [holdings, realEstateSummary]);
+
+  const { valuationHistory, isLoading: isValuationHistoryLoading } = useValuationHistory(dateRange);
 
   // Calculate gainLossAmount and simpleReturn from valuationHistory
   const { gainLossAmount, simpleReturn } = useMemo(() => {
@@ -69,15 +75,17 @@ export default function DashboardPage() {
   }, [valuationHistory]);
 
   const chartData = useMemo(() => {
+    const realEstateEquity = realEstateSummary?.totalEquity ?? 0;
+
     return (
       valuationHistory?.map((item) => ({
         date: item.valuationDate,
-        totalValue: item.totalValue,
+        totalValue: item.totalValue + realEstateEquity,
         netContribution: item.netContribution,
         currency: item.baseCurrency ?? baseCurrency,
       })) ?? []
     );
-  }, [valuationHistory, baseCurrency]);
+  }, [valuationHistory, baseCurrency, realEstateSummary]);
 
   if ((isValuationHistoryLoading && !valuationHistory) || (isHoldingsLoading && !holdings)) {
     return <DashboardSkeleton />;
