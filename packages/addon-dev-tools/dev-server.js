@@ -262,9 +262,13 @@ class AddonDevServer {
 
     // Start vite build in watch mode
     const { spawn } = require("child_process");
-    this.viteWatcher = spawn("npm", ["run", "dev"], {
+    const isWindows = process.platform === "win32";
+
+    this.viteWatcher = spawn(isWindows ? "npm.cmd" : "npm", ["run", "dev"], {
       cwd: this.config.addonPath,
       stdio: ["ignore", "pipe", "pipe"],
+      shell: isWindows, // Use shell on Windows for proper process management
+      windowsHide: true, // Hide console window on Windows
     });
 
     this.viteWatcher.stdout.on("data", (data) => {
@@ -313,20 +317,47 @@ class AddonDevServer {
     // Handle graceful shutdown
     process.on("SIGINT", () => {
       this.stop();
-      process.exit(0);
+      // Wait for cleanup before exiting
+      setTimeout(() => process.exit(0), 1500);
     });
 
     process.on("SIGTERM", () => {
       this.stop();
-      process.exit(0);
+      // Wait for cleanup before exiting
+      setTimeout(() => process.exit(0), 1500);
     });
   }
 
   stop() {
     console.log("🛑 Shutting down dev server...");
 
-    if (this.viteWatcher) {
-      this.viteWatcher.kill("SIGTERM");
+    if (this.viteWatcher && this.viteWatcher.pid) {
+      const isWindows = process.platform === "win32";
+
+      if (isWindows) {
+        // On Windows, kill the entire process tree
+        try {
+          exec(`taskkill /pid ${this.viteWatcher.pid} /T /F`, (error) => {
+            if (error) {
+              console.error("Error killing process tree:", error.message);
+            }
+          });
+        } catch (e) {
+          console.error("Failed to kill process tree:", e);
+        }
+      } else {
+        // On Unix, try graceful shutdown first
+        this.viteWatcher.kill("SIGTERM");
+
+        // Force kill after timeout if still running
+        setTimeout(() => {
+          if (this.viteWatcher && !this.viteWatcher.killed) {
+            console.log("⚠️ Force killing Vite watcher...");
+            this.viteWatcher.kill("SIGKILL");
+          }
+        }, 1000);
+      }
+
       this.viteWatcher = null;
     }
   }
