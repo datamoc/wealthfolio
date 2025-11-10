@@ -24,7 +24,7 @@ const getDefaultData = (): RealEstateData => ({
  */
 export async function loadData(ctx: AddonContext): Promise<RealEstateData> {
   try {
-    const data = localStorage.getItem(STORAGE_KEY);
+    const data = await ctx.api.storage.getData(STORAGE_KEY);
 
     if (!data) {
       ctx.api.logger.info("No existing data found, returning default data");
@@ -56,7 +56,7 @@ export async function saveData(
 ): Promise<void> {
   try {
     const serialized = JSON.stringify(data);
-    localStorage.setItem(STORAGE_KEY, serialized);
+    await ctx.api.storage.setData(STORAGE_KEY, serialized);
     ctx.api.logger.debug("Data saved successfully");
   } catch (error) {
     ctx.api.logger.error("Failed to save data: " + (error as Error).message);
