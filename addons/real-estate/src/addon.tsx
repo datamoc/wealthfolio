@@ -300,6 +300,7 @@ export default function enable(ctx: AddonContext) {
   ctx.onDisable(() => {
     ctx.api.logger.info("🛑 Real Estate Tracker addon is being disabled");
 
+    // Remove UI elements
     addedItems.forEach((item) => {
       try {
         item.remove();
@@ -307,6 +308,14 @@ export default function enable(ctx: AddonContext) {
         ctx.api.logger.error("Error removing sidebar item: " + (error as Error).message);
       }
     });
+
+    // Clean up localStorage data
+    try {
+      localStorage.removeItem("real-estate-data");
+      ctx.api.logger.info("Cleaned up real estate data from localStorage");
+    } catch (error) {
+      ctx.api.logger.error("Error cleaning up localStorage: " + (error as Error).message);
+    }
 
     ctx.api.logger.info("Real Estate Tracker addon disabled successfully");
   });
