@@ -127,6 +127,10 @@ export interface InternalHostAPI {
   openCsvFileDialog(): Promise<null | string | string[]>;
   openFileSaveDialog(fileContent: Uint8Array | Blob | string, fileName: string): Promise<unknown>;
 
+  // Storage operations (database-backed, included in backups)
+  getAddonData(key: string): Promise<string>;
+  setAddonData(key: string, value: string): Promise<void>;
+
   // Event listeners - Import
   listenImportFileDropHover<T>(handler: EventCallback<T>): Promise<UnlistenFn>;
   listenImportFileDrop<T>(handler: EventCallback<T>): Promise<UnlistenFn>;
@@ -254,6 +258,10 @@ export function createSDKHostAPIBridge(internalAPI: InternalHostAPI, addonId?: s
     files: {
       openCsvDialog: internalAPI.openCsvFileDialog,
       openSaveDialog: internalAPI.openFileSaveDialog,
+    },
+    storage: {
+      getData: internalAPI.getAddonData,
+      setData: internalAPI.setAddonData,
     },
 
     logger: createAddonLogger(addonId ?? "unknown-addon"),

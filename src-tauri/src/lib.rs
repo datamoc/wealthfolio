@@ -365,6 +365,8 @@ pub fn run() {
             commands::addon::install_addon_from_staging,
             commands::addon::clear_addon_staging,
             commands::addon::submit_addon_rating,
+            commands::addon::get_addon_data,
+            commands::addon::set_addon_data,
             // Device Sync commands in pro version only
             #[cfg(feature = "wealthfolio-pro")]
             commands::sync::get_sync_status,
