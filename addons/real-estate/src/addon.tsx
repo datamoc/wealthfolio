@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
   Icons,
@@ -25,6 +26,7 @@ import type { Property } from "./lib/types";
  * Main Real Estate Tracker Component
  */
 function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
+  const { t } = useTranslation("real-estate");
   const { data, isLoading, error, saveProperty, deleteProperty, saveLoan, deleteLoan } =
     useRealEstateData(ctx);
 
@@ -61,7 +63,7 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
   };
 
   const handleDeleteProperty = async (propertyId: string) => {
-    if (confirm("Are you sure you want to delete this property? All associated loans will also be deleted.")) {
+    if (confirm(t("delete_confirm"))) {
       try {
         await deleteProperty(propertyId);
       } catch (error) {
@@ -84,7 +86,7 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
     <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
       {properties.length > 0 && (
         <Input
-          placeholder="Search properties..."
+          placeholder={t("search_placeholder")}
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full sm:w-64"
@@ -92,7 +94,7 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
       )}
       <Button onClick={handleAddProperty}>
         <Icons.Plus className="mr-2 h-4 w-4" />
-        Add Property
+        {t("add_property")}
       </Button>
     </div>
   );
@@ -101,11 +103,8 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
     <PageHeader actions={headerActions}>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold sm:text-xl">Real Estate Portfolio</h1>
+          <h1 className="text-lg font-semibold sm:text-xl">{t("title")}</h1>
         </div>
-        <p className="text-muted-foreground text-sm sm:text-base">
-          Track your properties, mortgages, and equity
-        </p>
       </div>
     </PageHeader>
   );
@@ -151,13 +150,13 @@ function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
             <div className="w-full max-w-lg">
               <EmptyPlaceholder className="mt-16">
                 <EmptyPlaceholder.Icon name="Home" />
-                <EmptyPlaceholder.Title>No Properties Yet</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Title>{t("no_properties_title")}</EmptyPlaceholder.Title>
                 <EmptyPlaceholder.Description>
-                  Start tracking your real estate portfolio by adding your first property.
+                  {t("no_properties_description")}
                 </EmptyPlaceholder.Description>
                 <Button onClick={handleAddProperty}>
                   <Icons.Plus className="mr-2 h-4 w-4" />
-                  Add Your First Property
+                  {t("no_properties_action")}
                 </Button>
               </EmptyPlaceholder>
             </div>
