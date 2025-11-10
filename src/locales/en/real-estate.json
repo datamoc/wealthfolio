@@ -95,9 +95,11 @@
   "card_roi": "ROI",
   "card_purchase_date": "Purchase Date",
 
-  "summary_total_value": "Total Value",
+  "summary_total_value": "Gross Assets",
   "summary_total_debt": "Total Debt",
-  "summary_total_equity": "Total Equity",
+  "summary_total_equity": "Net Assets",
   "summary_total_invested": "Total Invested",
-  "summary_properties": "Properties"
+  "summary_properties": "Number of Properties",
+  "summary_appreciation": "appreciation",
+  "summary_average": "average"
 }
