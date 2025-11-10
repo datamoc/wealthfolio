@@ -24,6 +24,13 @@ export function initAddonI18n() {
     // Add addon translations to existing instance
     i18n.addResourceBundle("en", defaultNS, translationEn, true, false);
     i18n.addResourceBundle("fr", defaultNS, translationFr, true, false);
+
+    // Reload the current language to make the new translations active
+    const currentLanguage = i18n.language;
+    if (currentLanguage) {
+      i18n.reloadResources(currentLanguage, defaultNS);
+    }
+
     return i18n;
   }
 
