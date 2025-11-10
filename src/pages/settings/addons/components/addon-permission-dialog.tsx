@@ -16,6 +16,7 @@ import type {
   RiskLevel,
 } from "@wealthfolio/addon-sdk";
 import { AlertFeedback } from "@wealthfolio/ui";
+import { useTranslation } from "react-i18next";
 import { PermissionCategoriesDisplay } from "./permission-categories-display";
 
 interface PermissionDialogProps {
@@ -52,6 +53,8 @@ export function PermissionDialog({
   onDeny,
   isViewOnly = false,
 }: PermissionDialogProps) {
+  const { t } = useTranslation("settings");
+
   // Safety check - don't render if manifest is missing
   if (!manifest) {
     return null;
@@ -102,12 +105,11 @@ export function PermissionDialog({
           {/* Function Count Warning */}
           <div className="pt-8">
             <AlertFeedback variant={getWarningVariantByFunctionCount(totalFunctionCount)}>
-              {totalFunctionCount <= 3 && "This addon has minimal access to your data."}
+              {totalFunctionCount <= 3 && t("addons_permission_warning_low")}
               {totalFunctionCount > 3 &&
                 totalFunctionCount <= 8 &&
-                "This addon has moderate access to your financial data."}
-              {totalFunctionCount > 8 &&
-                "This addon has extensive access to sensitive financial data."}
+                t("addons_permission_warning_medium")}
+              {totalFunctionCount > 8 && t("addons_permission_warning_high")}
             </AlertFeedback>
           </div>
 
@@ -121,17 +123,17 @@ export function PermissionDialog({
           {isViewOnly ? (
             <Button onClick={onApprove}>
               <Icons.Check className="mr-2 h-4 w-4" />
-              Close
+              {t("addons_permission_dialog_close")}
             </Button>
           ) : (
             <>
               <Button variant="outline" onClick={onDeny}>
                 <Icons.Close className="mr-2 h-4 w-4" />
-                Deny Installation
+                {t("addons_permission_dialog_deny")}
               </Button>
               <Button onClick={onApprove}>
                 <Icons.Check className="mr-2 h-4 w-4" />
-                Approve & Install
+                {t("addons_permission_dialog_approve")}
               </Button>
             </>
           )}

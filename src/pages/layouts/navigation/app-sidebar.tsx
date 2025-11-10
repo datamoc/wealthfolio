@@ -9,6 +9,7 @@ import {
   DropdownMenuTrigger,
 } from "@wealthfolio/ui";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation } from "react-router-dom";
 import { type NavLink, type NavigationProps, isPathActive } from "./app-navigation";
 
@@ -17,6 +18,7 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ navigation }: AppSidebarProps) {
+  const { t } = useTranslation("settings");
   const [collapsed, setCollapsed] = useState(true);
 
   return (
@@ -176,7 +178,7 @@ function AddonsMenu({ addons, collapsed }: AddonsMenuProps) {
               "block opacity-100": !collapsed,
             })}
           >
-            Add-ons
+            {t("addons_nav_label")}
           </span>
         </Button>
       </DropdownMenuTrigger>

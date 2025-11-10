@@ -3,17 +3,18 @@ import { Icons } from "@wealthfolio/ui";
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const checklistItems = [
-  { id: "create-account", label: "Create your first account" },
-  { id: "import-activities", label: "Add or import your transactions" },
-  { id: "explore-dashboard", label: "Explore the application dashboards" },
-  { id: "create-goals", label: "Create saving goals" },
-  { id: "set-limits", label: "Set contribution limits" },
-  { id: "install-addons", label: "Explore and install Addons" },
-];
-
 export const OnboardingStep3: React.FC = () => {
   const { t } = useTranslation("onboarding");
+  const { t: tSettings } = useTranslation("settings");
+
+  const checklistItems = [
+    { id: "create-account", label: "Create your first account" },
+    { id: "import-activities", label: "Add or import your transactions" },
+    { id: "explore-dashboard", label: "Explore the application dashboards" },
+    { id: "create-goals", label: "Create saving goals" },
+    { id: "set-limits", label: "Set contribution limits" },
+    { id: "install-addons", label: tSettings("addons_onboarding_explore") },
+  ];
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   const toggleChecklistItem = (id: string) => {
