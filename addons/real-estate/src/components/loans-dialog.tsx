@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export function LoansDialog({
   onSaveLoan,
   onDeleteLoan,
 }: LoansDialogProps) {
+  const { t } = useTranslation("real-estate");
   const [loanFormOpen, setLoanFormOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | undefined>();
 
@@ -50,17 +52,17 @@ export function LoansDialog({
   };
 
   const handleDeleteLoan = async (loanId: string) => {
-    if (confirm("Are you sure you want to delete this loan?")) {
+    if (confirm(t("delete_loan_confirm"))) {
       await onDeleteLoan(loanId);
     }
   };
 
   const loanTypeLabels: Record<string, string> = {
-    fixed: "Fixed Rate",
-    variable: "Variable Rate",
-    adjustable: "ARM",
-    "interest-only": "Interest Only",
-    "home-equity": "Home Equity",
+    fixed: t("loan_type_fixed"),
+    variable: t("loan_type_variable"),
+    adjustable: t("loan_type_adjustable"),
+    "interest-only": t("loan_type_interest_only"),
+    "home-equity": t("loan_type_home_equity"),
   };
 
   return (
@@ -68,17 +70,17 @@ export function LoansDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
-            <DialogTitle>Loans for {propertyName}</DialogTitle>
-            <DialogDescription>Manage all loans associated with this property.</DialogDescription>
+            <DialogTitle>{t("loans_dialog_title_for", { propertyName })}</DialogTitle>
+            <DialogDescription>{t("loans_dialog_description_manage")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {loans.length === 0 ? (
               <div className="text-muted-foreground py-8 text-center">
-                <p className="mb-4">No loans added yet.</p>
+                <p className="mb-4">{t("no_loans_added")}</p>
                 <Button onClick={handleAddLoan}>
                   <Icons.Plus className="mr-2 h-4 w-4" />
-                  Add First Loan
+                  {t("add_first_loan")}
                 </Button>
               </div>
             ) : (
@@ -86,7 +88,7 @@ export function LoansDialog({
                 <div className="flex justify-end">
                   <Button onClick={handleAddLoan} size="sm">
                     <Icons.Plus className="mr-2 h-4 w-4" />
-                    Add Loan
+                    {t("add_loan")}
                   </Button>
                 </div>
 
@@ -109,24 +111,24 @@ export function LoansDialog({
 
                               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Current Balance</p>
+                                  <p className="text-muted-foreground text-xs">{t("loan_current_balance")}</p>
                                   <p className="font-semibold">
                                     {formatCurrency(loan.currentBalance, currency)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Original Amount</p>
+                                  <p className="text-muted-foreground text-xs">{t("loan_original_amount")}</p>
                                   <p className="text-sm">
                                     {formatCurrency(loan.originalAmount, currency)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Interest Rate</p>
+                                  <p className="text-muted-foreground text-xs">{t("interest_rate").replace(" (%)", "")}</p>
                                   <p className="text-sm">{formatPercentage(loan.interestRate)}</p>
                                 </div>
                                 {loan.monthlyPayment && (
                                   <div>
-                                    <p className="text-muted-foreground text-xs">Monthly Payment</p>
+                                    <p className="text-muted-foreground text-xs">{t("monthly_payment")}</p>
                                     <p className="text-sm">
                                       {formatCurrency(loan.monthlyPayment, currency)}
                                     </p>
@@ -136,15 +138,15 @@ export function LoansDialog({
 
                               <div className="mt-3 flex items-center gap-4 text-xs">
                                 <span className="text-muted-foreground">
-                                  Started: {formatDate(loan.startDate)}
+                                  {t("loan_started")} {formatDate(loan.startDate)}
                                 </span>
                                 {loan.endDate && (
                                   <span className="text-muted-foreground">
-                                    Matures: {formatDate(loan.endDate)}
+                                    {t("loan_matures")} {formatDate(loan.endDate)}
                                   </span>
                                 )}
                                 <span className="text-green-600 dark:text-green-400">
-                                  {formatPercentage(paidPercentage)} paid off
+                                  {formatPercentage(paidPercentage)} {t("loan_paid_off")}
                                 </span>
                               </div>
 
