@@ -10,10 +10,17 @@ import {
   Card,
   CardContent,
   Badge,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@wealthfolio/ui";
 import type { Loan } from "../lib/types";
 import { formatCurrency, formatPercentage, formatDate } from "../lib/utils";
 import { LoanFormDialog } from "./loan-form-dialog";
+import { PostponePaymentsDialog } from "./postpone-payments-dialog";
+import { AnticipatedReimbursementDialog } from "./anticipated-reimbursement-dialog";
 
 interface LoansDialogProps {
   open: boolean;
@@ -38,6 +45,9 @@ export function LoansDialog({
 }: LoansDialogProps) {
   const [loanFormOpen, setLoanFormOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | undefined>();
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<Loan | undefined>();
 
   const handleEditLoan = (loan: Loan) => {
     setEditingLoan(loan);
@@ -53,6 +63,86 @@ export function LoansDialog({
     if (confirm("Are you sure you want to delete this loan?")) {
       await onDeleteLoan(loanId);
     }
+  };
+
+  const handlePostponePayments = (loan: Loan) => {
+    setSelectedLoan(loan);
+    setPostponeDialogOpen(true);
+  };
+
+  const handleAnticipatedReimbursement = (loan: Loan) => {
+    setSelectedLoan(loan);
+    setReimbursementDialogOpen(true);
+  };
+
+  const handleConfirmPostpone = async (loan: Loan, monthsToPostpone: number) => {
+    // Calculate new end date
+    const newEndDate = loan.endDate
+      ? new Date(new Date(loan.endDate).setMonth(new Date(loan.endDate).getMonth() + monthsToPostpone))
+          .toISOString()
+          .split("T")[0]
+      : undefined;
+
+    // Update the loan with new end date
+    const updatedLoan: Loan = {
+      ...loan,
+      endDate: newEndDate,
+      notes: loan.notes
+        ? `${loan.notes}\n\n[${new Date().toISOString().split("T")[0]}] Postponed ${monthsToPostpone} months`
+        : `[${new Date().toISOString().split("T")[0]}] Postponed ${monthsToPostpone} months`,
+    };
+
+    await onSaveLoan(updatedLoan);
+  };
+
+  const handleConfirmReimbursement = async (
+    loan: Loan,
+    extraPayment: number,
+    option: "shorter-duration" | "lower-payment"
+  ) => {
+    const newBalance = Math.max(0, loan.currentBalance - extraPayment);
+    let updatedLoan: Loan;
+
+    if (option === "shorter-duration") {
+      // Calculate new duration
+      const monthlyInterestRate = loan.interestRate / 100 / 12;
+      const numerator = Math.log(1 - (monthlyInterestRate * newBalance) / (loan.monthlyPayment || 0));
+      const denominator = Math.log(1 + monthlyInterestRate);
+      const newDurationMonths = Math.ceil(-numerator / denominator);
+
+      const startDate = new Date(loan.startDate);
+      const newEndDate = new Date(startDate);
+      newEndDate.setMonth(newEndDate.getMonth() + newDurationMonths);
+
+      updatedLoan = {
+        ...loan,
+        currentBalance: newBalance,
+        endDate: newEndDate.toISOString().split("T")[0],
+        notes: loan.notes
+          ? `${loan.notes}\n\n[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (shorter duration)`
+          : `[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (shorter duration)`,
+      };
+    } else {
+      // Calculate new monthly payment
+      const remainingMonths = loan.endDate
+        ? Math.ceil((new Date(loan.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30))
+        : 0;
+      const monthlyInterestRate = loan.interestRate / 100 / 12;
+      const numerator = monthlyInterestRate * Math.pow(1 + monthlyInterestRate, remainingMonths);
+      const denominator = Math.pow(1 + monthlyInterestRate, remainingMonths) - 1;
+      const newMonthlyPayment = (newBalance * numerator) / denominator;
+
+      updatedLoan = {
+        ...loan,
+        currentBalance: newBalance,
+        monthlyPayment: newMonthlyPayment,
+        notes: loan.notes
+          ? `${loan.notes}\n\n[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (lower payment)`
+          : `[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (lower payment)`,
+      };
+    }
+
+    await onSaveLoan(updatedLoan);
   };
 
   const loanTypeLabels: Record<string, string> = {
@@ -153,21 +243,39 @@ export function LoansDialog({
                               )}
                             </div>
 
-                            <div className="ml-4 flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditLoan(loan)}
-                              >
-                                <Icons.Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteLoan(loan.id)}
-                              >
-                                <Icons.Trash className="h-4 w-4" />
-                              </Button>
+                            <div className="ml-4">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <Icons.MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuItem onClick={() => handleEditLoan(loan)}>
+                                    <Icons.Pencil className="mr-2 h-4 w-4" />
+                                    Edit Loan
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handlePostponePayments(loan)}>
+                                    <Icons.Clock className="mr-2 h-4 w-4" />
+                                    Postpone Payments
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleAnticipatedReimbursement(loan)}
+                                  >
+                                    <Icons.TrendingUp className="mr-2 h-4 w-4" />
+                                    Extra Payment
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteLoan(loan.id)}
+                                    className="text-red-600 dark:text-red-400"
+                                  >
+                                    <Icons.Trash className="mr-2 h-4 w-4" />
+                                    Delete Loan
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         </CardContent>
@@ -189,6 +297,26 @@ export function LoansDialog({
         onSave={onSaveLoan}
         currency={currency}
       />
+
+      {selectedLoan && (
+        <>
+          <PostponePaymentsDialog
+            open={postponeDialogOpen}
+            onOpenChange={setPostponeDialogOpen}
+            loan={selectedLoan}
+            currency={currency}
+            onConfirm={handleConfirmPostpone}
+          />
+
+          <AnticipatedReimbursementDialog
+            open={reimbursementDialogOpen}
+            onOpenChange={setReimbursementDialogOpen}
+            loan={selectedLoan}
+            currency={currency}
+            onConfirm={handleConfirmReimbursement}
+          />
+        </>
+      )}
     </>
   );
 }
