@@ -16,6 +16,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/components/ui/use-toast";
 import type { AddonUpdateInfo } from "@wealthfolio/addon-sdk";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 interface AddonUpdateCardProps {
   addonId: string;
@@ -32,6 +33,7 @@ export function AddonUpdateCard({
   onUpdateComplete,
   disabled = false,
 }: AddonUpdateCardProps) {
+  const { t } = useTranslation("settings");
   const [isUpdating, setIsUpdating] = useState(false);
   const [showReleaseNotes, setShowReleaseNotes] = useState(false);
   const { toast } = useToast();
@@ -39,8 +41,8 @@ export function AddonUpdateCard({
   const handleUpdate = async () => {
     if (!updateInfo.downloadUrl) {
       toast({
-        title: "Update not available",
-        description: "No download URL available for this update.",
+        title: t("addons_update_not_available"),
+        description: t("addons_update_no_download_url"),
         variant: "destructive",
       });
       return;
@@ -55,7 +57,7 @@ export function AddonUpdateCard({
       await reloadAllAddons();
 
       toast({
-        title: "Update successful",
+        title: t("addons_update_successful"),
         description: `${addonName} has been updated to version ${updateInfo.latestVersion}.`,
       });
 
@@ -79,8 +81,8 @@ export function AddonUpdateCard({
   };
 
   const getUpdateBadgeText = () => {
-    if (updateInfo.isCritical) return "Critical Update";
-    if (updateInfo.hasBreakingChanges) return "Breaking Changes";
+    if (updateInfo.isCritical) return t("addons_update_critical_badge");
+    if (updateInfo.hasBreakingChanges) return t("addons_update_breaking_badge");
     return null; // Don't show badge for regular updates
   };
 
@@ -230,7 +232,7 @@ export function AddonUpdateCard({
         <div className="mt-3 rounded-md bg-amber-100 p-2 dark:bg-amber-900/20">
           <p className="text-xs text-amber-800 dark:text-amber-200">
             <Icons.Info className="mr-1 inline h-3 w-3" />
-            Requires Wealthfolio {updateInfo.minWealthfolioVersion} or later
+            {t("addons_update_requires_version", { version: updateInfo.minWealthfolioVersion })}
           </p>
         </div>
       )}

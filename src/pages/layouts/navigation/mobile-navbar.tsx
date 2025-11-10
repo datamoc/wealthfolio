@@ -13,6 +13,7 @@ import {
 } from "@wealthfolio/ui";
 import { motion } from "motion/react";
 import { useCallback, useId, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { type NavigationProps, isPathActive } from "./app-navigation";
 
@@ -21,6 +22,7 @@ interface MobileNavBarProps {
 }
 
 export function MobileNavBar({ navigation }: MobileNavBarProps) {
+  const { t } = useTranslation("settings");
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -168,7 +170,7 @@ export function MobileNavBar({ navigation }: MobileNavBarProps) {
                         <span className="flex size-6 shrink-0 items-center justify-center">
                           <Icons.Addons className="size-5" />
                         </span>
-                        <span className="truncate text-left">Add-ons</span>
+                        <span className="truncate text-left">{t("addons_nav_label")}</span>
                       </button>
                     </LiquidGlass>
                   )}
@@ -183,7 +185,7 @@ export function MobileNavBar({ navigation }: MobileNavBarProps) {
       <Sheet open={addonsSheetOpen} onOpenChange={setAddonsSheetOpen}>
         <SheetContent side="bottom" className="px-4 pb-8">
           <SheetHeader>
-            <SheetTitle>Add-ons</SheetTitle>
+            <SheetTitle>{t("addons_nav_label")}</SheetTitle>
           </SheetHeader>
           <div className="mt-4 flex flex-col gap-2">
             {addonItems.map((item) => {
