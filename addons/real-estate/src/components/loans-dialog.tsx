@@ -11,10 +11,17 @@ import {
   Card,
   CardContent,
   Badge,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
 } from "@wealthfolio/ui";
 import type { Loan } from "../lib/types";
 import { formatCurrency, formatPercentage, formatDate } from "../lib/utils";
 import { LoanFormDialog } from "./loan-form-dialog";
+import { PostponePaymentsDialog } from "./postpone-payments-dialog";
+import { AnticipatedReimbursementDialog } from "./anticipated-reimbursement-dialog";
 
 interface LoansDialogProps {
   open: boolean;
@@ -40,6 +47,9 @@ export function LoansDialog({
   const { t } = useTranslation("real-estate");
   const [loanFormOpen, setLoanFormOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | undefined>();
+  const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
+  const [reimbursementDialogOpen, setReimbursementDialogOpen] = useState(false);
+  const [selectedLoan, setSelectedLoan] = useState<Loan | undefined>();
 
   const handleEditLoan = (loan: Loan) => {
     setEditingLoan(loan);
@@ -52,17 +62,97 @@ export function LoansDialog({
   };
 
   const handleDeleteLoan = async (loanId: string) => {
-    if (confirm(t("delete_loan_confirm"))) {
+    if (confirm(t("loansDialog.deleteConfirm"))) {
       await onDeleteLoan(loanId);
     }
   };
 
+  const handlePostponePayments = (loan: Loan) => {
+    setSelectedLoan(loan);
+    setPostponeDialogOpen(true);
+  };
+
+  const handleAnticipatedReimbursement = (loan: Loan) => {
+    setSelectedLoan(loan);
+    setReimbursementDialogOpen(true);
+  };
+
+  const handleConfirmPostpone = async (loan: Loan, monthsToPostpone: number) => {
+    // Calculate new end date
+    const newEndDate = loan.endDate
+      ? new Date(new Date(loan.endDate).setMonth(new Date(loan.endDate).getMonth() + monthsToPostpone))
+          .toISOString()
+          .split("T")[0]
+      : undefined;
+
+    // Update the loan with new end date
+    const updatedLoan: Loan = {
+      ...loan,
+      endDate: newEndDate,
+      notes: loan.notes
+        ? `${loan.notes}\n\n[${new Date().toISOString().split("T")[0]}] Postponed ${monthsToPostpone} months`
+        : `[${new Date().toISOString().split("T")[0]}] Postponed ${monthsToPostpone} months`,
+    };
+
+    await onSaveLoan(updatedLoan);
+  };
+
+  const handleConfirmReimbursement = async (
+    loan: Loan,
+    extraPayment: number,
+    option: "shorter-duration" | "lower-payment"
+  ) => {
+    const newBalance = Math.max(0, loan.currentBalance - extraPayment);
+    let updatedLoan: Loan;
+
+    if (option === "shorter-duration") {
+      // Calculate new duration
+      const monthlyInterestRate = loan.interestRate / 100 / 12;
+      const numerator = Math.log(1 - (monthlyInterestRate * newBalance) / (loan.monthlyPayment || 0));
+      const denominator = Math.log(1 + monthlyInterestRate);
+      const newDurationMonths = Math.ceil(-numerator / denominator);
+
+      const startDate = new Date(loan.startDate);
+      const newEndDate = new Date(startDate);
+      newEndDate.setMonth(newEndDate.getMonth() + newDurationMonths);
+
+      updatedLoan = {
+        ...loan,
+        currentBalance: newBalance,
+        endDate: newEndDate.toISOString().split("T")[0],
+        notes: loan.notes
+          ? `${loan.notes}\n\n[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (shorter duration)`
+          : `[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (shorter duration)`,
+      };
+    } else {
+      // Calculate new monthly payment
+      const remainingMonths = loan.endDate
+        ? Math.ceil((new Date(loan.endDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24 * 30))
+        : 0;
+      const monthlyInterestRate = loan.interestRate / 100 / 12;
+      const numerator = monthlyInterestRate * Math.pow(1 + monthlyInterestRate, remainingMonths);
+      const denominator = Math.pow(1 + monthlyInterestRate, remainingMonths) - 1;
+      const newMonthlyPayment = (newBalance * numerator) / denominator;
+
+      updatedLoan = {
+        ...loan,
+        currentBalance: newBalance,
+        monthlyPayment: newMonthlyPayment,
+        notes: loan.notes
+          ? `${loan.notes}\n\n[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (lower payment)`
+          : `[${new Date().toISOString().split("T")[0]}] Extra payment: ${extraPayment.toFixed(2)} ${currency} (lower payment)`,
+      };
+    }
+
+    await onSaveLoan(updatedLoan);
+  };
+
   const loanTypeLabels: Record<string, string> = {
-    fixed: t("loan_type_fixed"),
-    variable: t("loan_type_variable"),
-    adjustable: t("loan_type_adjustable"),
-    "interest-only": t("loan_type_interest_only"),
-    "home-equity": t("loan_type_home_equity"),
+    fixed: t("loanTypes.fixed"),
+    variable: t("loanTypes.variable"),
+    adjustable: t("loanTypes.adjustable"),
+    "interest-only": t("loanTypes.interest-only"),
+    "home-equity": t("loanTypes.home-equity"),
   };
 
   return (
@@ -70,17 +160,17 @@ export function LoansDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
-            <DialogTitle>{t("loans_dialog_title_for", { propertyName })}</DialogTitle>
-            <DialogDescription>{t("loans_dialog_description_manage")}</DialogDescription>
+            <DialogTitle>{t("loansDialog.title", { propertyName })}</DialogTitle>
+            <DialogDescription>{t("loansDialog.description")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {loans.length === 0 ? (
               <div className="text-muted-foreground py-8 text-center">
-                <p className="mb-4">{t("no_loans_added")}</p>
+                <p className="mb-4">{t("loansDialog.noLoans")}</p>
                 <Button onClick={handleAddLoan}>
                   <Icons.Plus className="mr-2 h-4 w-4" />
-                  {t("add_first_loan")}
+                  {t("loansDialog.addFirstLoan")}
                 </Button>
               </div>
             ) : (
@@ -88,7 +178,7 @@ export function LoansDialog({
                 <div className="flex justify-end">
                   <Button onClick={handleAddLoan} size="sm">
                     <Icons.Plus className="mr-2 h-4 w-4" />
-                    {t("add_loan")}
+                    {t("loansDialog.addLoan")}
                   </Button>
                 </div>
 
@@ -111,24 +201,32 @@ export function LoansDialog({
 
                               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                                 <div>
-                                  <p className="text-muted-foreground text-xs">{t("loan_current_balance")}</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {t("loansDialog.currentBalance")}
+                                  </p>
                                   <p className="font-semibold">
                                     {formatCurrency(loan.currentBalance, currency)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">{t("loan_original_amount")}</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {t("loansDialog.originalAmount")}
+                                  </p>
                                   <p className="text-sm">
                                     {formatCurrency(loan.originalAmount, currency)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">{t("interest_rate").replace(" (%)", "")}</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {t("loansDialog.interestRate")}
+                                  </p>
                                   <p className="text-sm">{formatPercentage(loan.interestRate)}</p>
                                 </div>
                                 {loan.monthlyPayment && (
                                   <div>
-                                    <p className="text-muted-foreground text-xs">{t("monthly_payment")}</p>
+                                    <p className="text-muted-foreground text-xs">
+                                      {t("loansDialog.monthlyPayment")}
+                                    </p>
                                     <p className="text-sm">
                                       {formatCurrency(loan.monthlyPayment, currency)}
                                     </p>
@@ -138,15 +236,15 @@ export function LoansDialog({
 
                               <div className="mt-3 flex items-center gap-4 text-xs">
                                 <span className="text-muted-foreground">
-                                  {t("loan_started")} {formatDate(loan.startDate)}
+                                  {t("loansDialog.started")}: {formatDate(loan.startDate)}
                                 </span>
                                 {loan.endDate && (
                                   <span className="text-muted-foreground">
-                                    {t("loan_matures")} {formatDate(loan.endDate)}
+                                    {t("loansDialog.matures")}: {formatDate(loan.endDate)}
                                   </span>
                                 )}
                                 <span className="text-green-600 dark:text-green-400">
-                                  {formatPercentage(paidPercentage)} {t("loan_paid_off")}
+                                  {formatPercentage(paidPercentage)} {t("loansDialog.paidOff")}
                                 </span>
                               </div>
 
@@ -155,21 +253,39 @@ export function LoansDialog({
                               )}
                             </div>
 
-                            <div className="ml-4 flex gap-1">
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleEditLoan(loan)}
-                              >
-                                <Icons.Pencil className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() => handleDeleteLoan(loan.id)}
-                              >
-                                <Icons.Trash className="h-4 w-4" />
-                              </Button>
+                            <div className="ml-4">
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon">
+                                    <Icons.MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-56">
+                                  <DropdownMenuItem onClick={() => handleEditLoan(loan)}>
+                                    <Icons.Pencil className="mr-2 h-4 w-4" />
+                                    {t("loansDialog.editLoan")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem onClick={() => handlePostponePayments(loan)}>
+                                    <Icons.Clock className="mr-2 h-4 w-4" />
+                                    {t("loansDialog.postponePayments")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleAnticipatedReimbursement(loan)}
+                                  >
+                                    <Icons.TrendingUp className="mr-2 h-4 w-4" />
+                                    {t("loansDialog.extraPayment")}
+                                  </DropdownMenuItem>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteLoan(loan.id)}
+                                    className="text-red-600 dark:text-red-400"
+                                  >
+                                    <Icons.Trash className="mr-2 h-4 w-4" />
+                                    {t("loansDialog.deleteLoan")}
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </div>
                         </CardContent>
@@ -191,6 +307,26 @@ export function LoansDialog({
         onSave={onSaveLoan}
         currency={currency}
       />
+
+      {selectedLoan && (
+        <>
+          <PostponePaymentsDialog
+            open={postponeDialogOpen}
+            onOpenChange={setPostponeDialogOpen}
+            loan={selectedLoan}
+            currency={currency}
+            onConfirm={handleConfirmPostpone}
+          />
+
+          <AnticipatedReimbursementDialog
+            open={reimbursementDialogOpen}
+            onOpenChange={setReimbursementDialogOpen}
+            loan={selectedLoan}
+            currency={currency}
+            onConfirm={handleConfirmReimbursement}
+          />
+        </>
+      )}
     </>
   );
 }
