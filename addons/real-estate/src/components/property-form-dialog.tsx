@@ -18,7 +18,7 @@ import {
 } from "@wealthfolio/ui";
 import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
 import type { Property, PropertyType } from "../lib/types";
-import { generateId } from "../lib/utils";
+import { generateId, getCurrencyForCountry } from "../lib/utils";
 
 interface PropertyFormDialogProps {
   open: boolean;
