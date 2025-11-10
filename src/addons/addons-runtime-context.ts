@@ -70,6 +70,7 @@ import {
 } from "@/commands/portfolio-listener";
 import { deleteSecret, getSecret, setSecret } from "@/commands/secrets";
 import { backupDatabase, getSettings, updateSettings } from "@/commands/settings";
+import { getAddonData, setAddonData } from "@/commands/addon";
 
 // Store for dynamically added navigation items
 interface NavItem {
@@ -270,6 +271,10 @@ export function createAddonContext(addonId: string): AddonContext {
           // File operations
           openCsvFileDialog,
           openFileSaveDialog,
+
+          // Storage operations (database-backed, included in backups)
+          getAddonData: (key: string) => getAddonData(addonId, key),
+          setAddonData: (key: string, value: string) => setAddonData(addonId, key, value),
 
           // Event listeners - Import
           listenImportFileDropHover,
