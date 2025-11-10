@@ -1,7 +1,7 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts", "src/chart.ts"],
+  entry: ["src/index.ts", "src/chart.ts", "src/lib/currencies.ts"],
   format: ["esm"],
   dts: false,
   sourcemap: true,
