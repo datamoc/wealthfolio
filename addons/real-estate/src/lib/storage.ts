@@ -3,6 +3,7 @@ import type {
   Property,
   Loan,
   PropertyValuation,
+  LoanEvent,
   RealEstateData,
 } from "./types";
 
@@ -16,6 +17,7 @@ const getDefaultData = (): RealEstateData => ({
   properties: [],
   loans: [],
   valuations: [],
+  loanEvents: [],
   version: CURRENT_VERSION,
 });
 
@@ -39,6 +41,7 @@ export async function loadData(ctx: AddonContext): Promise<RealEstateData> {
       properties: parsed.properties || [],
       loans: parsed.loans || [],
       valuations: parsed.valuations || [],
+      loanEvents: parsed.loanEvents || [],
       version: parsed.version || CURRENT_VERSION,
     };
   } catch (error) {
@@ -97,6 +100,11 @@ export async function deleteProperty(
 ): Promise<void> {
   const data = await loadData(ctx);
 
+  // Get all loan IDs for this property
+  const loanIds = data.loans
+    .filter((l) => l.propertyId === propertyId)
+    .map((l) => l.id);
+
   // Remove property
   data.properties = data.properties.filter((p) => p.id !== propertyId);
 
@@ -105,6 +113,9 @@ export async function deleteProperty(
 
   // Remove associated valuations
   data.valuations = data.valuations.filter((v) => v.propertyId !== propertyId);
+
+  // Remove associated loan events
+  data.loanEvents = data.loanEvents.filter((e) => !loanIds.includes(e.loanId));
 
   await saveData(ctx, data);
 }
@@ -139,6 +150,8 @@ export async function deleteLoan(
 ): Promise<void> {
   const data = await loadData(ctx);
   data.loans = data.loans.filter((l) => l.id !== loanId);
+  // Remove associated loan events
+  data.loanEvents = data.loanEvents.filter((e) => e.loanId !== loanId);
   await saveData(ctx, data);
 }
 
@@ -176,4 +189,57 @@ export async function getPropertyValuations(
   return data.valuations
     .filter((v) => v.propertyId === propertyId)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+}
+
+/**
+ * Add a loan event
+ */
+export async function addLoanEvent(
+  ctx: AddonContext,
+  loanEvent: LoanEvent
+): Promise<void> {
+  const data = await loadData(ctx);
+  data.loanEvents.push(loanEvent);
+  await saveData(ctx, data);
+}
+
+/**
+ * Update a loan event
+ */
+export async function updateLoanEvent(
+  ctx: AddonContext,
+  loanEvent: LoanEvent
+): Promise<void> {
+  const data = await loadData(ctx);
+  const index = data.loanEvents.findIndex((e) => e.id === loanEvent.id);
+
+  if (index >= 0) {
+    data.loanEvents[index] = loanEvent;
+    await saveData(ctx, data);
+  }
+}
+
+/**
+ * Delete a loan event
+ */
+export async function deleteLoanEvent(
+  ctx: AddonContext,
+  eventId: string
+): Promise<void> {
+  const data = await loadData(ctx);
+  data.loanEvents = data.loanEvents.filter((e) => e.id !== eventId);
+  await saveData(ctx, data);
+}
+
+/**
+ * Get all loan events for a specific loan
+ */
+export async function getLoanEvents(
+  ctx: AddonContext,
+  loanId: string
+): Promise<LoanEvent[]> {
+  const data = await loadData(ctx);
+  return data.loanEvents
+    .filter((e) => e.loanId === loanId)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 }

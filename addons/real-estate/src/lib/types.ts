@@ -20,6 +20,36 @@ export type LoanType =
   | "home-equity";
 
 /**
+ * Loan event types
+ */
+export type LoanEventType =
+  | "postponement" // Defer payments for a period
+  | "early_reimbursement_duration" // Extra payment reducing loan duration
+  | "early_reimbursement_payment" // Extra payment reducing monthly payment
+  | "rate_change" // Interest rate adjustment
+  | "refinance"; // Loan refinancing
+
+/**
+ * Represents a loan event (modifications to loan terms)
+ */
+export interface LoanEvent {
+  id: string;
+  loanId: string;
+  type: LoanEventType;
+  date: string; // ISO date when event occurs
+  amount?: number; // For early reimbursements
+  previousMonthlyPayment?: number;
+  newMonthlyPayment?: number;
+  previousEndDate?: string;
+  newEndDate?: string;
+  previousInterestRate?: number;
+  newInterestRate?: number;
+  postponementMonths?: number; // For postponements
+  notes?: string;
+  createdAt: string;
+}
+
+/**
  * Represents a real estate property
  */
 export interface Property {
@@ -107,5 +137,6 @@ export interface RealEstateData {
   properties: Property[];
   loans: Loan[];
   valuations: PropertyValuation[];
+  loanEvents: LoanEvent[];
   version: string;
 }
