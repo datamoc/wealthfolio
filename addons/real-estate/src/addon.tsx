@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useTranslation, I18nextProvider } from "react-i18next";
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
   Icons,
@@ -268,13 +268,17 @@ export default function enable(ctx: AddonContext) {
 
     ctx.api.logger.debug("Sidebar navigation item added successfully");
 
-    // Create wrapper component with QueryClientProvider
+    // Create wrapper component with QueryClientProvider and I18nextProvider
     const RealEstateTrackerWrapper = () => {
       const sharedQueryClient = ctx.api.query.getClient() as QueryClient;
+      const i18n = (window as any).__wealthfolio_i18n__;
+
       return (
-        <QueryClientProvider client={sharedQueryClient}>
-          <RealEstateTracker ctx={ctx} />
-        </QueryClientProvider>
+        <I18nextProvider i18n={i18n}>
+          <QueryClientProvider client={sharedQueryClient}>
+            <RealEstateTracker ctx={ctx} />
+          </QueryClientProvider>
+        </I18nextProvider>
       );
     };
 
