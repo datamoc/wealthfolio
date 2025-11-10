@@ -522,3 +522,37 @@ pub async fn submit_addon_rating(
     let instance_id = state.instance_id.as_str();
     addons::submit_addon_rating(&addon_id, rating, review, instance_id).await
 }
+
+/// Get addon-specific data from database storage
+/// Data is stored with a key prefix: "addon:{addon_id}:{key}"
+#[tauri::command]
+pub async fn get_addon_data(
+    addon_id: String,
+    key: String,
+    state: State<'_, Arc<ServiceContext>>,
+) -> Result<String, String> {
+    let storage_key = format!("addon:{}:{}", addon_id, key);
+    state
+        .settings_service()
+        .settings_repository
+        .get_setting(&storage_key)
+        .map_err(|e| format!("Failed to get addon data: {}", e))
+}
+
+/// Set addon-specific data in database storage
+/// Data is stored with a key prefix: "addon:{addon_id}:{key}"
+#[tauri::command]
+pub async fn set_addon_data(
+    addon_id: String,
+    key: String,
+    value: String,
+    state: State<'_, Arc<ServiceContext>>,
+) -> Result<(), String> {
+    let storage_key = format!("addon:{}:{}", addon_id, key);
+    state
+        .settings_service()
+        .settings_repository
+        .update_setting(&storage_key, &value)
+        .await
+        .map_err(|e| format!("Failed to set addon data: {}", e))
+}
