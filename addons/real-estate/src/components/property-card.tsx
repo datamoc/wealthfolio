@@ -17,6 +17,8 @@ interface PropertyCardProps {
   onDelete: () => void;
   onAddLoan: () => void;
   onManageLoans: () => void;
+  onAddValuation: () => void;
+  onViewValuations: () => void;
 }
 
 export function PropertyCard({
@@ -25,6 +27,8 @@ export function PropertyCard({
   onDelete,
   onAddLoan,
   onManageLoans,
+  onAddValuation,
+  onViewValuations,
 }: PropertyCardProps) {
   const { property, loans, equity, equityPercentage, totalAppreciation, monthlyPayments } =
     metrics;
@@ -141,6 +145,25 @@ export function PropertyCard({
               </div>
             </div>
           )}
+
+          {/* Value History */}
+          <div className="border-t pt-3">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-muted-foreground text-xs">Value History</p>
+              <Button variant="link" size="sm" className="h-auto p-0" onClick={onViewValuations}>
+                View History
+              </Button>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-full"
+              onClick={onAddValuation}
+            >
+              <Icons.TrendingUp className="mr-2 h-4 w-4" />
+              Update Property Value
+            </Button>
+          </div>
 
           {/* Actions */}
           <div className="border-t pt-3">
