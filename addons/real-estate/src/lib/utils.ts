@@ -243,3 +243,108 @@ export function calculateMonthsBetweenDates(startDate: string, endDate: string):
 
   return years * 12 + months;
 }
+
+/**
+ * Get default currency for a country
+ * Maps country names (and common variations) to their primary currencies
+ */
+export function getCurrencyForCountry(country: string): string {
+  const countryLower = country.toLowerCase().trim();
+
+  // Country to currency mapping (most common countries and variations)
+  const countryToCurrency: Record<string, string> = {
+    // North America
+    'united states': 'USD',
+    'usa': 'USD',
+    'us': 'USD',
+    'america': 'USD',
+    'canada': 'CAD',
+    'mexico': 'MXN',
+
+    // Europe
+    'germany': 'EUR',
+    'france': 'EUR',
+    'spain': 'EUR',
+    'italy': 'EUR',
+    'netherlands': 'EUR',
+    'belgium': 'EUR',
+    'austria': 'EUR',
+    'portugal': 'EUR',
+    'greece': 'EUR',
+    'ireland': 'EUR',
+    'finland': 'EUR',
+    'luxembourg': 'EUR',
+    'slovakia': 'EUR',
+    'slovenia': 'EUR',
+    'estonia': 'EUR',
+    'latvia': 'EUR',
+    'lithuania': 'EUR',
+    'malta': 'EUR',
+    'cyprus': 'EUR',
+    'united kingdom': 'GBP',
+    'uk': 'GBP',
+    'britain': 'GBP',
+    'england': 'GBP',
+    'scotland': 'GBP',
+    'wales': 'GBP',
+    'switzerland': 'CHF',
+    'sweden': 'SEK',
+    'norway': 'NOK',
+    'denmark': 'DKK',
+    'poland': 'PLN',
+    'czech republic': 'CZK',
+    'czechia': 'CZK',
+    'hungary': 'HUF',
+    'romania': 'RON',
+    'bulgaria': 'BGN',
+    'croatia': 'EUR',
+    'iceland': 'ISK',
+
+    // Asia Pacific
+    'japan': 'JPY',
+    'china': 'CNY',
+    'south korea': 'KRW',
+    'korea': 'KRW',
+    'hong kong': 'HKD',
+    'singapore': 'SGD',
+    'india': 'INR',
+    'australia': 'AUD',
+    'new zealand': 'NZD',
+    'thailand': 'THB',
+    'malaysia': 'MYR',
+    'indonesia': 'IDR',
+    'philippines': 'PHP',
+    'vietnam': 'VND',
+    'taiwan': 'TWD',
+
+    // Middle East
+    'united arab emirates': 'AED',
+    'uae': 'AED',
+    'dubai': 'AED',
+    'saudi arabia': 'SAR',
+    'israel': 'ILS',
+    'turkey': 'TRY',
+    'qatar': 'QAR',
+    'kuwait': 'KWD',
+
+    // South America
+    'brazil': 'BRL',
+    'argentina': 'ARS',
+    'chile': 'CLP',
+    'colombia': 'COP',
+    'peru': 'PEN',
+
+    // Africa
+    'south africa': 'ZAR',
+    'nigeria': 'NGN',
+    'egypt': 'EGP',
+    'kenya': 'KES',
+    'morocco': 'MAD',
+
+    // Other
+    'russia': 'RUB',
+    'ukraine': 'UAH',
+  };
+
+  return countryToCurrency[countryLower] || 'USD'; // Default to USD if country not found
+}
