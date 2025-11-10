@@ -18,6 +18,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@wealthfolio/ui";
+import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
 import type { Loan, LoanType } from "../lib/types";
 import {
   generateId,
@@ -42,6 +43,8 @@ const loanTypes: { value: LoanType; label: string }[] = [
   { value: "interest-only", label: "Interest Only" },
   { value: "home-equity", label: "Home Equity" },
 ];
+
+const popularCurrencies = ["USD", "CAD", "EUR", "GBP", "AUD", "CHF", "JPY"];
 
 export function LoanFormDialog({
   open,
@@ -337,6 +340,36 @@ export function LoanFormDialog({
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
                 />
               </div>
+            </div>
+
+            {/* Currency */}
+            <div className="grid gap-2">
+              <Label htmlFor="currency">Currency *</Label>
+              <Select
+                value={formData.currency}
+                onValueChange={(value) => setFormData({ ...formData, currency: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Popular</div>
+                  {popularCurrencies.map((curr) => (
+                    <SelectItem key={curr} value={curr}>
+                      {curr}
+                    </SelectItem>
+                  ))}
+                  <div className="my-1 border-t" />
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">All Currencies</div>
+                  {worldCurrencies
+                    .filter((c) => !popularCurrencies.includes(c.value))
+                    .map((curr) => (
+                      <SelectItem key={curr.value} value={curr.value}>
+                        {curr.label}
+                      </SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Notes */}
