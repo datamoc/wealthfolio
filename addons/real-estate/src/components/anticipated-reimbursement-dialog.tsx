@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ export function AnticipatedReimbursementDialog({
   currency,
   onConfirm,
 }: AnticipatedReimbursementDialogProps) {
+  const { t } = useTranslation("real-estate");
   const [extraPayment, setExtraPayment] = useState(0);
   const [option, setOption] = useState<"shorter-duration" | "lower-payment">("shorter-duration");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -136,10 +138,9 @@ export function AnticipatedReimbursementDialog({
       <DialogContent className="sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Anticipated Reimbursement</DialogTitle>
+            <DialogTitle>{t("anticipatedReimbursement.title")}</DialogTitle>
             <DialogDescription>
-              Make an extra payment on {loan.name} to either shorten the loan duration or reduce
-              monthly payments.
+              {t("anticipatedReimbursement.description", { loanName: loan.name })}
             </DialogDescription>
           </DialogHeader>
 
@@ -147,14 +148,12 @@ export function AnticipatedReimbursementDialog({
             <Alert variant="default">
               <Icons.TrendingUp className="h-4 w-4" />
               <div className="ml-2">
-                <p className="text-sm">
-                  Making extra payments can save you significant interest over the life of the loan.
-                </p>
+                <p className="text-sm">{t("anticipatedReimbursement.alertMessage")}</p>
               </div>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="extraPayment">Extra Payment Amount</Label>
+              <Label htmlFor="extraPayment">{t("anticipatedReimbursement.extraPaymentLabel")}</Label>
               <Input
                 id="extraPayment"
                 type="number"
@@ -166,25 +165,26 @@ export function AnticipatedReimbursementDialog({
                 required
               />
               <p className="text-muted-foreground text-xs">
-                Current balance: {formatCurrency(loan.currentBalance, currency)}
+                {t("anticipatedReimbursement.currentBalance")}:{" "}
+                {formatCurrency(loan.currentBalance, currency)}
               </p>
             </div>
 
             <div className="space-y-3">
-              <Label>Choose Your Option</Label>
+              <Label>{t("anticipatedReimbursement.chooseOption")}</Label>
               <RadioGroup value={option} onValueChange={(v) => setOption(v as typeof option)}>
                 <div className="flex items-start space-x-2 rounded-lg border p-4">
                   <RadioGroupItem value="shorter-duration" id="shorter-duration" className="mt-1" />
                   <div className="flex-1">
                     <Label htmlFor="shorter-duration" className="font-semibold cursor-pointer">
-                      Shorter Loan Duration
+                      {t("anticipatedReimbursement.shorterDurationTitle")}
                     </Label>
                     <p className="text-muted-foreground text-sm mt-1">
-                      Keep the same monthly payment of{" "}
-                      {loan.monthlyPayment
-                        ? formatCurrency(loan.monthlyPayment, currency)
-                        : "N/A"}
-                      , but pay off the loan sooner.
+                      {t("anticipatedReimbursement.shorterDurationDescription", {
+                        monthlyPayment: loan.monthlyPayment
+                          ? formatCurrency(loan.monthlyPayment, currency)
+                          : "N/A",
+                      })}
                     </p>
                   </div>
                 </div>
@@ -193,11 +193,12 @@ export function AnticipatedReimbursementDialog({
                   <RadioGroupItem value="lower-payment" id="lower-payment" className="mt-1" />
                   <div className="flex-1">
                     <Label htmlFor="lower-payment" className="font-semibold cursor-pointer">
-                      Lower Monthly Payment
+                      {t("anticipatedReimbursement.lowerPaymentTitle")}
                     </Label>
                     <p className="text-muted-foreground text-sm mt-1">
-                      Keep the same end date of {loan.endDate ? formatDate(loan.endDate) : "N/A"},
-                      but reduce your monthly payments.
+                      {t("anticipatedReimbursement.lowerPaymentDescription", {
+                        endDate: loan.endDate ? formatDate(loan.endDate) : "N/A",
+                      })}
                     </p>
                   </div>
                 </div>
@@ -206,41 +207,53 @@ export function AnticipatedReimbursementDialog({
 
             {newParameters && extraPayment > 0 && (
               <div className="bg-muted rounded-lg p-4 space-y-2">
-                <h4 className="font-semibold text-sm">Impact Summary</h4>
+                <h4 className="font-semibold text-sm">{t("anticipatedReimbursement.impactSummary")}</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">Extra Payment:</span>
+                    <span className="text-muted-foreground">
+                      {t("anticipatedReimbursement.extraPayment")}:
+                    </span>
                     <span className="font-semibold">
                       {formatCurrency(extraPayment, currency)}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">New Balance:</span>
+                    <span className="text-muted-foreground">
+                      {t("anticipatedReimbursement.newBalance")}:
+                    </span>
                     <span>{formatCurrency(newParameters.newBalance, currency)}</span>
                   </div>
                   {option === "shorter-duration" ? (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Current End Date:</span>
+                        <span className="text-muted-foreground">
+                          {t("anticipatedReimbursement.currentEndDate")}:
+                        </span>
                         <span>{loan.endDate ? formatDate(loan.endDate) : "N/A"}</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">New End Date:</span>
+                        <span className="text-muted-foreground">
+                          {t("anticipatedReimbursement.newEndDate")}:
+                        </span>
                         <span className="font-semibold text-green-600 dark:text-green-400">
                           {formatDate(newParameters.newEndDate!)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Months Saved:</span>
+                        <span className="text-muted-foreground">
+                          {t("anticipatedReimbursement.monthsSaved")}:
+                        </span>
                         <span className="font-semibold text-green-600 dark:text-green-400">
-                          {newParameters.monthsSaved} months
+                          {newParameters.monthsSaved} {t("anticipatedReimbursement.months")}
                         </span>
                       </div>
                     </>
                   ) : (
                     <>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Current Monthly Payment:</span>
+                        <span className="text-muted-foreground">
+                          {t("anticipatedReimbursement.currentMonthlyPayment")}:
+                        </span>
                         <span>
                           {loan.monthlyPayment
                             ? formatCurrency(loan.monthlyPayment, currency)
@@ -248,13 +261,17 @@ export function AnticipatedReimbursementDialog({
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">New Monthly Payment:</span>
+                        <span className="text-muted-foreground">
+                          {t("anticipatedReimbursement.newMonthlyPayment")}:
+                        </span>
                         <span className="font-semibold text-green-600 dark:text-green-400">
                           {formatCurrency(newParameters.newMonthlyPayment, currency)}
                         </span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-muted-foreground">Monthly Savings:</span>
+                        <span className="text-muted-foreground">
+                          {t("anticipatedReimbursement.monthlySavings")}:
+                        </span>
                         <span className="font-semibold text-green-600 dark:text-green-400">
                           {formatCurrency(
                             (loan.monthlyPayment || 0) - newParameters.newMonthlyPayment,
@@ -265,7 +282,9 @@ export function AnticipatedReimbursementDialog({
                     </>
                   )}
                   <div className="flex justify-between pt-2 border-t">
-                    <span className="text-muted-foreground">Estimated Interest Saved:</span>
+                    <span className="text-muted-foreground">
+                      {t("anticipatedReimbursement.interestSaved")}:
+                    </span>
                     <span className="font-semibold text-green-600 dark:text-green-400">
                       {formatCurrency(newParameters.interestSaved, currency)}
                     </span>
@@ -278,10 +297,7 @@ export function AnticipatedReimbursementDialog({
               <Alert variant="destructive">
                 <Icons.AlertCircle className="h-4 w-4" />
                 <div className="ml-2">
-                  <p className="text-sm">
-                    Unable to calculate new parameters. Please ensure you have a valid end date and
-                    monthly payment set for this loan.
-                  </p>
+                  <p className="text-sm">{t("anticipatedReimbursement.calculationError")}</p>
                 </div>
               </Alert>
             )}
@@ -289,10 +305,12 @@ export function AnticipatedReimbursementDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("anticipatedReimbursement.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting || !newParameters || extraPayment <= 0}>
-              {isSubmitting ? "Processing..." : "Confirm Extra Payment"}
+              {isSubmitting
+                ? t("anticipatedReimbursement.processing")
+                : t("anticipatedReimbursement.confirm")}
             </Button>
           </DialogFooter>
         </form>
