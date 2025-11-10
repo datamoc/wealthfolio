@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { format } from "date-fns";
-import { useTranslation } from "react-i18next";
 import { Quote } from "@/lib/types";
 
 import {
