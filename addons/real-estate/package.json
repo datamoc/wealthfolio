@@ -1,6 +1,6 @@
 {
   "name": "real-estate-addon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "An addon for tracking real estate properties and their associated loans with equity calculation",
   "type": "module",
   "main": "dist/addon.js",
