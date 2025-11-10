@@ -6,7 +6,7 @@ import "./addons/addons-runtime-context";
 import App from "./App";
 import { installLockdown } from "./lockdown";
 import "./styles.css";
-import "./lib/i18n";
+import i18n from "./lib/i18n";
 import "./lib/i18n-types";
 
 // Initialize development mode only in development
@@ -16,10 +16,11 @@ if (import.meta.env.DEV) {
   installLockdown();
 }
 
-// Expose React and ReactDOM globally for addons
+// Expose React, ReactDOM, and i18n globally for addons
 // ReactDOM/client only has createRoot/hydrateRoot, but addons need createPortal from react-dom
 window.React = React;
 window.ReactDOM = ReactDOMLegacy;
+window.__wealthfolio_i18n__ = i18n;
 
 // Make debug function available globally for debugging
 globalThis.debugAddons = debugAddonState;
