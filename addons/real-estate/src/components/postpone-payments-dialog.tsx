@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -30,6 +31,7 @@ export function PostponePaymentsDialog({
   currency,
   onConfirm,
 }: PostponePaymentsDialogProps) {
+  const { t } = useTranslation("real-estate");
   const [monthsToPostpone, setMonthsToPostpone] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -70,10 +72,9 @@ export function PostponePaymentsDialog({
       <DialogContent className="sm:max-w-[500px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>Postpone Loan Payments</DialogTitle>
+            <DialogTitle>{t("postponePayments.title")}</DialogTitle>
             <DialogDescription>
-              Temporarily postpone payments for {loan.name}. This will extend the loan maturity
-              date and increase the total interest paid.
+              {t("postponePayments.description", { loanName: loan.name })}
             </DialogDescription>
           </DialogHeader>
 
@@ -81,15 +82,12 @@ export function PostponePaymentsDialog({
             <Alert variant="default">
               <Icons.AlertCircle className="h-4 w-4" />
               <div className="ml-2">
-                <p className="text-sm">
-                  Postponing payments is typically used during financial difficulties. Interest
-                  will continue to accrue during the postponement period.
-                </p>
+                <p className="text-sm">{t("postponePayments.alertMessage")}</p>
               </div>
             </Alert>
 
             <div className="space-y-2">
-              <Label htmlFor="months">Number of Months to Postpone</Label>
+              <Label htmlFor="months">{t("postponePayments.monthsLabel")}</Label>
               <Input
                 id="months"
                 type="number"
@@ -99,32 +97,36 @@ export function PostponePaymentsDialog({
                 onChange={(e) => setMonthsToPostpone(parseInt(e.target.value) || 1)}
                 required
               />
-              <p className="text-muted-foreground text-xs">
-                Maximum 12 months can be postponed at once
-              </p>
+              <p className="text-muted-foreground text-xs">{t("postponePayments.monthsHint")}</p>
             </div>
 
             <div className="bg-muted rounded-lg p-4 space-y-2">
-              <h4 className="font-semibold text-sm">Impact Summary</h4>
+              <h4 className="font-semibold text-sm">{t("postponePayments.impactSummary")}</h4>
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Current End Date:</span>
+                  <span className="text-muted-foreground">
+                    {t("postponePayments.currentEndDate")}:
+                  </span>
                   <span>{loan.endDate ? formatDate(loan.endDate) : "N/A"}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">New End Date:</span>
+                  <span className="text-muted-foreground">{t("postponePayments.newEndDate")}:</span>
                   <span className="font-semibold">
                     {newEndDate ? formatDate(newEndDate) : "N/A"}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Additional Interest (approx):</span>
+                  <span className="text-muted-foreground">
+                    {t("postponePayments.additionalInterest")}:
+                  </span>
                   <span className="font-semibold text-orange-600 dark:text-orange-400">
                     +{formatCurrency(additionalInterest, currency)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Months Postponed:</span>
+                  <span className="text-muted-foreground">
+                    {t("postponePayments.monthsPostponed")}:
+                  </span>
                   <span className="font-semibold">{monthsToPostpone}</span>
                 </div>
               </div>
@@ -133,10 +135,10 @@ export function PostponePaymentsDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("postponePayments.cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Processing..." : "Confirm Postponement"}
+              {isSubmitting ? t("postponePayments.processing") : t("postponePayments.confirm")}
             </Button>
           </DialogFooter>
         </form>

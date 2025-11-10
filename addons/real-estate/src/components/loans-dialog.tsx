@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -43,6 +44,7 @@ export function LoansDialog({
   onSaveLoan,
   onDeleteLoan,
 }: LoansDialogProps) {
+  const { t } = useTranslation("real-estate");
   const [loanFormOpen, setLoanFormOpen] = useState(false);
   const [editingLoan, setEditingLoan] = useState<Loan | undefined>();
   const [postponeDialogOpen, setPostponeDialogOpen] = useState(false);
@@ -60,7 +62,7 @@ export function LoansDialog({
   };
 
   const handleDeleteLoan = async (loanId: string) => {
-    if (confirm("Are you sure you want to delete this loan?")) {
+    if (confirm(t("loansDialog.deleteConfirm"))) {
       await onDeleteLoan(loanId);
     }
   };
@@ -146,11 +148,11 @@ export function LoansDialog({
   };
 
   const loanTypeLabels: Record<string, string> = {
-    fixed: "Fixed Rate",
-    variable: "Variable Rate",
-    adjustable: "ARM",
-    "interest-only": "Interest Only",
-    "home-equity": "Home Equity",
+    fixed: t("loanTypes.fixed"),
+    variable: t("loanTypes.variable"),
+    adjustable: t("loanTypes.adjustable"),
+    "interest-only": t("loanTypes.interest-only"),
+    "home-equity": t("loanTypes.home-equity"),
   };
 
   return (
@@ -158,17 +160,17 @@ export function LoansDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[700px]">
           <DialogHeader>
-            <DialogTitle>Loans for {propertyName}</DialogTitle>
-            <DialogDescription>Manage all loans associated with this property.</DialogDescription>
+            <DialogTitle>{t("loansDialog.title", { propertyName })}</DialogTitle>
+            <DialogDescription>{t("loansDialog.description")}</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             {loans.length === 0 ? (
               <div className="text-muted-foreground py-8 text-center">
-                <p className="mb-4">No loans added yet.</p>
+                <p className="mb-4">{t("loansDialog.noLoans")}</p>
                 <Button onClick={handleAddLoan}>
                   <Icons.Plus className="mr-2 h-4 w-4" />
-                  Add First Loan
+                  {t("loansDialog.addFirstLoan")}
                 </Button>
               </div>
             ) : (
@@ -176,7 +178,7 @@ export function LoansDialog({
                 <div className="flex justify-end">
                   <Button onClick={handleAddLoan} size="sm">
                     <Icons.Plus className="mr-2 h-4 w-4" />
-                    Add Loan
+                    {t("loansDialog.addLoan")}
                   </Button>
                 </div>
 
@@ -199,24 +201,32 @@ export function LoansDialog({
 
                               <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Current Balance</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {t("loansDialog.currentBalance")}
+                                  </p>
                                   <p className="font-semibold">
                                     {formatCurrency(loan.currentBalance, currency)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Original Amount</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {t("loansDialog.originalAmount")}
+                                  </p>
                                   <p className="text-sm">
                                     {formatCurrency(loan.originalAmount, currency)}
                                   </p>
                                 </div>
                                 <div>
-                                  <p className="text-muted-foreground text-xs">Interest Rate</p>
+                                  <p className="text-muted-foreground text-xs">
+                                    {t("loansDialog.interestRate")}
+                                  </p>
                                   <p className="text-sm">{formatPercentage(loan.interestRate)}</p>
                                 </div>
                                 {loan.monthlyPayment && (
                                   <div>
-                                    <p className="text-muted-foreground text-xs">Monthly Payment</p>
+                                    <p className="text-muted-foreground text-xs">
+                                      {t("loansDialog.monthlyPayment")}
+                                    </p>
                                     <p className="text-sm">
                                       {formatCurrency(loan.monthlyPayment, currency)}
                                     </p>
@@ -226,15 +236,15 @@ export function LoansDialog({
 
                               <div className="mt-3 flex items-center gap-4 text-xs">
                                 <span className="text-muted-foreground">
-                                  Started: {formatDate(loan.startDate)}
+                                  {t("loansDialog.started")}: {formatDate(loan.startDate)}
                                 </span>
                                 {loan.endDate && (
                                   <span className="text-muted-foreground">
-                                    Matures: {formatDate(loan.endDate)}
+                                    {t("loansDialog.matures")}: {formatDate(loan.endDate)}
                                   </span>
                                 )}
                                 <span className="text-green-600 dark:text-green-400">
-                                  {formatPercentage(paidPercentage)} paid off
+                                  {formatPercentage(paidPercentage)} {t("loansDialog.paidOff")}
                                 </span>
                               </div>
 
@@ -253,18 +263,18 @@ export function LoansDialog({
                                 <DropdownMenuContent align="end" className="w-56">
                                   <DropdownMenuItem onClick={() => handleEditLoan(loan)}>
                                     <Icons.Pencil className="mr-2 h-4 w-4" />
-                                    Edit Loan
+                                    {t("loansDialog.editLoan")}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem onClick={() => handlePostponePayments(loan)}>
                                     <Icons.Clock className="mr-2 h-4 w-4" />
-                                    Postpone Payments
+                                    {t("loansDialog.postponePayments")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() => handleAnticipatedReimbursement(loan)}
                                   >
                                     <Icons.TrendingUp className="mr-2 h-4 w-4" />
-                                    Extra Payment
+                                    {t("loansDialog.extraPayment")}
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
@@ -272,7 +282,7 @@ export function LoansDialog({
                                     className="text-red-600 dark:text-red-400"
                                   >
                                     <Icons.Trash className="mr-2 h-4 w-4" />
-                                    Delete Loan
+                                    {t("loansDialog.deleteLoan")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import type { AddonContext } from "@wealthfolio/addon-sdk";
 import {
   Icons,
@@ -20,11 +20,17 @@ import {
 import { useRealEstateData } from "./hooks/use-real-estate-data";
 import { calculatePropertyMetrics, calculatePortfolioSummary, filterProperties } from "./lib/utils";
 import type { Property } from "./lib/types";
+import { initAddonI18n } from "./lib/i18n";
 
 /**
  * Main Real Estate Tracker Component
  */
 function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
+  // Initialize i18n for the addon
+  useEffect(() => {
+    initAddonI18n();
+  }, []);
+
   const { data, isLoading, error, saveProperty, deleteProperty, saveLoan, deleteLoan } =
     useRealEstateData(ctx);
 
