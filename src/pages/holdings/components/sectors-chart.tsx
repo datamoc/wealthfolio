@@ -17,12 +17,12 @@ function getSectorsData(holdings: Holding[], t: TranslateFn) {
       const assetSectors = holding.instrument?.sectors;
       const marketValue = Number(holding.marketValue?.base) || 0;
 
-      const sectorsToProcess =
-        assetSectors && assetSectors.length > 0 ? assetSectors : [{ name: t("others"), weight: 1 }];
+      const sectorsToProcess: Sector[] =
+        assetSectors && assetSectors.length > 0 ? assetSectors : [{ name: t("other"), weight: 1 }];
 
       if (isNaN(marketValue)) return acc;
 
-      sectorsToProcess.forEach((sector: Sector) => {
+      sectorsToProcess.forEach((sector) => {
         const current = acc[sector.name] || 0;
         const weight = Number(sector.weight) || 0;
         acc[sector.name] = current + marketValue * (weight > 1 ? weight / 100 : weight);
