@@ -259,7 +259,7 @@ export function LoanFormDialog({
 
             {/* Input Mode Selection */}
             <div className="grid gap-3">
-              <Label>Choose Input Method *</Label>
+              <Label>{t("loan_input_method")} *</Label>
               <RadioGroup
                 value={inputMode}
                 onValueChange={(value: "interest" | "payment") => setInputMode(value)}
@@ -268,13 +268,13 @@ export function LoanFormDialog({
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="interest" id="mode-interest" />
                   <Label htmlFor="mode-interest" className="font-normal cursor-pointer">
-                    Enter Interest Rate
+                    {t("loan_enter_interest")}
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value="payment" id="mode-payment" />
                   <Label htmlFor="mode-payment" className="font-normal cursor-pointer">
-                    Enter Monthly Payment
+                    {t("loan_enter_payment")}
                   </Label>
                 </div>
               </RadioGroup>
@@ -284,9 +284,9 @@ export function LoanFormDialog({
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="interestRate" className="flex items-center gap-2">
-                  Interest Rate (%)
+                  {t("interest_rate")}
                   {inputMode === "payment" && (
-                    <span className="text-muted-foreground text-xs font-normal">(calculated)</span>
+                    <span className="text-muted-foreground text-xs font-normal">{t("loan_calculated")}</span>
                   )}
                 </Label>
                 <Input
@@ -304,9 +304,9 @@ export function LoanFormDialog({
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="monthlyPayment" className="flex items-center gap-2">
-                  Monthly Payment
+                  {t("monthly_payment")}
                   {inputMode === "interest" && (
-                    <span className="text-muted-foreground text-xs font-normal">(calculated)</span>
+                    <span className="text-muted-foreground text-xs font-normal">{t("loan_calculated")}</span>
                   )}
                 </Label>
                 <Input
@@ -326,7 +326,7 @@ export function LoanFormDialog({
             {/* Start Date and End Date */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="startDate">Start Date *</Label>
+                <Label htmlFor="startDate">{t("loan_start_date")} *</Label>
                 <Input
                   id="startDate"
                   type="date"
@@ -336,7 +336,7 @@ export function LoanFormDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="endDate">Maturity Date</Label>
+                <Label htmlFor="endDate">{t("loan_maturity_date")}</Label>
                 <Input
                   id="endDate"
                   type="date"
@@ -348,7 +348,7 @@ export function LoanFormDialog({
 
             {/* Currency */}
             <div className="grid gap-2">
-              <Label htmlFor="currency">Currency *</Label>
+              <Label htmlFor="currency">{t("currency")} *</Label>
               <Select
                 value={formData.currency}
                 onValueChange={(value) => setFormData({ ...formData, currency: value })}
@@ -357,14 +357,14 @@ export function LoanFormDialog({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Popular</div>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{t("currency_popular")}</div>
                   {popularCurrencies.map((curr) => (
                     <SelectItem key={curr} value={curr}>
                       {curr}
                     </SelectItem>
                   ))}
                   <div className="my-1 border-t" />
-                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">All Currencies</div>
+                  <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">{t("currency_all")}</div>
                   {worldCurrencies
                     .filter((c) => !popularCurrencies.includes(c.value))
                     .map((curr) => (
@@ -378,12 +378,12 @@ export function LoanFormDialog({
 
             {/* Notes */}
             <div className="grid gap-2">
-              <Label htmlFor="loan-notes">Notes</Label>
+              <Label htmlFor="loan-notes">{t("notes")}</Label>
               <Textarea
                 id="loan-notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Additional notes about this loan..."
+                placeholder={t("loan_notes_placeholder")}
                 rows={3}
               />
             </div>
@@ -391,10 +391,10 @@ export function LoanFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : loan ? "Update" : "Add Loan"}
+              {isSubmitting ? t("saving") : loan ? t("update") : t("add_loan")}
             </Button>
           </DialogFooter>
         </form>
