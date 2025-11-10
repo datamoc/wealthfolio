@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "description": "Track your real estate properties and associated loans with equity calculation and valuation history",
   "author": "Wealthfolio",
-  "main": "dist/addon.js",
+  "main": "addon.js",
   "sdkVersion": "2.0.0",
   "enabled": true,
   "permissions": [
