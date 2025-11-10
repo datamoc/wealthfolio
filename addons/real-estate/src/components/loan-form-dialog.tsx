@@ -15,9 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
   Textarea,
+  RadioGroup,
+  RadioGroupItem,
 } from "@wealthfolio/ui";
 import type { Loan, LoanType } from "../lib/types";
-import { generateId } from "../lib/utils";
+import {
+  generateId,
+  calculateMonthlyPayment,
+  calculateInterestRate,
+  calculateMonthsBetweenDates
+} from "../lib/utils";
 
 interface LoanFormDialogProps {
   open: boolean;
@@ -59,10 +66,17 @@ export function LoanFormDialog({
     notes: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [inputMode, setInputMode] = useState<"interest" | "payment">("interest");
 
   useEffect(() => {
     if (loan) {
       setFormData(loan);
+      // Set input mode based on which value is present
+      if (loan.monthlyPayment && loan.monthlyPayment > 0) {
+        setInputMode("payment");
+      } else {
+        setInputMode("interest");
+      }
     } else {
       setFormData({
         propertyId,
@@ -78,8 +92,46 @@ export function LoanFormDialog({
         currency,
         notes: "",
       });
+      setInputMode("interest");
     }
   }, [loan, open, propertyId, currency]);
+
+  // Auto-calculate based on input mode
+  useEffect(() => {
+    if (!formData.currentBalance || !formData.startDate || !formData.endDate) return;
+
+    const months = calculateMonthsBetweenDates(formData.startDate, formData.endDate);
+    if (months <= 0) return;
+
+    if (inputMode === "interest" && formData.interestRate !== undefined) {
+      // Calculate monthly payment from interest rate
+      const calculatedPayment = calculateMonthlyPayment(
+        formData.currentBalance,
+        formData.interestRate,
+        months
+      );
+      if (calculatedPayment !== formData.monthlyPayment) {
+        setFormData((prev) => ({ ...prev, monthlyPayment: calculatedPayment }));
+      }
+    } else if (inputMode === "payment" && formData.monthlyPayment) {
+      // Calculate interest rate from monthly payment
+      const calculatedRate = calculateInterestRate(
+        formData.currentBalance,
+        formData.monthlyPayment,
+        months
+      );
+      if (Math.abs(calculatedRate - (formData.interestRate || 0)) > 0.01) {
+        setFormData((prev) => ({ ...prev, interestRate: calculatedRate }));
+      }
+    }
+  }, [
+    formData.currentBalance,
+    formData.startDate,
+    formData.endDate,
+    formData.interestRate,
+    formData.monthlyPayment,
+    inputMode,
+  ]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -198,30 +250,68 @@ export function LoanFormDialog({
               </div>
             </div>
 
+            {/* Input Mode Selection */}
+            <div className="grid gap-3">
+              <Label>Choose Input Method *</Label>
+              <RadioGroup
+                value={inputMode}
+                onValueChange={(value: "interest" | "payment") => setInputMode(value)}
+                className="flex gap-4"
+              >
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="interest" id="mode-interest" />
+                  <Label htmlFor="mode-interest" className="font-normal cursor-pointer">
+                    Enter Interest Rate
+                  </Label>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <RadioGroupItem value="payment" id="mode-payment" />
+                  <Label htmlFor="mode-payment" className="font-normal cursor-pointer">
+                    Enter Monthly Payment
+                  </Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             {/* Interest Rate and Monthly Payment */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="interestRate">Interest Rate (%) *</Label>
+                <Label htmlFor="interestRate" className="flex items-center gap-2">
+                  Interest Rate (%)
+                  {inputMode === "payment" && (
+                    <span className="text-muted-foreground text-xs font-normal">(calculated)</span>
+                  )}
+                </Label>
                 <Input
                   id="interestRate"
                   type="number"
                   step="0.01"
                   min="0"
                   max="100"
-                  value={formData.interestRate}
+                  value={formData.interestRate || ""}
                   onChange={(e) => setFormData({ ...formData, interestRate: Number(e.target.value) })}
-                  required
+                  required={inputMode === "interest"}
+                  disabled={inputMode === "payment"}
+                  className={inputMode === "payment" ? "bg-muted" : ""}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="monthlyPayment">Monthly Payment</Label>
+                <Label htmlFor="monthlyPayment" className="flex items-center gap-2">
+                  Monthly Payment
+                  {inputMode === "interest" && (
+                    <span className="text-muted-foreground text-xs font-normal">(calculated)</span>
+                  )}
+                </Label>
                 <Input
                   id="monthlyPayment"
                   type="number"
                   step="0.01"
                   min="0"
-                  value={formData.monthlyPayment}
+                  value={formData.monthlyPayment || ""}
                   onChange={(e) => setFormData({ ...formData, monthlyPayment: Number(e.target.value) })}
+                  required={inputMode === "payment"}
+                  disabled={inputMode === "interest"}
+                  className={inputMode === "interest" ? "bg-muted" : ""}
                 />
               </div>
             </div>
