@@ -4,6 +4,7 @@ import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
 import { formatDate } from "@/lib/utils";
 import { AmountDisplay } from "@wealthfolio/ui";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Area, AreaChart, Tooltip, YAxis } from "recharts";
 
 interface HistoryChartData {
@@ -34,6 +35,8 @@ const CustomTooltip = ({
   isBalanceHidden,
   isChartHovered,
 }: CustomTooltipProps) => {
+  const { t } = useTranslation("common");
+
   if (!active || !payload?.length) {
     return null;
   }
@@ -61,7 +64,7 @@ const CustomTooltip = ({
       <div className="flex items-center justify-between space-x-2">
         <div className="flex items-center space-x-1.5">
           <span className="block h-0.5 w-3" style={{ backgroundColor: "var(--success)" }} />
-          <span className="text-muted-foreground text-xs">Total Value:</span>
+          <span className="text-muted-foreground text-xs">{t("total_value")}</span>
         </div>
         <AmountDisplay
           value={tvPayload.totalValue}
@@ -77,7 +80,7 @@ const CustomTooltip = ({
               className="block h-0 w-3 border-b-2 border-dashed"
               style={{ borderColor: "var(--muted-foreground)" }}
             />
-            <span className="text-muted-foreground text-xs">Net Deposit:</span>
+            <span className="text-muted-foreground text-xs">{t("net_deposit")}</span>
           </div>
           <AmountDisplay
             value={ncPayload.netContribution}

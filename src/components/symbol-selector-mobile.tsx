@@ -92,8 +92,8 @@ export const SymbolSelectorMobile = forwardRef<HTMLButtonElement, SymbolSelector
         </SheetTrigger>
         <SheetContent side="bottom" className="h-[85vh] p-0">
           <SheetHeader className="border-border border-b py-2">
-            <SheetTitle>Select Symbol</SheetTitle>
-            <SheetDescription>Search for a stock, ETF, crypto, or other asset</SheetDescription>
+            <SheetTitle>{t("select_symbol")}</SheetTitle>
+            <SheetDescription>{t("search_for_stock")}</SheetDescription>
           </SheetHeader>
 
           <div className="flex h-[calc(85vh-5rem)] flex-col">
@@ -117,7 +117,7 @@ export const SymbolSelectorMobile = forwardRef<HTMLButtonElement, SymbolSelector
               {/* Loading state */}
               {isLoading && searchQuery.length > 1 && (
                 <div className="space-y-3">
-                  <div className="text-muted-foreground text-sm font-medium">Searching...</div>
+                  <div className="text-muted-foreground text-sm font-medium">{t("searching")}</div>
                   <Skeleton className="h-16 w-full rounded-xl" />
                   <Skeleton className="h-16 w-full rounded-xl" />
                   <Skeleton className="h-16 w-full rounded-xl" />
@@ -127,7 +127,7 @@ export const SymbolSelectorMobile = forwardRef<HTMLButtonElement, SymbolSelector
               {/* Error state */}
               {isError && searchQuery.length > 1 && (
                 <div className="text-muted-foreground py-8 text-center text-sm">
-                  Error searching for symbols. Please try again.
+                  {t("error_searching")}
                 </div>
               )}
 
@@ -171,7 +171,7 @@ export const SymbolSelectorMobile = forwardRef<HTMLButtonElement, SymbolSelector
               {searchQuery.length === 0 && (
                 <div className="text-muted-foreground flex h-full flex-col items-center justify-center gap-2 text-center text-sm">
                   <Icons.Search className="h-12 w-12 opacity-20" />
-                  <p>Start typing to search for symbols</p>
+                  <p>{t("start_typing_to_search")}</p>
                 </div>
               )}
 
@@ -182,14 +182,14 @@ export const SymbolSelectorMobile = forwardRef<HTMLButtonElement, SymbolSelector
                 sortedSearchResults.length === 0 &&
                 searchQuery.length > 1 && (
                   <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-                    No symbols found matching "{searchQuery}".
+                    {t("no_symbols_found_matching", { query: searchQuery })}
                   </div>
                 )}
 
               {/* Too short query state */}
               {searchQuery.length > 0 && searchQuery.length <= 1 && (
                 <div className="text-muted-foreground flex h-full items-center justify-center text-sm">
-                  Type at least 2 characters to search.
+                  {t("type_at_least_2_chars")}
                 </div>
               )}
             </ScrollArea>

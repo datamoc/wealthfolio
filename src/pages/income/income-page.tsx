@@ -91,7 +91,7 @@ export default function IncomePage() {
   }
 
   if (error || !incomeData) {
-    return <div>Failed to load income summary: {error?.message || "Unknown error"}</div>;
+    return <div>{t("failed_to_load")} {error?.message || "Unknown error"}</div>;
   }
 
   const periodSummary = incomeData.find((summary) => summary.period === selectedPeriod);

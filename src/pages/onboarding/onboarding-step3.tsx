@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Icons } from "@wealthfolio/ui";
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 const checklistItems = [
   { id: "create-account", label: "Create your first account" },
@@ -12,6 +13,7 @@ const checklistItems = [
 ];
 
 export const OnboardingStep3: React.FC = () => {
+  const { t } = useTranslation("onboarding");
   const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
 
   const toggleChecklistItem = (id: string) => {
@@ -25,7 +27,7 @@ export const OnboardingStep3: React.FC = () => {
     <div className="space-y-3">
       <div className="text-center">
         <p className="text-muted-foreground text-sm sm:text-base">
-          Here are a few things you can do to get the most out of Wealthfolio
+          {t("step3_heading")}
         </p>
       </div>
       <Card className="border-none bg-transparent">
@@ -68,7 +70,7 @@ export const OnboardingStep3: React.FC = () => {
           </div>
           <div className="mt-6 rounded-lg border p-4">
             <p className="text-muted-foreground text-center text-sm">
-              💡 Tip: You can complete these steps at your own pace after onboarding
+              {t("step3_tip")}
             </p>
           </div>
         </CardContent>

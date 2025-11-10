@@ -1,6 +1,7 @@
 import { FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "react-i18next";
 
 interface ThemeSelectorProps {
   value?: string;
@@ -9,6 +10,8 @@ interface ThemeSelectorProps {
 }
 
 export function ThemeSelector({ value, onChange, className }: ThemeSelectorProps) {
+  const { t } = useTranslation('settings');
+
   return (
     <RadioGroup
       onValueChange={onChange}
@@ -37,7 +40,7 @@ export function ThemeSelector({ value, onChange, className }: ThemeSelectorProps
             </div>
           </div>
           <span className="block w-full p-1 text-center text-xs font-normal sm:p-2 sm:text-sm">
-            Light
+            {t('appearance_theme_light')}
           </span>
         </FormLabel>
       </FormItem>
@@ -63,7 +66,7 @@ export function ThemeSelector({ value, onChange, className }: ThemeSelectorProps
             </div>
           </div>
           <span className="block w-full p-1 text-center text-xs font-normal sm:p-2 sm:text-sm">
-            Dark
+            {t('appearance_theme_dark')}
           </span>
         </FormLabel>
       </FormItem>
@@ -107,7 +110,7 @@ export function ThemeSelector({ value, onChange, className }: ThemeSelectorProps
             </div>
           </div>
           <span className="block w-full p-1 text-center text-xs font-normal sm:p-2 sm:text-sm">
-            System
+            {t('appearance_theme_system')}
           </span>
         </FormLabel>
       </FormItem>

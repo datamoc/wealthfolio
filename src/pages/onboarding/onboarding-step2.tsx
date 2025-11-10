@@ -14,6 +14,7 @@ import { Icons } from "@wealthfolio/ui";
 import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
 import { forwardRef, useEffect, useImperativeHandle, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import * as z from "zod";
 
 const onboardingSettingsSchema = z.object({
@@ -63,6 +64,7 @@ interface OnboardingStep2Props {
 
 export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2Props>(
   ({ onNext, onValidityChange }, ref) => {
+    const { t } = useTranslation("onboarding");
     const { settings, updateSettings } = useSettingsContext();
     const [initialValuesSet, setInitialValuesSet] = useState(false);
     const [showCurrencySearch, setShowCurrencySearch] = useState(false);
@@ -121,7 +123,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
         <div className="space-y-3 sm:space-y-4">
           <div className="text-center">
             <p className="text-muted-foreground text-sm sm:text-base">
-              Just a couple preferences to get you started
+              {t("step2_title")}
             </p>
           </div>
           <Card className="border-none bg-transparent">
@@ -137,7 +139,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                           <div className="bg-muted rounded-lg p-2">
                             <Icons.DollarSign className="text-muted-foreground h-5 w-5" />
                           </div>
-                          <FormLabel className="text-xl font-semibold">Currency</FormLabel>
+                          <FormLabel className="text-xl font-semibold">{t("step2_currency_label")}</FormLabel>
                         </div>
                         <FormControl>
                           <div className="grid grid-cols-3 gap-3 md:grid-cols-4">
@@ -161,7 +163,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                               className="border-border hover:border-primary/50 hover:bg-accent ring-offset-background focus-visible:ring-ring inline-flex cursor-pointer items-center justify-center gap-2 rounded-lg border-2 text-sm font-medium whitespace-nowrap transition-colors focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0"
                             >
                               <Icons.Search className="size-5" />
-                              Other
+                              {t("step2_currency_other")}
                             </button>
                           </div>
                         </FormControl>
@@ -179,7 +181,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                           <div className="bg-muted rounded-lg p-2">
                             <Icons.Palette className="text-muted-foreground h-5 w-5" />
                           </div>
-                          <FormLabel className="text-xl font-semibold">Theme</FormLabel>
+                          <FormLabel className="text-xl font-semibold">{t("step2_theme_label")}</FormLabel>
                         </div>
                         <FormControl>
                           <div className="grid grid-cols-3 gap-4">
@@ -202,7 +204,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                                 >
                                   <Icons.Moon className="h-6 w-6" />
                                 </div>
-                                <span className="font-semibold">Dark</span>
+                                <span className="font-semibold">{t("appearance_theme_dark", { ns: "settings" })}</span>
                               </div>
                             </button>
                             <button
@@ -224,7 +226,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                                 >
                                   <Icons.Sun className="h-6 w-6" />
                                 </div>
-                                <span className="font-semibold">Light</span>
+                                <span className="font-semibold">{t("appearance_theme_light", { ns: "settings" })}</span>
                               </div>
                             </button>
                             <button
@@ -246,7 +248,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                                 >
                                   <Icons.Monitor className="h-6 w-6" />
                                 </div>
-                                <span className="font-semibold">System</span>
+                                <span className="font-semibold">{t("appearance_theme_system", { ns: "settings" })}</span>
                               </div>
                             </button>
                           </div>
@@ -266,7 +268,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
             <Card className="w-full max-w-md border shadow-lg">
               <div className="p-6">
                 <div className="mb-4 flex items-center justify-between">
-                  <h3 className="text-xl font-bold">Select Currency</h3>
+                  <h3 className="text-xl font-bold">{t("step2_select_currency")}</h3>
                   <button
                     onClick={() => {
                       setShowCurrencySearch(false);
@@ -282,7 +284,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                   <Icons.Search className="text-muted-foreground absolute top-1/2 left-3 h-5 w-5 -translate-y-1/2 transform" />
                   <Input
                     type="text"
-                    placeholder="Search currencies..."
+                    placeholder={t("step2_search_currencies")}
                     value={currencySearch}
                     onChange={(e) => setCurrencySearch(e.target.value)}
                     className="pl-10"
@@ -312,7 +314,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                   ))}
                   {filteredCurrencies.length === 0 && (
                     <div className="text-muted-foreground py-8 text-center">
-                      No currencies found
+                      {t("step2_no_currencies")}
                     </div>
                   )}
                 </div>

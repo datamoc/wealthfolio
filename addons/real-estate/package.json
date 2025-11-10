@@ -1,0 +1,51 @@
+{
+  "name": "real-estate-addon",
+  "version": "1.0.0",
+  "description": "An addon for tracking real estate properties and their associated loans with equity calculation",
+  "type": "module",
+  "main": "dist/addon.js",
+  "author": "Wealthfolio",
+  "license": "MIT",
+  "homepage": "https://github.com/afadil/wealthfolio",
+  "keywords": [
+    "wealthfolio",
+    "addon",
+    "real-estate",
+    "property",
+    "mortgage",
+    "loan",
+    "equity"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite build --watch",
+    "dev:server": "wealthfolio dev",
+    "clean": "rm -rf dist",
+    "package": "mkdir -p dist && zip -r dist/$npm_package_name-$npm_package_version.zip manifest.json dist/ README.md",
+    "bundle": "pnpm clean && pnpm build && pnpm package",
+    "lint": "tsc --noEmit",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@wealthfolio/addon-sdk": "workspace:*",
+    "@wealthfolio/ui": "workspace:*",
+    "@tanstack/react-query": "^5.90.5",
+    "react": "^19.1.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.13",
+    "@wealthfolio/addon-dev-tools": "workspace:*",
+    "@types/node": "^20.0.0",
+    "@types/react": "^19.1.1",
+    "@types/react-dom": "^19.1.1",
+    "rollup-plugin-external-globals": "^0.13.0",
+    "tailwindcss": "^4.1.13",
+    "typescript": "^5.9.2",
+    "vite": "^7.1.5"
+  },
+  "files": [
+    "dist/",
+    "manifest.json",
+    "README.md"
+  ]
+}
