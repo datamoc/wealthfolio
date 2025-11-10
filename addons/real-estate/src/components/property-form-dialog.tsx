@@ -201,7 +201,15 @@ export function PropertyFormDialog({
                 <Input
                   id="country"
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                  onChange={(e) => {
+                    const newCountry = e.target.value;
+                    setFormData({
+                      ...formData,
+                      country: newCountry,
+                      // Auto-set currency based on country
+                      currency: getCurrencyForCountry(newCountry)
+                    });
+                  }}
                   placeholder="USA"
                   required
                 />
