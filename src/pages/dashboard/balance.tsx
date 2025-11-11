@@ -2,6 +2,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
 import NumberFlow from "@number-flow/react";
 import { useMemo } from "react";
+import i18n from "@/lib/i18n";
 
 interface BalanceProps {
   targetValue: number;
@@ -21,8 +22,10 @@ const Balance: React.FC<BalanceProps> = ({
   useCompactNotation = false,
 }) => {
   const { isBalanceHidden } = useBalancePrivacy();
+  const locale = i18n.language || "en-US";
+
   const currencySymbol = useMemo(() => {
-    const formatter = new Intl.NumberFormat(undefined, {
+    const formatter = new Intl.NumberFormat(locale, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
@@ -34,7 +37,7 @@ const Balance: React.FC<BalanceProps> = ({
     const symbolPart = parts.find((part) => part.type === "currency");
 
     return symbolPart?.value ?? currency;
-  }, [currency]);
+  }, [currency, locale]);
 
   if (isLoading) {
     return <Skeleton className="h-9 w-48" />;
@@ -52,6 +55,7 @@ const Balance: React.FC<BalanceProps> = ({
           className="muted-fraction"
           value={targetValue}
           isolate={false}
+          locales={locale}
           format={{
             currency: currency,
             style: displayCurrency ? "currency" : "decimal",
