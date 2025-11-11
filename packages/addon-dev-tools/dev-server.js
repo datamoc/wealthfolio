@@ -268,11 +268,7 @@ class AddonDevServer {
     this.viteWatcher = spawn(isWindows ? "npm.cmd" : "npm", ["run", "dev"], {
       cwd: this.config.addonPath,
       stdio: ["ignore", "pipe", "pipe"],
-<<<<<<< HEAD
-      windowsHide: isWindows, // Hide console window on Windows
-=======
       shell: true, // Required for Windows to properly spawn npm
->>>>>>> be2024cb8a424a74554c70e4ad2f0eebd3f786dc
     });
 
     this.viteWatcher.stdout.on("data", (data) => {
