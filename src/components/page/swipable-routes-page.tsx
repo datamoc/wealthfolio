@@ -216,23 +216,23 @@ export function SwipableRoutesPage({
             onViewChange={handleSwipe}
             onInit={(api) => {
               if (api) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                 
                 emblaApiRef.current = api;
 
                 // Initialize selected index
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-                setSelectedIndex(api.selectedScrollSnap() as number);
+                 
+                setSelectedIndex(api.selectedScrollSnap());
 
                 // Set up event listeners for tracking selection
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+                 
                 api.on("select", () => {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
-                  setSelectedIndex(api.selectedScrollSnap() as number);
+                   
+                  setSelectedIndex(api.selectedScrollSnap());
                 });
 
                 // Scroll to current route on init
                 if (currentRouteIndex > 0) {
-                  // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-unsafe-member-access
+                   
                   api?.scrollTo(currentRouteIndex);
                 }
               }

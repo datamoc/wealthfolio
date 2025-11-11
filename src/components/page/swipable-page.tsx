@@ -162,7 +162,7 @@ export function SwipablePage({
             }}
             onInit={(api) => {
               if (api) {
-                // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+                 
                 emblaApiRef.current = api;
               }
             }}
