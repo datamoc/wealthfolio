@@ -1,4 +1,7 @@
+import Finance from "financejs";
 import type { Property, Loan, PropertyMetrics, PortfolioSummary } from "./types";
+
+const finance = new Finance();
 
 /**
  * Generate a unique ID
@@ -158,13 +161,11 @@ export function filterProperties(
 }
 
 /**
- * Calculate monthly payment from loan parameters
- * Formula: M = P * [r(1 + r)^n] / [(1 + r)^n - 1]
- * Where:
- * - M = Monthly payment
- * - P = Principal (loan amount)
- * - r = Monthly interest rate (annual rate / 12 / 100)
- * - n = Number of months
+ * Calculate monthly payment from loan parameters using financejs
+ * @param principal - Loan amount
+ * @param annualInterestRate - Annual interest rate as percentage (e.g., 3.45 for 3.45%)
+ * @param months - Number of months
+ * @returns Monthly payment amount
  */
 export function calculateMonthlyPayment(
   principal: number,
@@ -174,20 +175,24 @@ export function calculateMonthlyPayment(
   if (principal <= 0 || months <= 0) return 0;
   if (annualInterestRate === 0) return principal / months;
 
-  const monthlyRate = annualInterestRate / 12 / 100;
-  const denominator = Math.pow(1 + monthlyRate, months) - 1;
+  // financejs PMT method: PMT(rate, nper, pv, fv, type)
+  // rate: monthly rate as decimal
+  // nper: number of periods
+  // pv: present value (negative for money borrowed)
+  // fv: future value (0 for loan fully paid)
+  // type: 0 for end of period payment
+  const monthlyRateDecimal = annualInterestRate / 100 / 12;
+  const payment = finance.PMT(monthlyRateDecimal, months, -principal, 0, 0);
 
-  if (denominator === 0) return 0;
-
-  const monthlyPayment =
-    (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / denominator;
-
-  return Math.round(monthlyPayment * 100) / 100;
+  return Math.round(payment * 100) / 100;
 }
 
 /**
- * Calculate annual interest rate from monthly payment using bisection method
- * This is more robust than Newton-Raphson for this problem
+ * Calculate annual interest rate from monthly payment using bisection method with financejs
+ * @param principal - Loan amount
+ * @param monthlyPayment - Target monthly payment
+ * @param months - Number of months
+ * @returns Annual interest rate as percentage (e.g., 3.45 for 3.45%)
  */
 export function calculateInterestRate(
   principal: number,
@@ -203,23 +208,22 @@ export function calculateInterestRate(
   // If monthly payment is less than minimum, something is wrong
   if (monthlyPayment < minPayment) return 0;
 
-  // Helper function to calculate monthly payment for a given annual rate
-  const calcPayment = (annualRate: number): number => {
-    if (annualRate === 0) return principal / months;
-    const monthlyRate = annualRate / 12;
-    const x = Math.pow(1 + monthlyRate, months);
-    return (principal * monthlyRate * x) / (x - 1);
+  // Helper function to calculate monthly payment for a given annual rate using financejs
+  const calcPayment = (annualRatePercent: number): number => {
+    if (annualRatePercent === 0) return principal / months;
+    const monthlyRateDecimal = annualRatePercent / 100 / 12;
+    return finance.PMT(monthlyRateDecimal, months, -principal, 0, 0);
   };
 
   // Bisection method to find the interest rate
   let lowRate = 0; // 0% annual rate
-  let highRate = 0.5; // 50% annual rate (very high upper bound)
+  let highRate = 50; // 50% annual rate (very high upper bound)
   const maxIterations = 100;
   const tolerance = 0.00001; // Tight tolerance for accuracy
 
   // First, check if we need a higher upper bound
-  while (calcPayment(highRate) < monthlyPayment && highRate < 1) {
-    highRate += 0.1;
+  while (calcPayment(highRate) < monthlyPayment && highRate < 100) {
+    highRate += 10;
   }
 
   // Bisection search
@@ -230,7 +234,7 @@ export function calculateInterestRate(
 
     // Check if we're close enough
     if (Math.abs(diff) < 0.01) {
-      return Math.round(midRate * 10000) / 100; // Return as percentage with 2 decimals
+      return Math.round(midRate * 100) / 100; // Return as percentage with 2 decimals
     }
 
     // Adjust bounds
@@ -243,13 +247,13 @@ export function calculateInterestRate(
     // Check if bounds are converging
     if (Math.abs(highRate - lowRate) < tolerance) {
       const finalRate = (lowRate + highRate) / 2;
-      return Math.round(finalRate * 10000) / 100;
+      return Math.round(finalRate * 100) / 100;
     }
   }
 
   // Return midpoint if we didn't converge (shouldn't happen with bisection)
   const finalRate = (lowRate + highRate) / 2;
-  return Math.round(finalRate * 10000) / 100;
+  return Math.round(finalRate * 100) / 100;
 }
 
 /**
