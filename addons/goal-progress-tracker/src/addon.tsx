@@ -5,9 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { InvestmentCalendar, GoalSelector, HelpPopover } from "./components";
 import { useGoalProgress } from "./hooks";
 import { useBalancePrivacy } from "@wealthfolio/ui";
+import { useTranslation } from "react-i18next";
+import "./lib/i18n";
 
 // Main Investment Target Tracker component
 function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
+  const { t } = useTranslation();
   const [targetAmount, setTargetAmount] = useState(100000);
   const [stepSize, setStepSize] = useState(10000);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
@@ -47,9 +50,9 @@ function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
   const headerDescription =
     goals && goals.length > 0
       ? selectedGoal
-        ? `Tracking progress for: ${selectedGoal.title}`
-        : "Select a goal to track your investment progress"
-      : "Track your investment progress towards your financial goals";
+        ? t("tracking_progress_for")
+        : t("select_goal_to_track")
+      : t("track_investment_progress");
 
   const headerActions =
     !isLoading && goals && goals.length > 0 ? (
@@ -62,7 +65,7 @@ function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
     <PageHeader actions={headerActions}>
       <div className="flex flex-col gap-2">
         <div className="flex items-center gap-2">
-          <h1 className="text-lg font-semibold sm:text-xl">Goal Progress Tracker</h1>
+          <h1 className="text-lg font-semibold sm:text-xl">{t("page_title")}</h1>
           <HelpPopover />
         </div>
         <p className="text-muted-foreground text-sm sm:text-base">{headerDescription}</p>
@@ -78,7 +81,7 @@ function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
           <div className="flex min-h-[40vh] items-center justify-center">
             <div className="text-center">
               <Icons.Loader className="text-primary mx-auto mb-4 h-8 w-8 animate-spin" />
-              <p className="text-muted-foreground text-sm">Loading data...</p>
+              <p className="text-muted-foreground text-sm">{t("loading_data")}</p>
             </div>
           </div>
         </PageContent>
@@ -93,7 +96,7 @@ function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
         <PageContent>
           <div className="flex min-h-[40vh] items-center justify-center px-4">
             <div className="text-destructive max-w-md rounded-xl border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-950">
-              <h3 className="mb-2 text-base font-semibold">Error Loading Data</h3>
+              <h3 className="mb-2 text-base font-semibold">{t("error_loading_title")}</h3>
               <p className="text-sm">{error?.message}</p>
             </div>
           </div>
@@ -112,14 +115,13 @@ function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
             <div className="w-full max-w-lg">
               <EmptyPlaceholder className="mt-16">
                 <EmptyPlaceholder.Icon name="Goals" />
-                <EmptyPlaceholder.Title>No Goals Found</EmptyPlaceholder.Title>
+                <EmptyPlaceholder.Title>{t("no_goals_found")}</EmptyPlaceholder.Title>
                 <EmptyPlaceholder.Description>
-                  You haven&apos;t created any investment goals yet. Create your first goal to start
-                  tracking your progress.
+                  {t("no_goals_description")}
                 </EmptyPlaceholder.Description>
                 <Button onClick={() => ctx.api.navigation.navigate("/settings/goals")}>
                   <Icons.Plus className="mr-2 h-4 w-4" />
-                  Create Your First Goal
+                  {t("create_first_goal")}
                 </Button>
               </EmptyPlaceholder>
             </div>
