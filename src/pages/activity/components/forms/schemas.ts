@@ -12,21 +12,21 @@ export const baseActivitySchema = z.object({
 
 export const holdingsActivitySchema = baseActivitySchema.extend({
   activityType: z.enum([ActivityType.ADD_HOLDING, ActivityType.REMOVE_HOLDING]),
-  assetId: z.string().min(1, { message: "Please select a security" }),
+  assetId: z.string().optional(),
   quantity: z.coerce
     .number({
-      required_error: "Please enter a valid quantity.",
       invalid_type_error: "Quantity must be a number.",
     })
-    .positive(),
+    .positive()
+    .optional(),
   unitPrice: z.coerce
     .number({
-      required_error: "Please enter a valid average cost.",
       invalid_type_error: "Average cost must be a number.",
     })
-    .positive(),
+    .positive()
+    .optional(),
   assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
-  // Simplified mode fields (UI only for now, backend transformation handles the rest)
+  // Simplified mode fields
   simplifiedMode: z.boolean().optional().default(false),
   assetName: z.string().optional(),
   assetSubClass: z.string().optional(),
@@ -151,6 +151,81 @@ export const newActivitySchema = z
     z.object({
       showCurrencySelect: z.boolean().optional(),
     }),
-  );
+  )
+  .superRefine((data, ctx) => {
+    // Validate holdings activities with simplified mode
+    if (
+      "activityType" in data &&
+      (data.activityType === "ADD_HOLDING" || data.activityType === "REMOVE_HOLDING")
+    ) {
+      const simplifiedMode = "simplifiedMode" in data ? data.simplifiedMode : false;
+
+      if (simplifiedMode) {
+        // In simplified mode, require assetName, assetSubClass, and totalAmount
+        if (!("assetName" in data) || !data.assetName || String(data.assetName).trim() === "") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Asset name is required",
+            path: ["assetName"],
+          });
+        }
+        if (
+          !("assetSubClass" in data) ||
+          !data.assetSubClass ||
+          String(data.assetSubClass).trim() === ""
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Asset subclass is required",
+            path: ["assetSubClass"],
+          });
+        }
+        if (
+          !("totalAmount" in data) ||
+          !data.totalAmount ||
+          (typeof data.totalAmount === "number" && data.totalAmount <= 0)
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Total amount is required and must be positive",
+            path: ["totalAmount"],
+          });
+        }
+      } else {
+        // In normal mode, require assetId, quantity, and unitPrice
+        if (!("assetId" in data) || !data.assetId || String(data.assetId).trim() === "") {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Please select a security",
+            path: ["assetId"],
+          });
+        }
+        if (
+          !("quantity" in data) ||
+          data.quantity === undefined ||
+          data.quantity === null ||
+          (typeof data.quantity === "number" && data.quantity <= 0)
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Please enter a valid quantity.",
+            path: ["quantity"],
+          });
+        }
+        if (
+          !("unitPrice" in data) ||
+          data.unitPrice === undefined ||
+          data.unitPrice === null ||
+          (typeof data.unitPrice === "number" && data.unitPrice <= 0)
+        ) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: "Please enter a valid average cost.",
+            path: ["unitPrice"],
+          });
+        }
+      }
+    }
+  });
 
 export type NewActivityFormValues = z.infer<typeof newActivitySchema>;
