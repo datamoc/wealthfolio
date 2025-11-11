@@ -118,7 +118,7 @@ export const HoldingsForm = ({ accounts }: { accounts: AccountSelectOption[] }) 
                         <SelectContent>
                           {ASSET_SUBCLASS_TYPES.map((type) => (
                             <SelectItem key={type.value} value={type.value}>
-                              {t(type.translationKey)}
+                              {t(`asset:${type.translationKey}`)}
                             </SelectItem>
                           ))}
                         </SelectContent>
