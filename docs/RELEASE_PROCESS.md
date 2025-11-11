@@ -16,6 +16,37 @@ The release is packaged as a single zip file containing the application installe
 - Rust and Tauri CLI installed
 - GitHub CLI (`gh`) installed (optional, for automated release creation)
 - All changes committed and pushed to the main branch
+- **Dependencies installed**: Run `pnpm install` at the project root first
+
+## Quick Start
+
+For the impatient, here's the TL;DR:
+
+```bash
+# 1. Ensure dependencies are installed
+pnpm install
+
+# 2. Update version in src-tauri/tauri.conf.json
+# Edit: "version": "2.0.0-alpha.1"
+
+# 3. Build and package addons
+pnpm run release:package
+
+# 4. Build Tauri app
+pnpm tauri build
+
+# 5. Copy installer to release-package/
+cp src-tauri/target/release/bundle/deb/*.deb release-package/  # Linux example
+
+# 6. Create release zip
+pnpm run release:create -- --prerelease
+
+# 7. Create GitHub release
+gh release create v2.0.0-alpha.1 wealthfolio-*.zip \
+  --title "Wealthfolio v2.0.0-alpha.1" \
+  --notes-file release-package/RELEASE_NOTES.md \
+  --prerelease
+```
 
 ## Release Workflow
 
@@ -36,7 +67,12 @@ For pre-releases, use semantic versioning with pre-release identifiers:
 
 ### Step 2: Build and Package Addons
 
-Run the addon packaging script:
+**Important**: Ensure all dependencies are installed first:
+```bash
+pnpm install
+```
+
+Then run the addon packaging script:
 
 ```bash
 pnpm run release:package
@@ -45,10 +81,13 @@ node scripts/package-release.mjs
 ```
 
 This script will:
+- Verify and install all workspace dependencies (root, packages, addons)
 - Clean the `release-package/` directory
 - Build all addons in the `addons/` directory
 - Package each addon as a zip file
 - Place addon zips in `release-package/addons/`
+
+**Note**: The script will automatically run `pnpm install` to ensure all dependencies are present, including addon dependencies.
 
 ### Step 3: Build Tauri Application
 
@@ -189,12 +228,30 @@ jobs:
 
 ### Addons Not Building
 
-If addon builds fail:
-1. Ensure all dependencies are installed: `pnpm install`
-2. Try building addons individually:
+If addon builds fail with errors like "vite: not found" or "node_modules missing":
+
+1. **Install all workspace dependencies**:
+   ```bash
+   pnpm install
+   ```
+   This installs dependencies for the root project, packages, AND all addons.
+
+2. **Verify addon dependencies are installed**:
+   ```bash
+   # Check if addon has node_modules symlink/directory
+   ls addons/goal-progress-tracker/node_modules
+   ```
+
+3. **Try building addons individually**:
    ```bash
    cd addons/goal-progress-tracker
    pnpm run bundle
+   ```
+
+4. **Clear pnpm cache if issues persist**:
+   ```bash
+   pnpm store prune
+   pnpm install
    ```
 
 ### Tauri Build Fails
