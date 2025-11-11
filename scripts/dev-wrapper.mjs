@@ -80,7 +80,7 @@ process.on("exit", () => {
   if (viteProcess && viteProcess.pid) {
     try {
       viteProcess.kill("SIGKILL");
-    } catch (e) {
+    } catch {
       // Ignore errors during final cleanup
     }
   }

@@ -25,7 +25,16 @@ export function convertToCSV<T extends Record<string, unknown>>(data: T[]): stri
     if (typeof value === "number" || typeof value === "boolean") {
       return String(value);
     }
-    // Quote strings and escape internal quotes
+    if (typeof value === "string") {
+      // Quote strings and escape internal quotes
+      return JSON.stringify(value);
+    }
+    // For objects/arrays, stringify them
+    if (typeof value === "object") {
+      return JSON.stringify(JSON.stringify(value));
+    }
+    // For any other type (symbol, function, bigint, etc), convert to string safely
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     return JSON.stringify(String(value));
   };
 
