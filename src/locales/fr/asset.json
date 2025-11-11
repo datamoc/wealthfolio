@@ -20,5 +20,15 @@
   "high": "Haut",
   "low": "Bas",
   "adj_close": "Clôture ajustée",
-  "volume": "Volume"
+  "volume": "Volume",
+  "subclass_stock": "Action",
+  "subclass_etf": "ETF",
+  "subclass_mutual_fund": "Fonds Commun",
+  "subclass_fonds_euros": "Fonds Euros",
+  "subclass_cryptocurrency": "Cryptomonnaie",
+  "subclass_commodity": "Matière Première",
+  "subclass_precious_metal": "Métal Précieux",
+  "subclass_alternative": "Alternatif",
+  "subclass_cash": "Liquidités",
+  "subclass_other": "Autre"
 }

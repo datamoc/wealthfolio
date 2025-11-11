@@ -175,14 +175,14 @@ export const ActivityTypeNames: Record<ActivityType, string> = {
 
 // Asset subclass types (from Rust AssetSubClass enum)
 export const ASSET_SUBCLASS_TYPES = [
-  { label: "Stock", value: "Stock" },
-  { label: "ETF", value: "ETF" },
-  { label: "Mutual Fund", value: "Mutual Fund" },
-  { label: "Fonds Euros", value: "Fonds Euros" },
-  { label: "Cryptocurrency", value: "Cryptocurrency" },
-  { label: "Commodity", value: "Commodity" },
-  { label: "Precious Metal", value: "Precious Metal" },
-  { label: "Alternative", value: "Alternative" },
-  { label: "Cash", value: "Cash" },
-  { label: "Other", value: "Other" },
+  { label: "Stock", value: "Stock", translationKey: "asset:subclass_stock" },
+  { label: "ETF", value: "ETF", translationKey: "asset:subclass_etf" },
+  { label: "Mutual Fund", value: "Mutual Fund", translationKey: "asset:subclass_mutual_fund" },
+  { label: "Fonds Euros", value: "Fonds Euros", translationKey: "asset:subclass_fonds_euros" },
+  { label: "Cryptocurrency", value: "Cryptocurrency", translationKey: "asset:subclass_cryptocurrency" },
+  { label: "Commodity", value: "Commodity", translationKey: "asset:subclass_commodity" },
+  { label: "Precious Metal", value: "Precious Metal", translationKey: "asset:subclass_precious_metal" },
+  { label: "Alternative", value: "Alternative", translationKey: "asset:subclass_alternative" },
+  { label: "Cash", value: "Cash", translationKey: "asset:subclass_cash" },
+  { label: "Other", value: "Other", translationKey: "asset:subclass_other" },
 ] as const;
