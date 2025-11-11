@@ -156,3 +156,195 @@ export function filterProperties(
       property.type.toLowerCase().includes(term)
   );
 }
+
+/**
+ * Calculate monthly payment from loan parameters
+ * Formula: M = P * [r(1 + r)^n] / [(1 + r)^n - 1]
+ * Where:
+ * - M = Monthly payment
+ * - P = Principal (loan amount)
+ * - r = Monthly interest rate (annual rate / 12 / 100)
+ * - n = Number of months
+ */
+export function calculateMonthlyPayment(
+  principal: number,
+  annualInterestRate: number,
+  months: number
+): number {
+  if (principal <= 0 || months <= 0) return 0;
+  if (annualInterestRate === 0) return principal / months;
+
+  const monthlyRate = annualInterestRate / 12 / 100;
+  const denominator = Math.pow(1 + monthlyRate, months) - 1;
+
+  if (denominator === 0) return 0;
+
+  const monthlyPayment =
+    (principal * monthlyRate * Math.pow(1 + monthlyRate, months)) / denominator;
+
+  return Math.round(monthlyPayment * 100) / 100;
+}
+
+/**
+ * Calculate annual interest rate from monthly payment using Newton-Raphson method
+ * This is an iterative approximation since there's no closed-form solution
+ */
+export function calculateInterestRate(
+  principal: number,
+  monthlyPayment: number,
+  months: number
+): number {
+  if (principal <= 0 || monthlyPayment <= 0 || months <= 0) return 0;
+
+  // If monthly payment equals principal/months, interest rate is 0
+  const minPayment = principal / months;
+  if (Math.abs(monthlyPayment - minPayment) < 0.01) return 0;
+
+  // Newton-Raphson method to find the interest rate
+  let rate = 0.05; // Initial guess: 5% annual rate
+  const maxIterations = 100;
+  const tolerance = 0.0001;
+
+  for (let i = 0; i < maxIterations; i++) {
+    const monthlyRate = rate / 12;
+    const x = Math.pow(1 + monthlyRate, months);
+
+    // Calculate the function value and derivative
+    const fx = principal * monthlyRate * x / (x - 1) - monthlyPayment;
+    const dfx = principal * ((x * (months * (x - 1) - x * monthlyRate * months)) / Math.pow(x - 1, 2)) / 12;
+
+    if (Math.abs(dfx) < 1e-10) break; // Avoid division by very small number
+
+    const newRate = rate - fx / dfx;
+
+    if (Math.abs(newRate - rate) < tolerance) {
+      return Math.round(newRate * 10000) / 100; // Return as percentage with 2 decimals
+    }
+
+    rate = newRate;
+
+    // Keep rate in reasonable bounds
+    if (rate < 0) rate = 0;
+    if (rate > 1) rate = 1; // Max 100% annual rate
+  }
+
+  return Math.round(rate * 10000) / 100;
+}
+
+/**
+ * Calculate number of months between two dates
+ */
+export function calculateMonthsBetweenDates(startDate: string, endDate: string): number {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  const years = end.getFullYear() - start.getFullYear();
+  const months = end.getMonth() - start.getMonth();
+
+  return years * 12 + months;
+}
+
+/**
+ * Get default currency for a country
+ * Maps country names (and common variations) to their primary currencies
+ */
+export function getCurrencyForCountry(country: string): string {
+  const countryLower = country.toLowerCase().trim();
+
+  // Country to currency mapping (most common countries and variations)
+  const countryToCurrency: Record<string, string> = {
+    // North America
+    'united states': 'USD',
+    'usa': 'USD',
+    'us': 'USD',
+    'america': 'USD',
+    'canada': 'CAD',
+    'mexico': 'MXN',
+
+    // Europe
+    'germany': 'EUR',
+    'france': 'EUR',
+    'spain': 'EUR',
+    'italy': 'EUR',
+    'netherlands': 'EUR',
+    'belgium': 'EUR',
+    'austria': 'EUR',
+    'portugal': 'EUR',
+    'greece': 'EUR',
+    'ireland': 'EUR',
+    'finland': 'EUR',
+    'luxembourg': 'EUR',
+    'slovakia': 'EUR',
+    'slovenia': 'EUR',
+    'estonia': 'EUR',
+    'latvia': 'EUR',
+    'lithuania': 'EUR',
+    'malta': 'EUR',
+    'cyprus': 'EUR',
+    'united kingdom': 'GBP',
+    'uk': 'GBP',
+    'britain': 'GBP',
+    'england': 'GBP',
+    'scotland': 'GBP',
+    'wales': 'GBP',
+    'switzerland': 'CHF',
+    'sweden': 'SEK',
+    'norway': 'NOK',
+    'denmark': 'DKK',
+    'poland': 'PLN',
+    'czech republic': 'CZK',
+    'czechia': 'CZK',
+    'hungary': 'HUF',
+    'romania': 'RON',
+    'bulgaria': 'BGN',
+    'croatia': 'EUR',
+    'iceland': 'ISK',
+
+    // Asia Pacific
+    'japan': 'JPY',
+    'china': 'CNY',
+    'south korea': 'KRW',
+    'korea': 'KRW',
+    'hong kong': 'HKD',
+    'singapore': 'SGD',
+    'india': 'INR',
+    'australia': 'AUD',
+    'new zealand': 'NZD',
+    'thailand': 'THB',
+    'malaysia': 'MYR',
+    'indonesia': 'IDR',
+    'philippines': 'PHP',
+    'vietnam': 'VND',
+    'taiwan': 'TWD',
+
+    // Middle East
+    'united arab emirates': 'AED',
+    'uae': 'AED',
+    'dubai': 'AED',
+    'saudi arabia': 'SAR',
+    'israel': 'ILS',
+    'turkey': 'TRY',
+    'qatar': 'QAR',
+    'kuwait': 'KWD',
+
+    // South America
+    'brazil': 'BRL',
+    'argentina': 'ARS',
+    'chile': 'CLP',
+    'colombia': 'COP',
+    'peru': 'PEN',
+
+    // Africa
+    'south africa': 'ZAR',
+    'nigeria': 'NGN',
+    'egypt': 'EGP',
+    'kenya': 'KES',
+    'morocco': 'MAD',
+
+    // Other
+    'russia': 'RUB',
+    'ukraine': 'UAH',
+  };
+
+  return countryToCurrency[countryLower] || 'USD'; // Default to USD if country not found
+}
