@@ -19,7 +19,7 @@ import {
   RadioGroup,
   RadioGroupItem,
 } from "@wealthfolio/ui";
-import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
+import { worldCurrencies } from "@wealthfolio/ui";
 import type { Loan, LoanType } from "../lib/types";
 import {
   generateId,

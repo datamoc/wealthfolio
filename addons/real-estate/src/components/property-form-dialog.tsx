@@ -17,7 +17,7 @@ import {
   SelectValue,
   Textarea,
 } from "@wealthfolio/ui";
-import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
+import { worldCurrencies } from "@wealthfolio/ui";
 import type { Property, PropertyType } from "../lib/types";
 import { generateId, getCurrencyForCountry } from "../lib/utils";
 
