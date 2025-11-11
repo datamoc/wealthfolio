@@ -4,14 +4,14 @@ export function getCurrencyLabel(currencyCode: string, language = 'en'): string 
     const displayNames = new Intl.DisplayNames([language], { type: 'currency' });
     const currencyName = displayNames.of(currencyCode);
     return `${currencyName} (${currencyCode})`;
-  } catch (error) {
+  } catch {
     // Fallback if DisplayNames not supported or currency code invalid
     return `${currencyCode}`;
   }
 }
 
 // Get all currencies with translated labels
-export function getWorldCurrencies(language = 'en'): Array<{ label: string; value: string }> {
+export function getWorldCurrencies(language = 'en'): { label: string; value: string }[] {
   return worldCurrencyCodes.map(code => ({
     label: getCurrencyLabel(code, language),
     value: code
