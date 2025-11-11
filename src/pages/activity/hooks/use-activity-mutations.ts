@@ -5,7 +5,7 @@ import {
   saveActivities,
   updateActivity,
 } from "@/commands/activity";
-import { updateQuote } from "@/commands/market-data";
+import { updateAssetProfile, updateQuote } from "@/commands/market-data";
 import { toast } from "@/components/ui/use-toast";
 import { isCashActivity } from "@/lib/activity-utils";
 import { DataSource } from "@/lib/constants";
@@ -20,6 +20,29 @@ import {
 } from "@/lib/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { NewActivityFormValues } from "../components/forms/schemas";
+
+// Transform simplified mode data into traditional activity format
+function transformSimplifiedActivity(data: NewActivityFormValues): NewActivityFormValues {
+  if ("simplifiedMode" in data && data.simplifiedMode && "assetName" in data && "totalAmount" in data) {
+    // Generate a symbol from the asset name
+    const timestamp = Date.now();
+    const nameSlug = data.assetName
+      ?.trim()
+      .toUpperCase()
+      .replace(/[^A-Z0-9]/g, "_")
+      .substring(0, 15);
+    const symbol = `${nameSlug}_${timestamp}`;
+
+    return {
+      ...data,
+      assetId: symbol,
+      quantity: 1,
+      unitPrice: data.totalAmount,
+      assetDataSource: DataSource.MANUAL,
+    };
+  }
+  return data;
+}
 
 export function useActivityMutations(
   onSuccess?: (activity: { accountId?: string | null }) => void,
@@ -93,9 +116,27 @@ export function useActivityMutations(
 
   const addActivityMutation = useMutation({
     mutationFn: async (data: NewActivityFormValues) => {
-      const { ...rest } = data;
+      // Transform simplified mode data
+      const transformedData = transformSimplifiedActivity(data);
+      const { ...rest } = transformedData;
+
       const activity = await createActivity(rest);
-      await createQuoteFromActivity(data);
+      await createQuoteFromActivity(transformedData);
+
+      // If simplified mode, update asset profile with name and sub-class
+      if ("simplifiedMode" in data && data.simplifiedMode && transformedData.assetId) {
+        try {
+          await updateAssetProfile({
+            symbol: transformedData.assetId,
+            name: (data as any).assetName || transformedData.assetId,
+            assetSubClass: (data as any).assetSubClass || "",
+          });
+        } catch (error) {
+          logger.error(`Error updating asset profile: ${String(error)}`);
+          // Don't fail the whole operation if asset profile update fails
+        }
+      }
+
       return activity;
     },
     ...createMutationOptions("adding"),
