@@ -3,6 +3,7 @@ import { type ClassValue, clsx } from "clsx";
 import { format, isValid, parse, parseISO } from "date-fns";
 import { twMerge } from "tailwind-merge";
 import { AccountValuation } from "./types";
+import i18n from "./i18n";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -220,17 +221,19 @@ export function formatDateTimeDisplay(date: Date | string | undefined): string {
   return format(value, "yyyy/MM/dd HH:mm");
 }
 export function formatAmount(amount: number, currency: string, displayCurrency = true) {
+  const locale = i18n.language || "en-US";
+
   // Handle pence (GBp) specially
   if (currency === "GBp" || currency === "GBX") {
     if (!displayCurrency) {
-      return new Intl.NumberFormat("en-US", {
+      return new Intl.NumberFormat(locale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(amount);
     }
 
     // For pence, format as "123.45p" or "1,234.56p"
-    const formattedNumber = new Intl.NumberFormat("en-US", {
+    const formattedNumber = new Intl.NumberFormat(locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
@@ -238,7 +241,7 @@ export function formatAmount(amount: number, currency: string, displayCurrency =
     return `${formattedNumber}p`;
   }
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     style: displayCurrency ? "currency" : undefined,
     currency: currency,
     minimumFractionDigits: 2,
@@ -249,8 +252,9 @@ export function formatAmount(amount: number, currency: string, displayCurrency =
 export function formatPercent(value: number | null | undefined) {
   if (value == null) return "-";
   try {
+    const locale = i18n.language || "en-US";
     // Use Intl.NumberFormat for correct percentage formatting (handles x100 and % sign)
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(locale, {
       style: "percent",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -274,10 +278,11 @@ export function formatQuantity(quantity: number | null | undefined): string {
     return "-";
   }
 
+  const locale = i18n.language || "en-US";
   // Use Intl.NumberFormat for consistent number formatting
   // Minimum fraction digits of 0 allows whole numbers to show without decimals
   // Maximum of 4 decimal places when needed
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(locale, {
     minimumFractionDigits: 0,
     maximumFractionDigits: 4,
     useGrouping: true,

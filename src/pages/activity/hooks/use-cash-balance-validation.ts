@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useLatestValuations } from "@/hooks/use-latest-valuations";
 import { NewActivityFormValues } from "../components/forms/schemas";
+import i18n from "@/lib/i18n";
 
 export interface CashBalanceValidationResult {
   isValid: boolean;
@@ -115,7 +116,8 @@ export function useCashBalanceValidation(): CashBalanceValidationResult {
 
     let warning: string | undefined;
     if (!isValid) {
-      const formatter = new Intl.NumberFormat("en-US", {
+      const locale = i18n.language || "en-US";
+      const formatter = new Intl.NumberFormat(locale, {
         style: "currency",
         currency: accountValuation.accountCurrency,
         minimumFractionDigits: 2,

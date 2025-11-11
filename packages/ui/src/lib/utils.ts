@@ -7,19 +7,22 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Format amount with currency support, including special handling for pence (GBp/GBX)
+ * Uses browser's locale for proper number formatting (e.g., French uses "800 000,00 €")
  */
-export function formatAmount(amount: number, currency: string, displayCurrency = true) {
+export function formatAmount(amount: number, currency: string, displayCurrency = true, locale?: string) {
+  const effectiveLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+
   // Handle pence (GBp) specially
   if (currency === "GBp" || currency === "GBX") {
     if (!displayCurrency) {
-      return new Intl.NumberFormat("en-US", {
+      return new Intl.NumberFormat(effectiveLocale, {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(amount);
     }
 
     // For pence, format as "123.45p" or "1,234.56p"
-    const formattedNumber = new Intl.NumberFormat("en-US", {
+    const formattedNumber = new Intl.NumberFormat(effectiveLocale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     }).format(amount);
@@ -27,7 +30,7 @@ export function formatAmount(amount: number, currency: string, displayCurrency =
     return `${formattedNumber}p`;
   }
 
-  return new Intl.NumberFormat("en-US", {
+  return new Intl.NumberFormat(effectiveLocale, {
     style: displayCurrency ? "currency" : undefined,
     currency: currency,
     minimumFractionDigits: 2,
@@ -37,12 +40,14 @@ export function formatAmount(amount: number, currency: string, displayCurrency =
 
 /**
  * Format percentage values with proper formatting
+ * Uses browser's locale for proper number formatting (e.g., French uses "3,45 %" with space)
  */
-export function formatPercent(value: number | null | undefined) {
+export function formatPercent(value: number | null | undefined, locale?: string) {
   if (value == null) return "-";
   try {
+    const effectiveLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
     // Use Intl.NumberFormat for correct percentage formatting (handles x100 and % sign)
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat(effectiveLocale, {
       style: "percent",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

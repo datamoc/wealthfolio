@@ -3,6 +3,7 @@ import { Alert, AlertDescription, Icons } from "@wealthfolio/ui";
 import { useCashBalanceValidation } from "../hooks/use-cash-balance-validation";
 import { NewActivityFormValues } from "./forms/schemas";
 import { useTranslation } from "react-i18next";
+import i18n from "@/lib/i18n";
 
 export function CashBalanceWarning() {
   const { t } = useTranslation("activity");
@@ -49,7 +50,8 @@ export function CashBalanceWarning() {
 
   // Only show success message for significant purchases to avoid being too chatty
   if (isValid && accountCurrency && currentBalance > 0 && requiredAmount > 0) {
-    const formatter = new Intl.NumberFormat("en-US", {
+    const locale = i18n.language || "en-US";
+    const formatter = new Intl.NumberFormat(locale, {
       style: "currency",
       currency: accountCurrency,
       minimumFractionDigits: 2,
