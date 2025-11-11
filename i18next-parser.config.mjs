@@ -28,7 +28,8 @@ export default {
   suffix: '}',
 
   // Namespaces to use
-  defaultValue: (locale, namespace, key) => {
+  // eslint-disable-next-line no-unused-vars
+  defaultValue: (_locale, _namespace, _key) => {
     // Return empty string as default value for missing keys
     return '';
   },

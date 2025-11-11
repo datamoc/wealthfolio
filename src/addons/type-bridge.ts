@@ -264,7 +264,7 @@ export function createSDKHostAPIBridge(internalAPI: InternalHostAPI, addonId?: s
       setData: internalAPI.setAddonData,
     },
 
-    logger: createAddonLogger(addonId ?? "unknown-addon"),
+    logger: createAddonLogger(addonId && addonId.trim() !== "" ? addonId : "unknown-addon"),
 
     events: {
       import: {

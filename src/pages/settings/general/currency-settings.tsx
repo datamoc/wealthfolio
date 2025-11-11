@@ -11,16 +11,12 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 type TranslateFn = ReturnType<typeof useTranslation<"settings">>["t"];
 
-const baseCurrencyFormSchema = z.object({
-  baseCurrency: z.string(),
-});
-
-type BaseCurrencyFormValues = z.infer<typeof baseCurrencyFormSchema>;
-
 const createBaseCurrencyFormSchema = (t: TranslateFn) =>
   z.object({
     baseCurrency: z.string({ required_error: t("currency_select_error") }),
   });
+
+type BaseCurrencyFormValues = z.infer<ReturnType<typeof createBaseCurrencyFormSchema>>;
 
 // Extracted form component
 export function BaseCurrencyForm() {

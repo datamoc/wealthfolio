@@ -130,10 +130,14 @@ export const DonutChart: React.FC<DonutChartProps> = ({
   startAngle = 180,
   endAngle = 0,
 }) => {
+  // Note: Recharts Pie component TypeScript definitions are incomplete
+  // We cast to any to use runtime-supported props not in the type definitions
+  const PieComponent = Pie as any;
+
   return (
     <div className="h-[160px] w-full p-0">
       <PieChart width={200} height={160} margin={{ top: 0, right: 0, bottom: 0, left: 0 }}>
-        <Pie
+        <PieComponent
           data={data}
           cy="80%"
           innerRadius="110%"
@@ -148,7 +152,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
           inactiveShape={renderInactiveShape}
           onMouseEnter={onPieEnter}
           onMouseLeave={onPieLeave}
-          onClick={(_event, index) => {
+          onClick={(_event: any, index: number) => {
             if (onSectionClick && data[index]) {
               onSectionClick(data[index], index);
             }
@@ -159,7 +163,7 @@ export const DonutChart: React.FC<DonutChartProps> = ({
           {data.map((_, index) => (
             <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
           ))}
-        </Pie>
+        </PieComponent>
       </PieChart>
     </div>
   );

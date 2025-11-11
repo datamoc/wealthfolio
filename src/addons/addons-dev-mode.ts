@@ -229,7 +229,8 @@ class AddonDevManager {
    * Start file watching for hot reload
    */
   private startWatching(): void {
-    if (this.watchInterval) return;
+    // Stop any existing watch first to prevent duplicates
+    this.stopWatching();
 
     // Use polling for simplicity - could be enhanced with native file watchers
     this.watchInterval = window.setInterval(() => {
@@ -325,23 +326,46 @@ class AddonDevManager {
    * Setup hot reload server connection
    */
   private setupHotReloadServer(): void {
+    // Clean up existing connection first to prevent memory leaks
+    if (this.eventSource) {
+      this.eventSource.close();
+      this.eventSource = null;
+    }
+
     // Connect to hot reload server if available
     if (typeof EventSource !== "undefined") {
       try {
         this.eventSource = new EventSource("http://localhost:3001/addon-updates");
 
         this.eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data) as { type?: string; addonId?: string };
-          if (data.type === "addon-changed" && data.addonId) {
-            this.reloadAddon(data.addonId);
+          try {
+            const data = JSON.parse(event.data) as { type?: string; addonId?: string };
+            if (data.type === "addon-changed" && data.addonId) {
+              this.reloadAddon(data.addonId);
+            }
+          } catch (error) {
+            logger.error(`Failed to parse addon update event: ${error}`);
           }
         };
 
         this.eventSource.onerror = () => {
-          // Hot reload server not available - that's fine
+          // Log error for debugging but don't crash
+          logger.debug("Hot reload server connection error (this is normal if server is not running)");
+
+          // Close the connection to prevent reconnection attempts
+          // EventSource will auto-reconnect by default, we prevent that here
+          if (this.eventSource && this.eventSource.readyState === EventSource.CONNECTING) {
+            this.eventSource.close();
+            this.eventSource = null;
+          }
+        };
+
+        this.eventSource.onopen = () => {
+          logger.debug("Hot reload server connected");
         };
       } catch (_error) {
         // EventSource not available or failed
+        logger.debug("Failed to setup hot reload server");
       }
     }
   }

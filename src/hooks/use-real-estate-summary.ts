@@ -88,7 +88,12 @@ function getPropertyValueAtDate(
   }
 
   // Otherwise use the oldest valuation (closest to purchase date)
-  return propertyValuations[propertyValuations.length - 1].value || property.currentValue;
+  // Double-check array is not empty (defensive programming)
+  if (propertyValuations.length > 0) {
+    return propertyValuations[propertyValuations.length - 1].value || property.currentValue;
+  }
+
+  return property.currentValue;
 }
 
 /**
