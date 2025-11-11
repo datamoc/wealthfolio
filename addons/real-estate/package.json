@@ -20,8 +20,8 @@
     "build": "vite build",
     "dev": "vite build --watch",
     "dev:server": "wealthfolio dev",
-    "clean": "rm -rf dist",
-    "package": "mkdir -p dist && cp dist/addon.js addon.js && zip -r dist/$npm_package_name-$npm_package_version.zip manifest.json addon.js README.md && rm addon.js",
+    "clean": "rimraf dist",
+    "package": "node ../../scripts/package-addon.mjs .",
     "bundle": "pnpm clean && pnpm build && pnpm package",
     "lint": "tsc --noEmit",
     "type-check": "tsc --noEmit"
