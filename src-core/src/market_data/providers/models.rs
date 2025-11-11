@@ -176,6 +176,8 @@ pub enum AssetSubClass {
     Commodity,
     PreciousMetal,
     MutualFund,
+    FondsEuros,
+    Other,
 }
 impl fmt::Display for AssetSubClass {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
@@ -187,6 +189,8 @@ impl fmt::Display for AssetSubClass {
             AssetSubClass::Commodity => "Commodity",
             AssetSubClass::PreciousMetal => "Precious Metal",
             AssetSubClass::MutualFund => "Mutual Fund",
+            AssetSubClass::FondsEuros => "Fonds Euros",
+            AssetSubClass::Other => "Other",
         };
         write!(f, "{}", display_string)
     }
