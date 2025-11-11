@@ -6,7 +6,16 @@ import ActivitySelectorPage from './pages/activity-selector-page';
 import SettingsPage from './pages/settings-page';
 import { SwingfolioIcon } from './components/swingfolio-icon';
 
-// Main addon component wrapper
+/**
+ * The main component for the Swingfolio addon.
+ *
+ * This component wraps the addon's pages in a `QueryClientProvider` to share
+ * the main application's data cache. It renders the `DashboardPage` by default.
+ *
+ * @param {object} props - The component's props.
+ * @param {AddonContext} props.ctx - The addon context, providing access to the main application's APIs.
+ * @returns {JSX.Element} The rendered component.
+ */
 function SwingfolioAddon({ ctx }: { ctx: AddonContext }) {
   return (
     <div className="swingfolio-addon">

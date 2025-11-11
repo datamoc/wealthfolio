@@ -24,7 +24,15 @@ import type { Property } from "./lib/types";
 import { initAddonI18n } from "./lib/i18n";
 
 /**
- * Main Real Estate Tracker Component
+ * The main component for the Real Estate Tracker addon.
+ *
+ * This component provides a dashboard for tracking real estate properties,
+ * including their value, loans, and equity. It allows users to add, edit, and
+ * delete properties and loans.
+ *
+ * @param {object} props - The component's props.
+ * @param {AddonContext} props.ctx - The addon context, providing access to the main application's APIs.
+ * @returns {JSX.Element} The rendered component.
  */
 function RealEstateTracker({ ctx }: { ctx: AddonContext }) {
   const { t } = useTranslation("real-estate");

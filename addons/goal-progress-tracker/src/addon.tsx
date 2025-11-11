@@ -6,7 +6,18 @@ import { InvestmentCalendar, GoalSelector, HelpPopover } from "./components";
 import { useGoalProgress } from "./hooks";
 import { useBalancePrivacy } from "@wealthfolio/ui";
 
-// Main Investment Target Tracker component
+/**
+ * The main component for the Investment Target Tracker addon.
+ *
+ * This component displays a calendar-like view of investment progress towards a
+ * selected financial goal. It fetches goal data from the main application,
+ * calculates progress, and provides a visual representation of the user's
+ * journey towards their target.
+ *
+ * @param {object} props - The component's props.
+ * @param {AddonContext} props.ctx - The addon context, providing access to the main application's APIs.
+ * @returns {JSX.Element} The rendered component.
+ */
 function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
   const [targetAmount, setTargetAmount] = useState(100000);
   const [stepSize, setStepSize] = useState(10000);

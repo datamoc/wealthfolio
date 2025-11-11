@@ -4,7 +4,16 @@ import type { AddonContext, AddonEnableFunction } from "@wealthfolio/addon-sdk";
 import { Icons } from "@wealthfolio/ui";
 import FeesPage from "./pages/fees-page";
 
-// Main addon component
+/**
+ * The main component for the Investment Fees Tracker addon.
+ *
+ * This component renders the `FeesPage`, which is the main UI for this addon.
+ * It passes the addon context down to the page component.
+ *
+ * @param {object} props - The component's props.
+ * @param {AddonContext} props.ctx - The addon context, providing access to the main application's APIs.
+ * @returns {JSX.Element} The rendered component.
+ */
 function InvestmentFeesTrackerAddon({ ctx }: { ctx: AddonContext }) {
   return (
     <div className="investment-fees-tracker-addon">
