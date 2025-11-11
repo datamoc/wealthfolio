@@ -44,15 +44,17 @@ easy-to-use tool to track their investments and goals.
 
 ### Step 3: Smart Tools (3-6 months)
 
-- [ ] Add Addons system to extend the app with custom features
+- [x] Add Addons system to extend the app with custom features
 - [ ] Add AI Chat addon with local first LLM(Ollama, LmStudio, etc) or Bring
       your own API keys (OpenAI, Anthropic, etc)
-- [ ] Real estate tracking (properties, mortgages, valuations, rental income)
-- [ ] Loan and liability tracking (mortgages, personal loans, credit cards, debts)
+- [x] Real estate tracking (properties, mortgages, valuations, rental income)
+- [~] Loan and liability tracking (mortgages, personal loans, credit cards, debts)
+      _Note: Loan tracking for real estate implemented in real-estate addon, but not yet available as a generic feature for all liability types_
 - [ ] Alternative assets tracking (gold, collectibles, cryptocurrencies, vehicles)
 - [x] LANG-001: Multilanguage support infrastructure (i18n functions and
       directory structure)
 - [x] LANG-002: French translation
+- [x] LANG-003: Locale-aware number formatting (respects language for number/currency display)
 
 ### Step 3: Smart Tools (6-12 months)
 
