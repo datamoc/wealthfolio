@@ -54,30 +54,17 @@ interface AddExchangeRateFormProps {
   onCancel: () => void;
 }
 
-export function AddExchangeRateForm({ onSubmit, onCancel }: AddExchangeRateFormProps) {
-  const { t } = useTranslation("settings");
-
-  type ExchangeRateFormData = z.infer<ReturnType<typeof exchangeRateSchema>>;
-
-  const form = useForm<ExchangeRateFormData>({
-    resolver: zodResolver(exchangeRateSchema(t)),
-    defaultValues: {
-      fromCurrency: "",
-      toCurrency: "",
-      rate: 0,
-    },
-  });
-
-  const handleSubmit = (data: ExchangeRateFormData) => {
-    onSubmit({
-      ...data,
-      source: "MANUAL",
-      timestamp: new Date().toISOString(),
-    });
-  };
-
-  const renderCurrencyField = (fieldName: "fromCurrency" | "toCurrency") => {
-    const [searchValue, setSearchValue] = useState("");
+// Separate component for currency field to properly use hooks
+function CurrencyFieldComponent({
+  fieldName,
+  form,
+  t,
+}: {
+  fieldName: "fromCurrency" | "toCurrency";
+  form: ReturnType<typeof useForm<z.infer<ReturnType<typeof exchangeRateSchema>>>>;
+  t: TranslateFn;
+}) {
+  const [searchValue, setSearchValue] = useState("");
 
     const handleSearchChange = (value: string) => {
       setSearchValue(value);
@@ -175,6 +162,28 @@ export function AddExchangeRateForm({ onSubmit, onCancel }: AddExchangeRateFormP
         )}
       />
     );
+}
+
+export function AddExchangeRateForm({ onSubmit, onCancel }: AddExchangeRateFormProps) {
+  const { t } = useTranslation("settings");
+
+  type ExchangeRateFormData = z.infer<ReturnType<typeof exchangeRateSchema>>;
+
+  const form = useForm<ExchangeRateFormData>({
+    resolver: zodResolver(exchangeRateSchema(t)),
+    defaultValues: {
+      fromCurrency: "",
+      toCurrency: "",
+      rate: 0,
+    },
+  });
+
+  const handleSubmit = (data: ExchangeRateFormData) => {
+    onSubmit({
+      ...data,
+      source: "MANUAL",
+      timestamp: new Date().toISOString(),
+    });
   };
 
   return (
@@ -186,8 +195,8 @@ export function AddExchangeRateForm({ onSubmit, onCancel }: AddExchangeRateFormP
         </DialogHeader>
 
         <div className="grid gap-10 p-4">
-          {renderCurrencyField("fromCurrency")}
-          {renderCurrencyField("toCurrency")}
+          <CurrencyFieldComponent fieldName="fromCurrency" form={form} t={t} />
+          <CurrencyFieldComponent fieldName="toCurrency" form={form} t={t} />
 
           <FormField
             control={form.control}

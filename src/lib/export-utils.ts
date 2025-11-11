@@ -18,15 +18,30 @@ export function convertToCSV<T extends Record<string, unknown>>(data: T[]): stri
   if (assetIDIndex !== -1) {
     headers[assetIDIndex] = "symbol";
   }
-  const dataRows = data.map((row) => Object.values(row).map(String));
-  const array = [headers].concat(dataRows);
-  return array
-    .map((row) => {
-      return row
-        .map((value) => {
-          return typeof value === "string" ? JSON.stringify(value) : value;
-        })
-        .toString();
-    })
-    .join("\n");
+
+  // Format CSV: quote headers, quote string values but not numbers
+  const formatCSVValue = (value: unknown): string => {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "number" || typeof value === "boolean") {
+      return String(value);
+    }
+    if (typeof value === "string") {
+      // Quote strings and escape internal quotes
+      return JSON.stringify(value);
+    }
+    // For objects/arrays, stringify them
+    if (typeof value === "object") {
+      return JSON.stringify(JSON.stringify(value));
+    }
+    // For any other type (symbol, function, bigint, etc), convert to string safely
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
+    return JSON.stringify(String(value));
+  };
+
+  const headerRow = headers.map((h) => JSON.stringify(h)).join(",");
+  const dataRows = data.map((row) => {
+    return Object.values(row).map(formatCSVValue).join(",");
+  });
+
+  return [headerRow, ...dataRows].join("\n");
 }

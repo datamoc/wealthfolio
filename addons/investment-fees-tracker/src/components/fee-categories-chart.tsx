@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
-import { DonutChart, EmptyPlaceholder, Skeleton } from "@wealthfolio/ui";
+import { EmptyPlaceholder, Skeleton } from "@wealthfolio/ui";
 import { Card, CardContent, CardHeader, CardTitle } from "@wealthfolio/ui";
+import { DonutChart } from "./donut-chart";
 
 interface FeeCategoryData {
   category: string;

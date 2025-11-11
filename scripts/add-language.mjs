@@ -227,7 +227,7 @@ async function translateText(text, targetLang, apiUrl) {
 
     const data = await response.json();
     return data.translatedText;
-  } catch (err) {
+  } catch {
     return null;
   }
 }
