@@ -1,7 +1,7 @@
 {
   "id": "real-estate-addon",
   "name": "Real Estate Tracker",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Track your real estate properties and associated loans with equity calculation and valuation history",
   "author": "Wealthfolio",
   "main": "dist/addon.js",

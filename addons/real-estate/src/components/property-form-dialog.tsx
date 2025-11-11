@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +17,9 @@ import {
   SelectValue,
   Textarea,
 } from "@wealthfolio/ui";
+import { worldCurrencies } from "@wealthfolio/ui/lib/currencies";
 import type { Property, PropertyType } from "../lib/types";
-import { generateId } from "../lib/utils";
+import { generateId, getCurrencyForCountry } from "../lib/utils";
 
 interface PropertyFormDialogProps {
   open: boolean;
@@ -26,14 +28,7 @@ interface PropertyFormDialogProps {
   onSave: (property: Property) => Promise<void>;
 }
 
-const propertyTypes: { value: PropertyType; label: string }[] = [
-  { value: "residential", label: "Residential" },
-  { value: "commercial", label: "Commercial" },
-  { value: "land", label: "Land" },
-  { value: "rental", label: "Rental Property" },
-  { value: "vacation", label: "Vacation Home" },
-  { value: "mixed-use", label: "Mixed Use" },
-];
+const popularCurrencies = ["USD", "CAD", "EUR", "GBP", "AUD", "CHF", "JPY"];
 
 export function PropertyFormDialog({
   open,
@@ -41,6 +36,16 @@ export function PropertyFormDialog({
   property,
   onSave,
 }: PropertyFormDialogProps) {
+  const { t } = useTranslation("real-estate");
+
+  const propertyTypes: { value: PropertyType; label: string }[] = [
+    { value: "residential", label: t("property_type_residential") },
+    { value: "commercial", label: t("property_type_commercial") },
+    { value: "land", label: t("property_type_land") },
+    { value: "rental", label: t("property_type_rental") },
+    { value: "vacation", label: t("property_type_vacation") },
+    { value: "mixed-use", label: t("property_type_mixed_use") },
+  ];
   const [formData, setFormData] = useState<Partial<Property>>({
     name: "",
     type: "residential",
@@ -116,30 +121,30 @@ export function PropertyFormDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-[600px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle>{property ? "Edit Property" : "Add New Property"}</DialogTitle>
+            <DialogTitle>
+              {property ? t("property_form_title_edit") : t("property_form_title_add")}
+            </DialogTitle>
             <DialogDescription>
-              {property
-                ? "Update the property details below."
-                : "Enter the details of your property."}
+              {property ? t("property_form_description_edit") : t("property_form_description_add")}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             {/* Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">Property Name *</Label>
+              <Label htmlFor="name">{t("property_name")} *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Main Residence, Downtown Condo"
+                placeholder={t("property_name_placeholder")}
                 required
               />
             </div>
 
             {/* Type */}
             <div className="grid gap-2">
-              <Label htmlFor="type">Property Type *</Label>
+              <Label htmlFor="type">{t("property_type")} *</Label>
               <Select
                 value={formData.type}
                 onValueChange={(value) => setFormData({ ...formData, type: value as PropertyType })}
@@ -159,12 +164,12 @@ export function PropertyFormDialog({
 
             {/* Address */}
             <div className="grid gap-2">
-              <Label htmlFor="address">Address *</Label>
+              <Label htmlFor="address">{t("address")} *</Label>
               <Input
                 id="address"
                 value={formData.address}
                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                placeholder="123 Main St"
+                placeholder={t("address_placeholder")}
                 required
               />
             </div>
@@ -172,21 +177,21 @@ export function PropertyFormDialog({
             {/* City, State */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="city">City</Label>
+                <Label htmlFor="city">{t("city")}</Label>
                 <Input
                   id="city"
                   value={formData.city}
                   onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  placeholder="New York"
+                  placeholder={t("city_placeholder")}
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="state">State/Province</Label>
+                <Label htmlFor="state">{t("state")}</Label>
                 <Input
                   id="state"
                   value={formData.state}
                   onChange={(e) => setFormData({ ...formData, state: e.target.value })}
-                  placeholder="NY"
+                  placeholder={t("state_placeholder")}
                 />
               </div>
             </div>
@@ -194,22 +199,30 @@ export function PropertyFormDialog({
             {/* Country, Postal Code */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="country">Country *</Label>
+                <Label htmlFor="country">{t("country")} *</Label>
                 <Input
                   id="country"
                   value={formData.country}
-                  onChange={(e) => setFormData({ ...formData, country: e.target.value })}
-                  placeholder="USA"
+                  onChange={(e) => {
+                    const newCountry = e.target.value;
+                    setFormData({
+                      ...formData,
+                      country: newCountry,
+                      // Auto-set currency based on country
+                      currency: getCurrencyForCountry(newCountry)
+                    });
+                  }}
+                  placeholder={t("country_placeholder")}
                   required
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="postalCode">Postal Code</Label>
+                <Label htmlFor="postalCode">{t("postal_code")}</Label>
                 <Input
                   id="postalCode"
                   value={formData.postalCode}
                   onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                  placeholder="10001"
+                  placeholder={t("postal_code_placeholder")}
                 />
               </div>
             </div>
@@ -217,7 +230,7 @@ export function PropertyFormDialog({
             {/* Purchase Date, Price */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="purchaseDate">Purchase Date *</Label>
+                <Label htmlFor="purchaseDate">{t("purchase_date")} *</Label>
                 <Input
                   id="purchaseDate"
                   type="date"
@@ -227,7 +240,7 @@ export function PropertyFormDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="purchasePrice">Purchase Price *</Label>
+                <Label htmlFor="purchasePrice">{t("purchase_price")} *</Label>
                 <Input
                   id="purchasePrice"
                   type="number"
@@ -243,7 +256,7 @@ export function PropertyFormDialog({
             {/* Current Value, Currency */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="currentValue">Current Value *</Label>
+                <Label htmlFor="currentValue">{t("current_value")} *</Label>
                 <Input
                   id="currentValue"
                   type="number"
@@ -255,25 +268,47 @@ export function PropertyFormDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="currency">Currency *</Label>
-                <Input
-                  id="currency"
+                <Label htmlFor="currency">{t("currency")} *</Label>
+                <Select
                   value={formData.currency}
-                  onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  placeholder="USD"
-                  required
-                />
+                  onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      {t("currency_popular")}
+                    </div>
+                    {popularCurrencies.map((curr) => (
+                      <SelectItem key={curr} value={curr}>
+                        {curr}
+                      </SelectItem>
+                    ))}
+                    <div className="my-1 border-t" />
+                    <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                      {t("currency_all")}
+                    </div>
+                    {worldCurrencies
+                      .filter((c) => !popularCurrencies.includes(c.value))
+                      .map((curr) => (
+                        <SelectItem key={curr.value} value={curr.value}>
+                          {curr.label}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
             {/* Notes */}
             <div className="grid gap-2">
-              <Label htmlFor="notes">Notes</Label>
+              <Label htmlFor="notes">{t("notes")}</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                placeholder="Additional notes about this property..."
+                placeholder={t("notes_placeholder")}
                 rows={3}
               />
             </div>
@@ -281,10 +316,10 @@ export function PropertyFormDialog({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : property ? "Update" : "Add Property"}
+              {isSubmitting ? t("saving") : property ? t("update") : t("save")}
             </Button>
           </DialogFooter>
         </form>
