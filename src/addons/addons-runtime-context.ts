@@ -90,17 +90,23 @@ const dynamicRoutes = new Map<string, React.LazyExoticComponent<React.ComponentT
 // Navigation update listeners
 const navigationUpdateListeners = new Set<() => void>();
 
-// Function to notify navigation update listeners
+/** Notifies all registered listeners that the navigation has been updated. */
 function notifyNavigationUpdate() {
   navigationUpdateListeners.forEach((listener) => listener());
 }
 
-// Public API for getting dynamic navigation items
+/**
+ * Gets all dynamically added navigation items, sorted by their `order`.
+ * @returns An array of dynamic navigation items.
+ */
 export function getDynamicNavItems() {
   return Array.from(dynamicNavItems.values()).sort((a, b) => a.order - b.order);
 }
 
-// Public API for getting dynamic routes
+/**
+ * Gets all dynamically added routes.
+ * @returns An array of objects, each containing a path and a component.
+ */
 export function getDynamicRoutes() {
   return Array.from(dynamicRoutes.entries()).map(([path, component]) => ({
     path,
@@ -108,18 +114,26 @@ export function getDynamicRoutes() {
   }));
 }
 
-// Public API for subscribing to navigation updates
+/**
+ * Subscribes to navigation updates.
+ * @param callback The function to call when the navigation is updated.
+ * @returns A function to unsubscribe.
+ */
 export function subscribeToNavigationUpdates(callback: () => void) {
   navigationUpdateListeners.add(callback);
   return () => navigationUpdateListeners.delete(callback);
 }
 
-// Public API for triggering navigation updates
+/** Triggers a navigation update, notifying all subscribers. */
 export function triggerNavigationUpdate() {
   notifyNavigationUpdate();
 }
 
-// Public API for triggering all disable callbacks
+/**
+ * Triggers all registered `onDisable` callbacks for all addons.
+ * This is called when addons are being unloaded, and it also clears all
+ * dynamic navigation items and routes.
+ */
 export function triggerAllDisableCallbacks() {
   disableCallbacks.forEach((cb) => {
     try {
@@ -134,7 +148,13 @@ export function triggerAllDisableCallbacks() {
   notifyNavigationUpdate();
 }
 
-// Create addon-scoped secret functions
+/**
+ * Creates a set of secret management functions that are scoped to a specific addon.
+ * This prevents addons from accessing each other's secrets.
+ *
+ * @param addonId The ID of the addon.
+ * @returns An object with `set`, `get`, and `delete` functions for secrets.
+ */
 function createAddonScopedSecrets(addonId: string) {
   const addonPrefix = `addon_${addonId}_`;
 
@@ -154,7 +174,16 @@ function createAddonScopedSecrets(addonId: string) {
   };
 }
 
-// Create context factory function for addon-specific contexts
+/**
+ * Creates a new addon context, scoped to a specific addon.
+ *
+ * The addon context provides the addon with access to the application's APIs,
+ * such as the sidebar, router, and data access functions. It also provides
+ * addon-scoped secret management.
+ *
+ * @param addonId The ID of the addon.
+ * @returns The addon context.
+ */
 export function createAddonContext(addonId: string): AddonContext {
   return {
     sidebar: {

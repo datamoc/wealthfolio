@@ -8,7 +8,13 @@ import {
   logger,
 } from "@/adapters";
 
-// openCsvFileDialog
+/**
+ * Opens a file dialog to select a CSV file.
+ * This is only supported in the desktop environment.
+ *
+ * @returns {Promise<null | string | string[]>} A promise that resolves with the selected file path(s), or null if the dialog is canceled.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const openCsvFileDialog = async (): Promise<null | string | string[]> => {
   try {
     switch (getRunEnv()) {
@@ -25,7 +31,13 @@ export const openCsvFileDialog = async (): Promise<null | string | string[]> => 
   }
 };
 
-// openFolderDialog
+/**
+ * Opens a dialog to select a folder.
+ * This is only supported in the desktop environment.
+ *
+ * @returns {Promise<string | null>} A promise that resolves with the selected folder path, or null if the dialog is canceled.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const openFolderDialog = async (): Promise<string | null> => {
   try {
     switch (getRunEnv()) {
@@ -42,7 +54,13 @@ export const openFolderDialog = async (): Promise<string | null> => {
   }
 };
 
-// openDatabaseFileDialog
+/**
+ * Opens a file dialog to select a database file.
+ * This is only supported in the desktop environment.
+ *
+ * @returns {Promise<string | null>} A promise that resolves with the selected file path, or null if the dialog is canceled.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const openDatabaseFileDialog = async (): Promise<string | null> => {
   try {
     switch (getRunEnv()) {
@@ -59,7 +77,15 @@ export const openDatabaseFileDialog = async (): Promise<string | null> => {
   }
 };
 
-// Function for downloading file content
+/**
+ * Opens a file save dialog to download content.
+ * This is only supported in the desktop environment.
+ *
+ * @param {Uint8Array | Blob | string} fileContent - The content to save.
+ * @param {string} fileName - The default file name.
+ * @returns {Promise<void>} A promise that resolves when the file is saved.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export async function openFileSaveDialog(
   fileContent: Uint8Array | Blob | string,
   fileName: string,

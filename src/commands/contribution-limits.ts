@@ -1,6 +1,12 @@
 import { ContributionLimit, NewContributionLimit, DepositsCalculation } from "@/lib/types";
 import { getRunEnv, RUN_ENV, invokeTauri, invokeWeb, logger } from "@/adapters";
 
+/**
+ * Gets all contribution limits.
+ *
+ * @returns {Promise<ContributionLimit[]>} A promise that resolves with a list of contribution limits.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getContributionLimit = async (): Promise<ContributionLimit[]> => {
   try {
     switch (getRunEnv()) {
@@ -17,6 +23,13 @@ export const getContributionLimit = async (): Promise<ContributionLimit[]> => {
   }
 };
 
+/**
+ * Creates a new contribution limit.
+ *
+ * @param {NewContributionLimit} newLimit - The data for the new contribution limit.
+ * @returns {Promise<ContributionLimit>} A promise that resolves with the newly created contribution limit.
+ * @throws Will throw an error if the API call fails.
+ */
 export const createContributionLimit = async (
   newLimit: NewContributionLimit,
 ): Promise<ContributionLimit> => {
@@ -35,6 +48,14 @@ export const createContributionLimit = async (
   }
 };
 
+/**
+ * Updates an existing contribution limit.
+ *
+ * @param {string} id - The ID of the contribution limit to update.
+ * @param {NewContributionLimit} updatedLimit - The updated data for the contribution limit.
+ * @returns {Promise<ContributionLimit>} A promise that resolves with the updated contribution limit.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateContributionLimit = async (
   id: string,
   updatedLimit: NewContributionLimit,
@@ -54,6 +75,13 @@ export const updateContributionLimit = async (
   }
 };
 
+/**
+ * Deletes a contribution limit.
+ *
+ * @param {string} id - The ID of the contribution limit to delete.
+ * @returns {Promise<void>} A promise that resolves when the contribution limit is deleted.
+ * @throws Will throw an error if the API call fails.
+ */
 export const deleteContributionLimit = async (id: string): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -70,6 +98,13 @@ export const deleteContributionLimit = async (id: string): Promise<void> => {
   }
 };
 
+/**
+ * Calculates the total deposits for a given contribution limit.
+ *
+ * @param {string} limitId - The ID of the contribution limit.
+ * @returns {Promise<DepositsCalculation>} A promise that resolves with the deposit calculation.
+ * @throws Will throw an error if the API call fails.
+ */
 export const calculateDepositsForLimit = async (limitId: string): Promise<DepositsCalculation> => {
   try {
     switch (getRunEnv()) {

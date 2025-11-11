@@ -1,6 +1,12 @@
 import type { ExchangeRate } from "@/lib/types";
 import { getRunEnv, RUN_ENV, invokeTauri, invokeWeb, logger } from "@/adapters";
 
+/**
+ * Gets the latest exchange rates.
+ *
+ * @returns {Promise<ExchangeRate[]>} A promise that resolves with a list of exchange rates.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getExchangeRates = async (): Promise<ExchangeRate[]> => {
   try {
     switch (getRunEnv()) {
@@ -17,6 +23,13 @@ export const getExchangeRates = async (): Promise<ExchangeRate[]> => {
   }
 };
 
+/**
+ * Updates an existing exchange rate.
+ *
+ * @param {ExchangeRate} updatedRate - The updated exchange rate data.
+ * @returns {Promise<ExchangeRate>} A promise that resolves with the updated exchange rate.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateExchangeRate = async (updatedRate: ExchangeRate): Promise<ExchangeRate> => {
   try {
     switch (getRunEnv()) {
@@ -33,6 +46,13 @@ export const updateExchangeRate = async (updatedRate: ExchangeRate): Promise<Exc
   }
 };
 
+/**
+ * Adds a new exchange rate.
+ *
+ * @param {Omit<ExchangeRate, "id">} newRate - The new exchange rate data.
+ * @returns {Promise<ExchangeRate>} A promise that resolves with the newly created exchange rate.
+ * @throws Will throw an error if the API call fails.
+ */
 export const addExchangeRate = async (newRate: Omit<ExchangeRate, "id">): Promise<ExchangeRate> => {
   try {
     switch (getRunEnv()) {
@@ -49,6 +69,13 @@ export const addExchangeRate = async (newRate: Omit<ExchangeRate, "id">): Promis
   }
 };
 
+/**
+ * Deletes an exchange rate.
+ *
+ * @param {string} rateId - The ID of the exchange rate to delete.
+ * @returns {Promise<void>} A promise that resolves when the exchange rate is deleted.
+ * @throws Will throw an error if the API call fails.
+ */
 export const deleteExchangeRate = async (rateId: string): Promise<void> => {
   try {
     switch (getRunEnv()) {

@@ -8,7 +8,15 @@ import {
   logger,
 } from "@/adapters";
 
-// listenImportFileDropHover
+/**
+ * Listens for a file drop hover event.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenImportFileDropHover = async <T>(
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> => {
@@ -27,7 +35,15 @@ export const listenImportFileDropHover = async <T>(
   }
 };
 
-// listenImportFileDrop
+/**
+ * Listens for a file drop event.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenImportFileDrop = async <T>(handler: EventCallback<T>): Promise<UnlistenFn> => {
   try {
     switch (getRunEnv()) {
@@ -44,7 +60,15 @@ export const listenImportFileDrop = async <T>(handler: EventCallback<T>): Promis
   }
 };
 
-// listenImportFileDropCancelled
+/**
+ * Listens for a file drop cancelled event.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenImportFileDropCancelled = async <T>(
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> => {

@@ -5,6 +5,16 @@ import { useState } from "react";
 import { PrivacyProvider } from "./context/privacy-context";
 import { AppRoutes } from "./routes";
 
+/**
+ * The main application component.
+ *
+ * This component serves as the root of the application, responsible for setting up
+ * essential providers for data fetching, application settings, privacy, and UI components.
+ * It initializes and provides the `QueryClient` for `react-query`, making it available
+ * globally for addons to use.
+ *
+ * @returns {JSX.Element} The rendered application with all necessary context providers.
+ */
 function App() {
   const [queryClient] = useState(
     () =>

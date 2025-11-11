@@ -18,6 +18,11 @@ interface AddonDevServer {
   lastUpdated?: Date;
 }
 
+/**
+ * Manages addon development mode, including hot reloading and discovery of development servers.
+ *
+ * This class is a singleton, with a global instance exported as `addonDevManager`.
+ */
 class AddonDevManager {
   private config: DevModeConfig;
   private devServers = new Map<string, AddonDevServer>();
@@ -37,7 +42,9 @@ class AddonDevManager {
   }
 
   /**
-   * Auto-discover running development servers
+   * Auto-discovers running addon development servers on common ports.
+   * It sends a health check request to each port and, if successful, tries to
+   * fetch the addon's manifest to identify and register it.
    */
   private async discoverDevServers(): Promise<void> {
     const commonPorts = [3001];
@@ -84,7 +91,11 @@ class AddonDevManager {
   }
 
   /**
-   * Enable development mode with hot reloading
+   * Enables addon development mode.
+   *
+   * This function discovers running dev servers, starts file watching for hot
+   * reloading, sets up a connection to the hot reload server, and injects
+   * development tools into the addon context.
    */
   async enableDevMode(): Promise<void> {
     if (!this.config.enabled) {
@@ -108,7 +119,10 @@ class AddonDevManager {
   }
 
   /**
-   * Disable development mode
+   * Disables addon development mode.
+   *
+   * This stops the file watcher and cleans up any resources used by the
+   * development mode, such as the hot reload server connection.
    */
   disableDevMode(): void {
     if (this.config.enabled) {
@@ -123,7 +137,9 @@ class AddonDevManager {
   }
 
   /**
-   * Register a development server for an addon
+   * Registers a development server for an addon.
+   *
+   * @param addon An object containing the addon's ID, name, and port.
    */
   registerDevServer(addon: { id: string; name: string; port: number }): void {
     const devServer: AddonDevServer = {
@@ -139,7 +155,13 @@ class AddonDevManager {
   }
 
   /**
-   * Load addon from development server
+   * Loads an addon from its development server.
+   *
+   * It fetches the addon's code and manifest from the dev server, and then
+   * executes the code in a sandboxed environment.
+   *
+   * @param addonId The ID of the addon to load.
+   * @returns A promise that resolves to `true` if the addon was loaded successfully, or `false` otherwise.
    */
   async loadAddonFromDevServer(addonId: string): Promise<boolean> {
     const devServer = this.devServers.get(addonId);
@@ -183,7 +205,15 @@ class AddonDevManager {
   }
 
   /**
-   * Execute addon code in a sandboxed environment
+   * Executes addon code in a sandboxed environment.
+   *
+   * It creates a blob URL from the addon code, dynamically imports it, and then
+   * executes the addon's default export as a function, passing it an
+   * addon-specific context.
+   *
+   * @param code The addon's JavaScript code.
+   * @param _manifest The addon's manifest (currently unused).
+   * @param addonId The ID of the addon.
    */
   private async executeAddonCode(code: string, _manifest: unknown, addonId: string): Promise<void> {
     try {
@@ -226,7 +256,8 @@ class AddonDevManager {
   }
 
   /**
-   * Start file watching for hot reload
+   * Starts the file watcher for hot reloading.
+   * It uses a polling mechanism to check for updates from the dev servers.
    */
   private startWatching(): void {
     if (this.watchInterval) return;
@@ -238,7 +269,7 @@ class AddonDevManager {
   }
 
   /**
-   * Stop file watching
+   * Stops the file watcher.
    */
   private stopWatching(): void {
     if (this.watchInterval) {
@@ -248,7 +279,8 @@ class AddonDevManager {
   }
 
   /**
-   * Check for updates from dev servers
+   * Checks for updates from the registered development servers.
+   * If an update is detected, it triggers a reload of the addon.
    */
   private async checkForUpdates(): Promise<void> {
     for (const [addonId, devServer] of this.devServers) {
@@ -274,7 +306,12 @@ class AddonDevManager {
   }
 
   /**
-   * Reload a specific addon
+   * Reloads a specific addon.
+   *
+   * It cleans up the existing instance of the addon, and then reloads it from
+   * the development server.
+   *
+   * @param addonId The ID of the addon to reload.
    */
   private async reloadAddon(addonId: string): Promise<void> {
     try {
@@ -322,7 +359,8 @@ class AddonDevManager {
   }
 
   /**
-   * Setup hot reload server connection
+   * Sets up a connection to the hot reload server using Server-Sent Events (SSE).
+   * When an `addon-changed` event is received, it triggers a reload of the specified addon.
    */
   private setupHotReloadServer(): void {
     // Connect to hot reload server if available
@@ -347,7 +385,9 @@ class AddonDevManager {
   }
 
   /**
-   * Inject development tools into addon context
+   * Injects development tools into the addon context.
+   * This provides addons with a `dev` object on their context, which contains
+   * functions for reloading, listing dev servers, and controlling auto-reloading.
    */
   private injectDevTools(): void {
     // Add development-specific APIs to a generic context
@@ -374,7 +414,9 @@ class AddonDevManager {
   }
 
   /**
-   * Cleanup resources
+   * Cleans up resources used by the development mode.
+   * This includes closing the hot reload server connection and disabling any
+   * running development addons.
    */
   private cleanup(): void {
     if (this.eventSource) {
@@ -399,14 +441,16 @@ class AddonDevManager {
   }
 
   /**
-   * Manually discover and register development servers
+   * Manually triggers the discovery and registration of development servers.
    */
   async discoverAndRegister(): Promise<void> {
     await this.discoverDevServers();
   }
 
   /**
-   * Get development status
+   * Gets the current status of the development mode.
+   *
+   * @returns An object containing the enabled status, a list of registered dev servers, and the auto-reload status.
    */
   getStatus() {
     return {
@@ -417,7 +461,9 @@ class AddonDevManager {
   }
 
   /**
-   * Toggle development mode on/off
+   * Toggles the development mode on or off.
+   *
+   * @returns `true` if development mode is now enabled, `false` otherwise.
    */
   toggleDevMode(): boolean {
     if (this.config.enabled) {
@@ -429,14 +475,16 @@ class AddonDevManager {
   }
 
   /**
-   * Check if development mode is enabled
+   * Checks if development mode is currently enabled.
+   *
+   * @returns `true` if development mode is enabled, `false` otherwise.
    */
   isEnabled(): boolean {
     return this.config.enabled;
   }
 
   /**
-   * Force disable development mode (for manual control)
+   * Forcibly disables development mode.
    */
   forceDisable(): void {
     if (this.config.enabled) {
@@ -446,7 +494,7 @@ class AddonDevManager {
   }
 
   /**
-   * Force enable development mode (for manual control)
+   * Forcibly enables development mode, if not already enabled and in a development environment.
    */
   forceEnable(): void {
     if (!this.config.enabled && import.meta.env.DEV) {

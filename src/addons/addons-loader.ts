@@ -2,7 +2,11 @@ import { logger } from "@/adapters";
 import { loadInstalledAddons, unloadAllAddons } from "@/addons/addons-core";
 
 /**
- * Loads all discovered addons with development mode support
+ * Loads all discovered addons, with support for development mode.
+ *
+ * In a development environment, it first attempts to discover and load addons
+ * from running development servers. If no dev servers are found, or in a
+ * production environment, it falls back to loading installed addons.
  */
 export async function loadAllAddons(): Promise<void> {
   try {
@@ -46,7 +50,9 @@ export async function loadAllAddons(): Promise<void> {
 }
 
 /**
- * Reloads all addons (useful for development)
+ * Reloads all addons.
+ * This is useful for development, as it unloads all existing addons and then
+ * re-runs the addon loading process.
  */
 export async function reloadAllAddons(): Promise<void> {
   unloadAllAddons();

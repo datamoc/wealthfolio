@@ -6,6 +6,15 @@ import { logger } from "@/adapters";
 
 type NewAccount = z.infer<typeof newAccountSchema>;
 
+/**
+ * Fetches all accounts from the backend.
+ *
+ * This function determines the runtime environment and calls the appropriate
+ * adapter (`invokeTauri` for desktop, `invokeWeb` for web) to get the accounts.
+ *
+ * @returns {Promise<Account[]>} A promise that resolves with an array of accounts.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getAccounts = async (): Promise<Account[]> => {
   try {
     switch (getRunEnv()) {
@@ -22,7 +31,13 @@ export const getAccounts = async (): Promise<Account[]> => {
   }
 };
 
-// createAccount
+/**
+ * Creates a new account.
+ *
+ * @param {NewAccount} account The account data to create.
+ * @returns {Promise<Account>} A promise that resolves with the newly created account.
+ * @throws Will throw an error if the API call fails.
+ */
 export const createAccount = async (account: NewAccount): Promise<Account> => {
   try {
     switch (getRunEnv()) {
@@ -39,7 +54,13 @@ export const createAccount = async (account: NewAccount): Promise<Account> => {
   }
 };
 
-// updateAccount
+/**
+ * Updates an existing account.
+ *
+ * @param {NewAccount} account The account data to update.
+ * @returns {Promise<Account>} A promise that resolves with the updated account.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateAccount = async (account: NewAccount): Promise<Account> => {
   try {
     switch (getRunEnv()) {
@@ -58,7 +79,13 @@ export const updateAccount = async (account: NewAccount): Promise<Account> => {
   }
 };
 
-// deleteAccount
+/**
+ * Deletes an account.
+ *
+ * @param {string} accountId The ID of the account to delete.
+ * @returns {Promise<void>} A promise that resolves when the account is deleted.
+ * @throws Will throw an error if the API call fails.
+ */
 export const deleteAccount = async (accountId: string): Promise<void> => {
   try {
     switch (getRunEnv()) {

@@ -10,7 +10,15 @@ import {
   listenMarketSyncStartTauri,
 } from "@/adapters";
 
-// listenPortfolioUpdateStart
+/**
+ * Listens for the start of a portfolio update.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenPortfolioUpdateStart = async <T>(
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> => {
@@ -29,7 +37,15 @@ export const listenPortfolioUpdateStart = async <T>(
   }
 };
 
-// listenPortfolioUpdateComplete
+/**
+ * Listens for the completion of a portfolio update.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenPortfolioUpdateComplete = async <T>(
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> => {
@@ -48,7 +64,15 @@ export const listenPortfolioUpdateComplete = async <T>(
   }
 };
 
-// listenPortfolioUpdateError
+/**
+ * Listens for an error during a portfolio update.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenPortfolioUpdateError = async <T>(
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> => {
@@ -67,7 +91,15 @@ export const listenPortfolioUpdateError = async <T>(
   }
 };
 
-// listenMarketSyncStart
+/**
+ * Listens for the start of a market data sync.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenMarketSyncStart = async <T>(handler: EventCallback<T>): Promise<UnlistenFn> => {
   try {
     switch (getRunEnv()) {
@@ -84,7 +116,15 @@ export const listenMarketSyncStart = async <T>(handler: EventCallback<T>): Promi
   }
 };
 
-// listenMarketSyncComplete
+/**
+ * Listens for the completion of a market data sync.
+ * This is only supported in the desktop environment.
+ *
+ * @template T
+ * @param {EventCallback<T>} handler - The event handler.
+ * @returns {Promise<UnlistenFn>} A promise that resolves with a function to unlisten to the event.
+ * @throws Will throw an error if the operation is not supported or fails.
+ */
 export const listenMarketSyncComplete = async <T>(
   handler: EventCallback<T>,
 ): Promise<UnlistenFn> => {

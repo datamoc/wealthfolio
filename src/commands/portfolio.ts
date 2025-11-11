@@ -7,6 +7,12 @@ import {
   SimplePerformanceMetrics,
 } from "@/lib/types";
 
+/**
+ * Updates the portfolio by fetching the latest market data and recalculating valuations.
+ *
+ * @returns {Promise<void>} A promise that resolves when the portfolio is updated.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updatePortfolio = async (): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -23,6 +29,12 @@ export const updatePortfolio = async (): Promise<void> => {
   }
 };
 
+/**
+ * Recalculates the entire portfolio from historical data.
+ *
+ * @returns {Promise<void>} A promise that resolves when the portfolio is recalculated.
+ * @throws Will throw an error if the API call fails.
+ */
 export const recalculatePortfolio = async (): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -39,6 +51,13 @@ export const recalculatePortfolio = async (): Promise<void> => {
   }
 };
 
+/**
+ * Gets the holdings for a specific account.
+ *
+ * @param {string} accountId - The ID of the account.
+ * @returns {Promise<Holding[]>} A promise that resolves with a list of holdings.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getHoldings = async (accountId: string): Promise<Holding[]> => {
   try {
     switch (getRunEnv()) {
@@ -55,6 +74,12 @@ export const getHoldings = async (accountId: string): Promise<Holding[]> => {
   }
 };
 
+/**
+ * Gets a summary of income for all accounts.
+ *
+ * @returns {Promise<IncomeSummary[]>} A promise that resolves with a list of income summaries.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getIncomeSummary = async (): Promise<IncomeSummary[]> => {
   try {
     switch (getRunEnv()) {
@@ -71,6 +96,15 @@ export const getIncomeSummary = async (): Promise<IncomeSummary[]> => {
   }
 };
 
+/**
+ * Gets the historical valuations for an account or all accounts.
+ *
+ * @param {string} [accountId] - The ID of the account. If not provided, fetches for all accounts.
+ * @param {string} [startDate] - The start date for the historical data.
+ * @param {string} [endDate] - The end date for the historical data.
+ * @returns {Promise<AccountValuation[]>} A promise that resolves with a list of historical valuations.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getHistoricalValuations = async (
   accountId?: string,
   startDate?: string,
@@ -109,6 +143,13 @@ export const getHistoricalValuations = async (
   }
 };
 
+/**
+ * Gets the latest valuations for a list of accounts.
+ *
+ * @param {string[]} accountIds - The IDs of the accounts.
+ * @returns {Promise<AccountValuation[]>} A promise that resolves with a list of latest valuations.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getLatestValuations = async (accountIds: string[]): Promise<AccountValuation[]> => {
   try {
     switch (getRunEnv()) {
@@ -125,6 +166,16 @@ export const getLatestValuations = async (accountIds: string[]): Promise<Account
   }
 };
 
+/**
+ * Calculates the performance history for an account or a symbol.
+ *
+ * @param {"account" | "symbol"} itemType - The type of item to calculate for.
+ * @param {string} itemId - The ID of the item.
+ * @param {string} startDate - The start date for the calculation.
+ * @param {string} endDate - The end date for the calculation.
+ * @returns {Promise<PerformanceMetrics>} A promise that resolves with the performance metrics.
+ * @throws Will throw an error if the API call fails.
+ */
 export const calculatePerformanceHistory = async (
   itemType: "account" | "symbol",
   itemId: string,
@@ -166,6 +217,13 @@ interface CalculatePerformanceSummaryArgs {
   endDate?: string | null;
 }
 
+/**
+ * Calculates a summary of performance for an account or a symbol.
+ *
+ * @param {CalculatePerformanceSummaryArgs} args - The arguments for the calculation.
+ * @returns {Promise<PerformanceMetrics>} A promise that resolves with the performance metrics.
+ * @throws Will throw an error if the API call fails.
+ */
 export const calculatePerformanceSummary = async ({
   itemType,
   itemId,
@@ -213,6 +271,13 @@ export const calculatePerformanceSummary = async ({
   }
 };
 
+/**
+ * Calculates a simple performance summary for a list of accounts.
+ *
+ * @param {string[]} accountIds - The IDs of the accounts.
+ * @returns {Promise<SimplePerformanceMetrics[]>} A promise that resolves with a list of simple performance metrics.
+ * @throws Will throw an error if the API call fails.
+ */
 export const calculateAccountsSimplePerformance = async (
   accountIds: string[],
 ): Promise<SimplePerformanceMetrics[]> => {
@@ -231,6 +296,14 @@ export const calculateAccountsSimplePerformance = async (
   }
 };
 
+/**
+ * Gets a specific holding for an asset in an account.
+ *
+ * @param {string} accountId - The ID of the account.
+ * @param {string} assetId - The ID of the asset.
+ * @returns {Promise<Holding | null>} A promise that resolves with the holding, or null if not found.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getHolding = async (accountId: string, assetId: string): Promise<Holding | null> => {
   try {
     switch (getRunEnv()) {

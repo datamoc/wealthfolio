@@ -36,8 +36,14 @@ import type {
 } from "@/lib/types";
 
 /**
- * Internal HostAPI interface that matches the actual command function signatures
- * This allows us to maintain type safety internally while providing a clean SDK interface
+ * @interface InternalHostAPI
+ * @brief Defines the internal API surface that the addon runtime provides.
+ *
+ * This interface mirrors the structure of the public addon SDK's `HostAPI`,
+ * but uses the application's internal types. This allows for type-safe
+ * communication between the addon runtime and the rest of the application,
+ * while the `createSDKHostAPIBridge` function handles the conversion to the
+ * public SDK types.
  */
 export interface InternalHostAPI {
   // Core data access
@@ -169,8 +175,16 @@ export interface InternalHostAPI {
 }
 
 /**
- * Type bridge utility to convert between internal and SDK types
- * This handles the mapping between the actual implementation types and the public SDK types
+ * Creates a bridge between the internal host API and the public addon SDK API.
+ *
+ * This function takes the internal API implementation and maps it to the
+ * structure expected by the addon SDK, ensuring that addons interact with a
+ * stable and well-defined API surface. It also creates a prefixed logger for
+ * the addon.
+ *
+ * @param internalAPI The internal host API implementation.
+ * @param addonId The ID of the addon, used for logging and scoping secrets.
+ * @returns An object that conforms to the `SDKHostAPI` interface.
  */
 export function createSDKHostAPIBridge(internalAPI: InternalHostAPI, addonId?: string): SDKHostAPI {
   // Create logger with addon prefix
@@ -296,23 +310,35 @@ export function createSDKHostAPIBridge(internalAPI: InternalHostAPI, addonId?: s
 }
 
 /**
- * Type guard to check if a value has SDK-compatible types
+ * A type guard to check if a value has SDK-compatible types.
+ *
+ * @template T
+ * @param _value The value to check.
+ * @returns `true` if the value is compatible, `false` otherwise.
  */
 export function isSDKCompatible<T>(_value: T): _value is T {
   return true; // For now, we use type assertions. Could add runtime checks if needed.
 }
 
 /**
- * Utility to convert internal types to SDK types
- * This can be expanded to handle specific type conversions if needed
+ * A utility function to convert internal types to SDK types.
+ * In the future, this could be expanded to handle specific type conversions.
+ *
+ * @template T
+ * @param value The value to convert.
+ * @returns The converted value.
  */
 export function toSDKType<T>(value: T): T {
   return value;
 }
 
 /**
- * Utility to convert SDK types to internal types
- * This can be expanded to handle specific type conversions if needed
+ * A utility function to convert SDK types to internal types.
+ * In the future, this could be expanded to handle specific type conversions.
+ *
+ * @template T
+ * @param value The value to convert.
+ * @returns The converted value.
  */
 export function fromSDKType<T>(value: T): T {
   return value;

@@ -3,6 +3,12 @@ import type { InstalledAddon, ExtractedAddon } from "@/adapters/tauri";
 import type { AddonManifest, AddonUpdateCheckResult } from "@wealthfolio/addon-sdk";
 import type { AddonStoreListing } from "@/lib/types";
 
+/**
+ * Gets a list of all installed addons.
+ *
+ * @returns {Promise<InstalledAddon[]>} A promise that resolves with a list of installed addons.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getInstalledAddons = async (): Promise<InstalledAddon[]> => {
   try {
     switch (getRunEnv()) {
@@ -19,6 +25,13 @@ export const getInstalledAddons = async (): Promise<InstalledAddon[]> => {
   }
 };
 
+/**
+ * Loads an addon for the runtime.
+ *
+ * @param {string} addonId - The ID of the addon to load.
+ * @returns {Promise<ExtractedAddon>} A promise that resolves with the extracted addon data.
+ * @throws Will throw an error if the API call fails.
+ */
 export const loadAddon = async (addonId: string): Promise<ExtractedAddon> => {
   try {
     switch (getRunEnv()) {
@@ -35,6 +48,13 @@ export const loadAddon = async (addonId: string): Promise<ExtractedAddon> => {
   }
 };
 
+/**
+ * Extracts the contents of an addon ZIP file.
+ *
+ * @param {Uint8Array} zipData - The binary data of the ZIP file.
+ * @returns {Promise<ExtractedAddon>} A promise that resolves with the extracted addon data.
+ * @throws Will throw an error if the API call fails.
+ */
 export const extractAddon = async (zipData: Uint8Array): Promise<ExtractedAddon> => {
   try {
     switch (getRunEnv()) {
@@ -51,6 +71,14 @@ export const extractAddon = async (zipData: Uint8Array): Promise<ExtractedAddon>
   }
 };
 
+/**
+ * Installs an addon from a ZIP file.
+ *
+ * @param {Uint8Array} zipData - The binary data of the ZIP file.
+ * @param {boolean} [enableAfterInstall] - Whether to enable the addon after installation.
+ * @returns {Promise<AddonManifest>} A promise that resolves with the manifest of the installed addon.
+ * @throws Will throw an error if the API call fails.
+ */
 export const installAddon = async (
   zipData: Uint8Array,
   enableAfterInstall?: boolean,
@@ -76,6 +104,14 @@ export const installAddon = async (
   }
 };
 
+/**
+ * Toggles the enabled state of an addon.
+ *
+ * @param {string} addonId - The ID of the addon to toggle.
+ * @param {boolean} enabled - The desired enabled state.
+ * @returns {Promise<void>} A promise that resolves when the operation is complete.
+ * @throws Will throw an error if the API call fails.
+ */
 export const toggleAddon = async (addonId: string, enabled: boolean): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -92,6 +128,13 @@ export const toggleAddon = async (addonId: string, enabled: boolean): Promise<vo
   }
 };
 
+/**
+ * Uninstalls an addon.
+ *
+ * @param {string} addonId - The ID of the addon to uninstall.
+ * @returns {Promise<void>} A promise that resolves when the operation is complete.
+ * @throws Will throw an error if the API call fails.
+ */
 export const uninstallAddon = async (addonId: string): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -108,6 +151,12 @@ export const uninstallAddon = async (addonId: string): Promise<void> => {
   }
 };
 
+/**
+ * Gets a list of all enabled addons.
+ *
+ * @returns {Promise<ExtractedAddon[]>} A promise that resolves with a list of enabled addons.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getEnabledAddons = async (): Promise<ExtractedAddon[]> => {
   try {
     switch (getRunEnv()) {
@@ -124,6 +173,13 @@ export const getEnabledAddons = async (): Promise<ExtractedAddon[]> => {
   }
 };
 
+/**
+ * Checks for updates for a specific addon.
+ *
+ * @param {string} addonId - The ID of the addon to check.
+ * @returns {Promise<AddonUpdateCheckResult>} A promise that resolves with the update check result.
+ * @throws Will throw an error if the API call fails.
+ */
 export const checkAddonUpdate = async (addonId: string): Promise<AddonUpdateCheckResult> => {
   try {
     switch (getRunEnv()) {
@@ -140,6 +196,12 @@ export const checkAddonUpdate = async (addonId: string): Promise<AddonUpdateChec
   }
 };
 
+/**
+ * Checks for updates for all installed addons.
+ *
+ * @returns {Promise<AddonUpdateCheckResult[]>} A promise that resolves with a list of update check results.
+ * @throws Will throw an error if the API call fails.
+ */
 export const checkAllAddonUpdates = async (): Promise<AddonUpdateCheckResult[]> => {
   try {
     switch (getRunEnv()) {
@@ -156,6 +218,13 @@ export const checkAllAddonUpdates = async (): Promise<AddonUpdateCheckResult[]> 
   }
 };
 
+/**
+ * Updates an addon from the addon store.
+ *
+ * @param {string} addonId - The ID of the addon to update.
+ * @returns {Promise<AddonManifest>} A promise that resolves with the manifest of the updated addon.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateAddon = async (addonId: string): Promise<AddonManifest> => {
   try {
     switch (getRunEnv()) {
@@ -172,6 +241,13 @@ export const updateAddon = async (addonId: string): Promise<AddonManifest> => {
   }
 };
 
+/**
+ * Downloads an addon to a staging area for review before installation.
+ *
+ * @param {string} addonId - The ID of the addon to download.
+ * @returns {Promise<ExtractedAddon>} A promise that resolves with the extracted addon data.
+ * @throws Will throw an error if the API call fails.
+ */
 export const downloadAddonForReview = async (addonId: string): Promise<ExtractedAddon> => {
   try {
     switch (getRunEnv()) {
@@ -188,6 +264,14 @@ export const downloadAddonForReview = async (addonId: string): Promise<Extracted
   }
 };
 
+/**
+ * Installs an addon from the staging area.
+ *
+ * @param {string} addonId - The ID of the addon to install.
+ * @param {boolean} [enableAfterInstall] - Whether to enable the addon after installation.
+ * @returns {Promise<AddonManifest>} A promise that resolves with the manifest of the installed addon.
+ * @throws Will throw an error if the API call fails.
+ */
 export const installFromStaging = async (
   addonId: string,
   enableAfterInstall?: boolean,
@@ -213,6 +297,13 @@ export const installFromStaging = async (
   }
 };
 
+/**
+ * Clears the addon staging area.
+ *
+ * @param {string} [addonId] - If provided, only the staging data for this addon will be cleared. Otherwise, the entire staging area is cleared.
+ * @returns {Promise<void>} A promise that resolves when the staging area is cleared.
+ * @throws Will throw an error if the API call fails.
+ */
 export const clearAddonStaging = async (addonId?: string): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -229,6 +320,13 @@ export const clearAddonStaging = async (addonId?: string): Promise<void> => {
   }
 };
 
+/**
+ * Gets the ratings for a specific addon.
+ *
+ * @param {string} addonId - The ID of the addon.
+ * @returns {Promise<unknown[]>} A promise that resolves with a list of ratings.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getAddonRatings = async (addonId: string): Promise<unknown[]> => {
   try {
     switch (getRunEnv()) {
@@ -245,6 +343,15 @@ export const getAddonRatings = async (addonId: string): Promise<unknown[]> => {
   }
 };
 
+/**
+ * Submits a rating and review for an addon.
+ *
+ * @param {string} addonId - The ID of the addon.
+ * @param {number} rating - The rating, from 1 to 5.
+ * @param {string} [review] - An optional review text.
+ * @returns {Promise<unknown>} A promise that resolves when the rating is submitted.
+ * @throws Will throw an error if the rating is invalid or the API call fails.
+ */
 export const submitAddonRating = async (
   addonId: string,
   rating: number,
@@ -277,6 +384,12 @@ export const submitAddonRating = async (
   }
 };
 
+/**
+ * Fetches the listings from the addon store.
+ *
+ * @returns {Promise<AddonStoreListing[]>} A promise that resolves with a list of addon store listings.
+ * @throws Will throw an error if the API call fails.
+ */
 export const fetchAddonStoreListings = async (): Promise<AddonStoreListing[]> => {
   try {
     switch (getRunEnv()) {
@@ -294,10 +407,12 @@ export const fetchAddonStoreListings = async (): Promise<AddonStoreListing[]> =>
 };
 
 /**
- * Get addon-specific data from database storage
- * @param addonId The addon ID
- * @param key The data key
- * @returns The stored data value
+ * Gets addon-specific data from database storage.
+ *
+ * @param {string} addonId - The ID of the addon.
+ * @param {string} key - The data key.
+ * @returns {Promise<string>} A promise that resolves with the stored data value.
+ * @throws Will throw an error if the API call fails.
  */
 export const getAddonData = async (addonId: string, key: string): Promise<string> => {
   try {
@@ -316,10 +431,13 @@ export const getAddonData = async (addonId: string, key: string): Promise<string
 };
 
 /**
- * Set addon-specific data in database storage
- * @param addonId The addon ID
- * @param key The data key
- * @param value The data value to store
+ * Sets addon-specific data in database storage.
+ *
+ * @param {string} addonId - The ID of the addon.
+ * @param {string} key - The data key.
+ * @param {string} value - The data value to store.
+ * @returns {Promise<void>} A promise that resolves when the data is set.
+ * @throws Will throw an error if the API call fails.
  */
 export const setAddonData = async (addonId: string, key: string, value: string): Promise<void> => {
   try {

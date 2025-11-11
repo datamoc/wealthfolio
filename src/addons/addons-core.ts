@@ -20,7 +20,10 @@ const loadedAddons = new Map<string, { disable?: () => void }>();
 const loadedAddonIds = new Set<string>(); // Prevent re-loading already processed addons
 
 /**
- * Discovers all available addons using Tauri commands
+ * Discovers all available addons by calling the `getInstalledAddons` command.
+ * It constructs the necessary file paths for each addon's main file and manifest.
+ *
+ * @returns {Promise<AddonFile[]>} A promise that resolves with a list of discovered addon files.
  */
 async function discoverAddons(): Promise<AddonFile[]> {
   try {
@@ -45,7 +48,11 @@ async function discoverAddons(): Promise<AddonFile[]> {
 }
 
 /**
- * Validates if an addon is compatible with the current SDK version
+ * Validates if an addon is compatible with the current SDK version.
+ * Currently, it warns on a mismatch but allows the addon to load.
+ *
+ * @param {AddonManifest} manifest The manifest of the addon to validate.
+ * @returns {boolean} `true` if the addon is considered compatible, `false` otherwise.
  */
 function validateAddonCompatibility(manifest: AddonManifest): boolean {
   // Be lenient in web mode: warn on mismatch but allow load.
@@ -59,7 +66,22 @@ function validateAddonCompatibility(manifest: AddonManifest): boolean {
 }
 
 /**
- * Loads a single addon using Tauri commands
+ * Loads a single addon.
+ *
+ * This function performs several steps:
+ * 1. Checks if the addon has already been loaded to prevent duplicates.
+ * 2. Validates the addon's compatibility with the current SDK version.
+ * 3. Loads the addon's code using the `loadAddonRuntime` command.
+ * 4. Extracts permissions and other metadata from the addon's manifest.
+ * 5. Verifies the availability of required global objects like `React` and `ReactDOM`.
+ * 6. Creates a blob URL from the addon's code and dynamically imports it.
+ * 7. Resolves the addon's `enable` function from its exports.
+ * 8. Creates an addon-specific context and calls the `enable` function.
+ * 9. Stores a reference to the addon for potential cleanup.
+ *
+ * @param {AddonFile} addonFile The addon file to load.
+ * @param {AddonContext} _context The addon context (currently unused).
+ * @returns {Promise<boolean>} A promise that resolves with `true` if the addon was loaded successfully, or `false` otherwise.
  */
 async function loadAddon(addonFile: AddonFile, _context: AddonContext): Promise<boolean> {
   let blobUrl: string | null = null;
@@ -186,7 +208,10 @@ async function loadAddon(addonFile: AddonFile, _context: AddonContext): Promise<
 }
 
 /**
- * Load installed addons (production mode)
+ * Loads all installed and enabled addons.
+ *
+ * It discovers all addons, filters for the enabled ones, and then loads them
+ * concurrently. It logs the number of successfully loaded addons.
  */
 export async function loadInstalledAddons(): Promise<void> {
   const addonFiles = await discoverAddons();
@@ -226,7 +251,12 @@ export async function loadInstalledAddons(): Promise<void> {
 }
 
 /**
- * Unloads a specific addon by ID
+ * Unloads a specific addon by its ID.
+ *
+ * If the addon has a `disable` function, it will be called. The addon is then
+ * removed from the list of loaded addons.
+ *
+ * @param {string} addonId The ID of the addon to unload.
  */
 export function unloadAddon(addonId: string): void {
   const addon = loadedAddons.get(addonId);
@@ -245,7 +275,11 @@ export function unloadAddon(addonId: string): void {
 }
 
 /**
- * Unloads all addons and cleans up resources
+ * Unloads all currently loaded addons and cleans up their resources.
+ *
+ * This function iterates through all loaded addons, calls their `disable`
+ * function if it exists, and clears all addon-related data structures. It also
+ * triggers the disable callbacks for all dynamic routes and navigation items.
  */
 export function unloadAllAddons(): void {
   loadedAddons.forEach((addon, id) => {
@@ -266,14 +300,17 @@ export function unloadAllAddons(): void {
 }
 
 /**
- * Gets information about currently loaded addons
+ * Gets a list of the IDs of all currently loaded addons.
+ *
+ * @returns {string[]} An array of loaded addon IDs.
  */
 export function getLoadedAddons(): string[] {
   return Array.from(loadedAddons.keys());
 }
 
 /**
- * Debug function to check current addon state
+ * Logs the current state of the addon system for debugging purposes.
+ * This includes dynamic navigation items, dynamic routes, and the list of loaded addons.
  */
 export function debugAddonState(): void {
   logger.info("🐛 Addon Debug Info:");
@@ -283,8 +320,10 @@ export function debugAddonState(): void {
 }
 
 /**
- * Reloads all addons (useful for development and settings)
- * This function dynamically imports the full plugin loader to avoid circular dependencies
+ * Reloads all addons.
+ *
+ * This is useful for development and after changing addon settings. It first unloads
+ * all addons and then dynamically imports and calls the `loadAllAddons` function.
  */
 export async function reloadAllAddons(): Promise<void> {
   unloadAllAddons();

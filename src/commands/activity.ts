@@ -20,6 +20,16 @@ interface Sort {
   desc: boolean;
 }
 
+/**
+ * Gets all activities for a given account.
+ *
+ * This is a convenience function that wraps `searchActivities` to fetch all
+ * activities for an account, without pagination.
+ *
+ * @param {string} [accountId] - The ID of the account to fetch activities for. If not provided, fetches all activities.
+ * @returns {Promise<ActivityDetails[]>} A promise that resolves with an array of activities.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getActivities = async (accountId?: string): Promise<ActivityDetails[]> => {
   try {
     const response = await searchActivities(
@@ -39,6 +49,17 @@ export const getActivities = async (accountId?: string): Promise<ActivityDetails
   }
 };
 
+/**
+ * Searches for activities with pagination, filtering, and sorting.
+ *
+ * @param {number} page - The page number to fetch.
+ * @param {number} pageSize - The number of activities per page.
+ * @param {Filters} filters - The filters to apply to the search.
+ * @param {string} searchKeyword - A keyword to search for.
+ * @param {Sort} sort - The sorting to apply to the results.
+ * @returns {Promise<ActivitySearchResponse>} A promise that resolves with the search results.
+ * @throws Will throw an error if the API call fails.
+ */
 export const searchActivities = async (
   page: number,
   pageSize: number,
@@ -75,6 +96,13 @@ export const searchActivities = async (
   }
 };
 
+/**
+ * Creates a new activity.
+ *
+ * @param {ActivityCreate} activity - The activity data to create.
+ * @returns {Promise<Activity>} A promise that resolves with the newly created activity.
+ * @throws Will throw an error if the API call fails.
+ */
 export const createActivity = async (activity: ActivityCreate): Promise<Activity> => {
   try {
     switch (getRunEnv()) {
@@ -91,6 +119,13 @@ export const createActivity = async (activity: ActivityCreate): Promise<Activity
   }
 };
 
+/**
+ * Updates an existing activity.
+ *
+ * @param {ActivityUpdate} activity - The activity data to update.
+ * @returns {Promise<Activity>} A promise that resolves with the updated activity.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateActivity = async (activity: ActivityUpdate): Promise<Activity> => {
   try {
     switch (getRunEnv()) {
@@ -107,6 +142,13 @@ export const updateActivity = async (activity: ActivityUpdate): Promise<Activity
   }
 };
 
+/**
+ * Saves a batch of activities, including creates, updates, and deletes.
+ *
+ * @param {ActivityBulkMutationRequest} request - The bulk mutation request.
+ * @returns {Promise<ActivityBulkMutationResult>} A promise that resolves with the result of the bulk mutation.
+ * @throws Will throw an error if the API call fails.
+ */
 export const saveActivities = async (
   request: ActivityBulkMutationRequest,
 ): Promise<ActivityBulkMutationResult> => {
@@ -130,6 +172,13 @@ export const saveActivities = async (
   }
 };
 
+/**
+ * Deletes an activity.
+ *
+ * @param {string} activityId - The ID of the activity to delete.
+ * @returns {Promise<Activity>} A promise that resolves with the deleted activity.
+ * @throws Will throw an error if the API call fails.
+ */
 export const deleteActivity = async (activityId: string): Promise<Activity> => {
   try {
     switch (getRunEnv()) {

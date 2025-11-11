@@ -1,5 +1,13 @@
 import { getRunEnv, RUN_ENV, invokeTauri, invokeWeb, logger } from "@/adapters";
 
+/**
+ * Sets a secret for a given provider.
+ *
+ * @param {string} providerId - The ID of the provider.
+ * @param {string} secret - The secret to set.
+ * @returns {Promise<void>} A promise that resolves when the secret is set.
+ * @throws Will throw an error if the API call fails.
+ */
 export const setSecret = async (providerId: string, secret: string): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -16,6 +24,13 @@ export const setSecret = async (providerId: string, secret: string): Promise<voi
   }
 };
 
+/**
+ * Gets a secret for a given provider.
+ *
+ * @param {string} providerId - The ID of the provider.
+ * @returns {Promise<string | null>} A promise that resolves with the secret, or null if not found.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getSecret = async (providerId: string): Promise<string | null> => {
   try {
     switch (getRunEnv()) {
@@ -32,6 +47,13 @@ export const getSecret = async (providerId: string): Promise<string | null> => {
   }
 };
 
+/**
+ * Deletes a secret for a given provider.
+ *
+ * @param {string} providerId - The ID of the provider.
+ * @returns {Promise<void>} A promise that resolves when the secret is deleted.
+ * @throws Will throw an error if the API call fails.
+ */
 export const deleteSecret = async (providerId: string): Promise<void> => {
   try {
     switch (getRunEnv()) {

@@ -6,6 +6,12 @@ import { logger } from "@/adapters";
 
 type NewGoal = z.infer<typeof newGoalSchema>;
 
+/**
+ * Gets all goals.
+ *
+ * @returns {Promise<Goal[]>} A promise that resolves with a list of goals.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getGoals = async (): Promise<Goal[]> => {
   try {
     switch (getRunEnv()) {
@@ -22,6 +28,13 @@ export const getGoals = async (): Promise<Goal[]> => {
   }
 };
 
+/**
+ * Creates a new goal.
+ *
+ * @param {NewGoal} goal - The data for the new goal.
+ * @returns {Promise<Goal>} A promise that resolves with the newly created goal.
+ * @throws Will throw an error if the API call fails.
+ */
 export const createGoal = async (goal: NewGoal): Promise<Goal> => {
   const newGoal = {
     ...goal,
@@ -44,6 +57,13 @@ export const createGoal = async (goal: NewGoal): Promise<Goal> => {
   }
 };
 
+/**
+ * Updates an existing goal.
+ *
+ * @param {Goal} goal - The updated goal data.
+ * @returns {Promise<Goal>} A promise that resolves with the updated goal.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateGoal = async (goal: Goal): Promise<Goal> => {
   try {
     switch (getRunEnv()) {
@@ -60,6 +80,13 @@ export const updateGoal = async (goal: Goal): Promise<Goal> => {
   }
 };
 
+/**
+ * Deletes a goal.
+ *
+ * @param {string} goalId - The ID of the goal to delete.
+ * @returns {Promise<void>} A promise that resolves when the goal is deleted.
+ * @throws Will throw an error if the API call fails.
+ */
 export const deleteGoal = async (goalId: string): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -78,6 +105,13 @@ export const deleteGoal = async (goalId: string): Promise<void> => {
   }
 };
 
+/**
+ * Updates the allocations for all goals.
+ *
+ * @param {GoalAllocation[]} allocations - A list of goal allocations.
+ * @returns {Promise<void>} A promise that resolves when the allocations are updated.
+ * @throws Will throw an error if the API call fails.
+ */
 export const updateGoalsAllocations = async (allocations: GoalAllocation[]): Promise<void> => {
   try {
     switch (getRunEnv()) {
@@ -96,6 +130,12 @@ export const updateGoalsAllocations = async (allocations: GoalAllocation[]): Pro
   }
 };
 
+/**
+ * Gets the allocations for all goals.
+ *
+ * @returns {Promise<GoalAllocation[]>} A promise that resolves with a list of goal allocations.
+ * @throws Will throw an error if the API call fails.
+ */
 export const getGoalsAllocation = async (): Promise<GoalAllocation[]> => {
   try {
     switch (getRunEnv()) {

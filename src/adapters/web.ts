@@ -1,7 +1,13 @@
+/** The prefix for all API routes. */
 const API_PREFIX = "/api/v1";
 
+/** A type definition for the command map, which maps command names to API endpoints. */
 type CommandMap = Record<string, { method: string; path: string }>;
 
+/**
+ * A map of command names to their corresponding API endpoint and HTTP method.
+ * This is used by `invokeWeb` to route frontend calls to the correct backend API.
+ */
 const COMMANDS: CommandMap = {
   get_accounts: { method: "GET", path: "/accounts" },
   create_account: { method: "POST", path: "/accounts" },
@@ -100,6 +106,19 @@ const COMMANDS: CommandMap = {
   probe_local_network_access: { method: "POST", path: "/sync/probe" },
 };
 
+/**
+ * Invokes a web command by sending an HTTP request to the backend server.
+ *
+ * This function looks up the command in the `COMMANDS` map to determine the
+ * HTTP method and URL path. It then constructs and sends the request, handling
+ * various payload formats and edge cases for different commands.
+ *
+ * @template T The expected return type of the command.
+ * @param {string} command The name of the command to invoke.
+ * @param {Record<string, unknown>} [payload] The payload to send with the command.
+ * @returns {Promise<T>} A promise that resolves with the result of the API call.
+ * @throws {Error} If the command is not supported or if the API call fails.
+ */
 export const invokeWeb = async <T>(
   command: string,
   payload?: Record<string, unknown>,
@@ -509,15 +528,26 @@ export const invokeWeb = async <T>(
   return (await res.json()) as T;
 };
 
+/** A logger that uses the browser's console. */
 export const logger = {
+  /** Logs an error message to the console. */
   error: (...args: unknown[]) => console.error(...args),
+  /** Logs a warning message to the console. */
   warn: (...args: unknown[]) => console.warn(...args),
+  /** Logs an info message to the console. */
   info: (...args: unknown[]) => console.warn(...args),
+  /** Logs a debug message to the console. */
   debug: (...args: unknown[]) => console.warn(...args),
+  /** Logs a trace message to the console. */
   trace: (...args: unknown[]) => console.warn(...args),
 };
 
-// Helpers
+/**
+ * Converts a Uint8Array or number array to a base64 string.
+ *
+ * @param {Uint8Array | number[]} data The data to convert.
+ * @returns {string} The base64-encoded string.
+ */
 function toBase64(data: Uint8Array | number[]): string {
   const bytes = Array.isArray(data) ? new Uint8Array(data) : data;
   // Fast base64 encoding without TextEncoder for binary
@@ -530,6 +560,12 @@ function toBase64(data: Uint8Array | number[]): string {
   return btoa(binary);
 }
 
+/**
+ * Converts a base64 string to a Uint8Array.
+ *
+ * @param {string} value The base64 string to convert.
+ * @returns {Uint8Array} The decoded binary data.
+ */
 function fromBase64(value: string): Uint8Array {
   const binary = atob(value);
   const bytes = new Uint8Array(binary.length);
