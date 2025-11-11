@@ -46,7 +46,7 @@ const exchangeRateSchema = (t: TranslateFn) => z.object({
       required_error: t("exchange_rates_rate_required"),
       invalid_type_error: t("exchange_rates_rate_positive"),
     })
-    .min(0, { message: t("exchange_rates_rate_non_negative") }),
+    .min(0, { message: t("exchange_rates_rate_positive") }),
 });
 
 interface AddExchangeRateFormProps {

@@ -1,5 +1,6 @@
 // Global ambient type declarations to avoid `any` for globals
 import type { QueryClient } from '@tanstack/react-query';
+import type { i18n } from 'i18next';
 
 declare global {
   interface Window {
@@ -9,10 +10,13 @@ declare global {
     // Exposed for addon integration
     __wealthfolio_query_client__?: QueryClient;
     __wealthfolio_navigate__?: (route: string) => void;
+    __wealthfolio_i18n__?: i18n;
 
     // Dev helpers and framework singletons made available at runtime
     React?: unknown;
     ReactDOM?: unknown;
+    i18next?: unknown;
+    ReactI18next?: unknown;
     __ADDON_DEV__?: unknown;
     __DEV_ADDONS__?: Map<string, unknown>;
   }

@@ -18,7 +18,6 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ navigation }: AppSidebarProps) {
-  const { t } = useTranslation("settings");
   const [collapsed, setCollapsed] = useState(true);
 
   return (
@@ -155,6 +154,7 @@ interface AddonsMenuProps {
 }
 
 function AddonsMenu({ addons, collapsed }: AddonsMenuProps) {
+  const { t } = useTranslation("settings");
   const location = useLocation();
   const hasActiveAddon = addons.some((addon) => isPathActive(location.pathname, addon.href));
 

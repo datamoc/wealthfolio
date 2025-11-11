@@ -20,6 +20,10 @@ pub trait SettingsServiceTrait: Send + Sync {
     fn is_auto_update_check_enabled(&self) -> Result<bool>;
 
     fn is_sync_enabled(&self) -> Result<bool>;
+
+    fn get_setting(&self, setting_key: &str) -> Result<String>;
+
+    async fn set_setting(&self, setting_key: &str, setting_value: &str) -> Result<()>;
 }
 
 pub struct SettingsService {
@@ -111,6 +115,14 @@ impl SettingsServiceTrait for SettingsService {
             }
             Err(e) => Err(e),
         }
+    }
+
+    fn get_setting(&self, setting_key: &str) -> Result<String> {
+        self.settings_repository.get_setting(setting_key)
+    }
+
+    async fn set_setting(&self, setting_key: &str, setting_value: &str) -> Result<()> {
+        self.settings_repository.update_setting(setting_key, setting_value).await
     }
 }
 

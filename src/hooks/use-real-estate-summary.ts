@@ -7,6 +7,7 @@ interface Property {
   currentValue: number;
   purchasePrice: number;
   currency: string;
+  purchaseDate: string;
 }
 
 interface Loan {
@@ -152,12 +153,19 @@ function getRealEstateSummary(baseCurrency: string, asOfDate?: string): RealEsta
 
 /**
  * Hook to get real estate summary for dashboard
+ * Only fetches data if real estate addon is installed
  */
-export function useRealEstateSummary(baseCurrency: string = "USD") {
+export function useRealEstateSummary(baseCurrency = "USD") {
+  // Check if real estate addon is installed by checking for its data
+  // If no data exists, don't poll (addon likely uninstalled)
+  const hasData = typeof window !== 'undefined' &&
+    localStorage.getItem(STORAGE_KEY) !== null;
+
   return useQuery<RealEstateSummary>({
     queryKey: [QueryKeys.REAL_ESTATE_SUMMARY, baseCurrency],
     queryFn: () => getRealEstateSummary(baseCurrency),
-    // Poll every 5 seconds to catch updates from the addon
-    refetchInterval: 5000,
+    // Only poll if data exists (addon is installed)
+    enabled: hasData,
+    refetchInterval: hasData ? 5000 : false,
   });
 }

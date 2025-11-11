@@ -450,6 +450,27 @@ export interface FilesAPI {
 }
 
 /**
+ * Storage APIs
+ * Provides database-backed storage for addon data (included in backups)
+ */
+export interface StorageAPI {
+  /**
+   * Get addon data from database storage
+   * @param key Storage key (automatically scoped to addon)
+   * @returns Promise resolving to stored value
+   */
+  getData(key: string): Promise<string>;
+
+  /**
+   * Set addon data in database storage
+   * @param key Storage key (automatically scoped to addon)
+   * @param value Value to store
+   * @returns Promise resolving when data is saved
+   */
+  setData(key: string, value: string): Promise<void>;
+}
+
+/**
  * Secrets management APIs
  * Provides secure storage for addon secrets using the system keyring
  * Each addon can only access its own secrets
@@ -666,6 +687,9 @@ export interface HostAPI {
 
   /** File operations */
   files: FilesAPI;
+
+  /** Database storage operations (included in backups) */
+  storage: StorageAPI;
 
   /** Secrets management */
   secrets: SecretsAPI;
