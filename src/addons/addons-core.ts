@@ -204,19 +204,17 @@ export async function loadInstalledAddons(): Promise<void> {
     return;
   }
 
-  let loadedCount = 0;
   const loadPromises = enabledAddonFiles.map(async (addonFile) => {
     // Each addon gets its own context, but loadAddon creates its own internally
     const success = await loadAddon(addonFile, {} as AddonContext);
-    if (success) {
-      loadedCount++;
-    } else {
-      void 0;
-    }
+    return success;
   });
 
   // Load all enabled addons concurrently
-  await Promise.all(loadPromises);
+  const results = await Promise.all(loadPromises);
+
+  // Count successes after all promises resolve (avoids race condition)
+  const loadedCount = results.filter((success) => success).length;
 
   logger.info(
     `🎉 Successfully loaded ${loadedCount} out of ${enabledAddonFiles.length} enabled addons`,
