@@ -30,7 +30,10 @@
     "@wealthfolio/addon-sdk": "workspace:*",
     "@wealthfolio/ui": "workspace:*",
     "@tanstack/react-query": "^5.90.5",
-    "react": "^19.1.1"
+    "i18next": "^24.2.0",
+    "i18next-browser-languagedetector": "^8.0.2",
+    "react": "^19.1.1",
+    "react-i18next": "^15.2.0"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.1.13",
