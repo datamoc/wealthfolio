@@ -13,6 +13,8 @@ declare global {
     // Dev helpers and framework singletons made available at runtime
     React?: unknown;
     ReactDOM?: unknown;
+    i18next?: unknown;
+    ReactI18next?: unknown;
     __ADDON_DEV__?: unknown;
     __DEV_ADDONS__?: Map<string, unknown>;
   }
