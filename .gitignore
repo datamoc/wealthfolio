@@ -77,3 +77,13 @@ Cargo.lock
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Claude Code local settings
+.claude/
+
+# Generated schemas and temp files
+src-tauri/gen/
+addons/**/temp_check/
+
+# Temporary documentation
+GEMINI.md

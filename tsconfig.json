@@ -5,6 +5,7 @@
     "types": ["@tauri-apps/api", "vitest/globals"],
     "noEmit": true,
     "composite": false, // Main app doesn't need to be composite
+    "baseUrl": ".", // Explicit baseUrl needed for path mappings
 
     // Path mapping for main app
     "paths": {

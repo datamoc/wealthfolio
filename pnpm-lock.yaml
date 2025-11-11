@@ -237,9 +237,18 @@ importers:
       '@wealthfolio/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      i18next:
+        specifier: ^24.2.0
+        version: 24.2.3(typescript@5.9.2)
+      i18next-browser-languagedetector:
+        specifier: ^8.0.2
+        version: 8.2.0
       react:
         specifier: ^19.1.1
         version: 19.1.1
+      react-i18next:
+        specifier: ^15.2.0
+        version: 15.7.4(i18next@24.2.3(typescript@5.9.2))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2)
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.1.13
@@ -4261,6 +4270,14 @@ packages:
     resolution: {integrity: sha512-3NpN2zasOWYR5zWA4JIdFhxrHxRJV8HEsbR7/GHSnotfjArjZzKvOzQnLFZ911QFmmcwq80saw8rccpHH+MYVQ==}
     hasBin: true
 
+  i18next@24.2.3:
+    resolution: {integrity: sha512-lfbf80OzkocvX7nmZtu7nSTNbrTYR52sLWxPtlXX1zAhVw8WEnFk4puUkCR4B1dNQwbSpEHHHemcZu//7EcB7A==}
+    peerDependencies:
+      typescript: ^5
+    peerDependenciesMeta:
+      typescript:
+        optional: true
+
   i18next@25.6.1:
     resolution: {integrity: sha512-yUWvdXtalZztmKrKw3yz/AvSP3yKyqIkVPx/wyvoYy9lkLmwzItLxp0iHZLG5hfVQ539Jor4XLO+U+NHIXg7pw==}
     peerDependencies:
@@ -5290,6 +5307,22 @@ packages:
     engines: {node: '>=18.0.0'}
     peerDependencies:
       react: ^16.8.0 || ^17 || ^18 || ^19
+
+  react-i18next@15.7.4:
+    resolution: {integrity: sha512-nyU8iKNrI5uDJch0z9+Y5XEr34b0wkyYj3Rp+tfbahxtlswxSCjcUL9H0nqXo9IR3/t5Y5PKIA3fx3MfUyR9Xw==}
+    peerDependencies:
+      i18next: '>= 23.4.0'
+      react: '>= 16.8.0'
+      react-dom: '*'
+      react-native: '*'
+      typescript: ^5
+    peerDependenciesMeta:
+      react-dom:
+        optional: true
+      react-native:
+        optional: true
+      typescript:
+        optional: true
 
   react-i18next@16.2.4:
     resolution: {integrity: sha512-pvbcPQ+YuQQoRkKBA4VCU9aO8dOgP/vdKEizIYXcAk3+AmI8yQKSJaCzxQQu4Kgg2zWZm3ax9KqHv8ItUlRY0A==}
@@ -10552,6 +10585,12 @@ snapshots:
       '@babel/runtime': 7.28.4
       yaml: 2.8.1
 
+  i18next@24.2.3(typescript@5.9.2):
+    dependencies:
+      '@babel/runtime': 7.28.4
+    optionalDependencies:
+      typescript: 5.9.2
+
   i18next@25.6.1(typescript@5.9.2):
     dependencies:
       '@babel/runtime': 7.28.4
@@ -11507,6 +11546,16 @@ snapshots:
   react-hook-form@7.62.0(react@19.1.1):
     dependencies:
       react: 19.1.1
+
+  react-i18next@15.7.4(i18next@24.2.3(typescript@5.9.2))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
+    dependencies:
+      '@babel/runtime': 7.28.4
+      html-parse-stringify: 3.0.1
+      i18next: 24.2.3(typescript@5.9.2)
+      react: 19.1.1
+    optionalDependencies:
+      react-dom: 19.1.1(react@19.1.1)
+      typescript: 5.9.2
 
   react-i18next@16.2.4(i18next@25.6.1(typescript@5.9.2))(react-dom@19.1.1(react@19.1.1))(react@19.1.1)(typescript@5.9.2):
     dependencies:
