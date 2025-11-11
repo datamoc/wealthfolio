@@ -15,17 +15,21 @@ export default defineConfig({
       formats: ["es"],
     },
     rollupOptions: {
-      external: ["react", "react-dom"],
+      external: ["react", "react-dom", "i18next", "react-i18next"],
       plugins: [
         externalGlobals({
           react: "React",
           "react-dom": "ReactDOM",
+          i18next: "i18next",
+          "react-i18next": "ReactI18next",
         }),
       ],
       output: {
         globals: {
           react: "React",
           "react-dom": "ReactDOM",
+          i18next: "i18next",
+          "react-i18next": "ReactI18next",
         },
       },
     },
