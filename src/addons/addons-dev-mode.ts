@@ -331,9 +331,13 @@ class AddonDevManager {
         this.eventSource = new EventSource("http://localhost:3001/addon-updates");
 
         this.eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data) as { type?: string; addonId?: string };
-          if (data.type === "addon-changed" && data.addonId) {
-            this.reloadAddon(data.addonId);
+          try {
+            const data = JSON.parse(event.data) as { type?: string; addonId?: string };
+            if (data.type === "addon-changed" && data.addonId) {
+              this.reloadAddon(data.addonId);
+            }
+          } catch (error) {
+            logger.error(`Failed to parse addon update event: ${error}`);
           }
         };
 
