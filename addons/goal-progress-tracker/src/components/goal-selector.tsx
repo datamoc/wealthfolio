@@ -13,6 +13,7 @@ import {
   PopoverTrigger,
   Icons,
 } from "@wealthfolio/ui";
+import { useTranslation } from "react-i18next";
 
 // Goal selector component with searchable dropdown using design system
 function GoalSelector({
@@ -24,6 +25,7 @@ function GoalSelector({
   selectedGoal: Goal | null;
   onGoalSelect: (goal: Goal | null) => void;
 }) {
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
@@ -35,15 +37,15 @@ function GoalSelector({
           aria-expanded={open}
           className="w-full justify-between sm:w-[200px]"
         >
-          {selectedGoal ? selectedGoal.title : "Select a goal..."}
+          {selectedGoal ? selectedGoal.title : t("select_goal")}
           <Icons.ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent className="w-full p-0 sm:w-[200px]">
         <Command>
-          <CommandInput placeholder="Search goals..." />
+          <CommandInput placeholder={t("search_goals_placeholder")} />
           <CommandList>
-            <CommandEmpty>No goals found.</CommandEmpty>
+            <CommandEmpty>{t("no_goals_found_search")}</CommandEmpty>
             <CommandGroup>
               <CommandItem
                 value="no-goal"
@@ -56,7 +58,7 @@ function GoalSelector({
                   className={`mr-2 h-4 w-4 ${!selectedGoal ? "opacity-100" : "opacity-0"}`}
                 />
                 <div className="flex flex-col">
-                  <span className="text-muted-foreground">No goal selected</span>
+                  <span className="text-muted-foreground">{t("no_goal_selected")}</span>
                 </div>
               </CommandItem>
               {goals.map((goal) => (
@@ -76,7 +78,7 @@ function GoalSelector({
                   <div className="flex flex-col">
                     <span>{goal.title}</span>
                     <span className="text-muted-foreground text-xs">
-                      Target: ${goal.targetAmount.toLocaleString()}
+                      {t("goal_target_label")}: ${goal.targetAmount.toLocaleString()}
                     </span>
                   </div>
                 </CommandItem>
