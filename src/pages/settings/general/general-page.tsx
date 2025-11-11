@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { SettingsHeader } from "../settings-header";
 import { AutoUpdateSettings } from "./auto-update-settings";
 import { BaseCurrencySettings } from "./currency-settings";
+import { DisplayFormatSettings } from "./display-format-settings";
 import { ExchangeRatesSettings } from "./exchange-rates/exchange-rates-settings";
 import { LanguageSettings } from "./language-settings";
 
@@ -21,6 +22,9 @@ export default function GeneralSettingsPage() {
       <LanguageSettings />
       <div className="pt-6">
         <BaseCurrencySettings />
+      </div>
+      <div className="pt-6">
+        <DisplayFormatSettings />
       </div>
       <div className="pt-6">
         <ExchangeRatesSettings />

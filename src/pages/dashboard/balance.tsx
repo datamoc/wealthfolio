@@ -9,6 +9,7 @@ interface BalanceProps {
   displayCurrency?: boolean;
   displayDecimal?: boolean;
   isLoading?: boolean;
+  useCompactNotation?: boolean;
 }
 
 const Balance: React.FC<BalanceProps> = ({
@@ -17,6 +18,7 @@ const Balance: React.FC<BalanceProps> = ({
   displayCurrency = false,
   displayDecimal = true,
   isLoading = false,
+  useCompactNotation = false,
 }) => {
   const { isBalanceHidden } = useBalancePrivacy();
   const currencySymbol = useMemo(() => {
@@ -54,8 +56,9 @@ const Balance: React.FC<BalanceProps> = ({
             currency: currency,
             style: displayCurrency ? "currency" : "decimal",
             currencyDisplay: "narrowSymbol",
-            minimumFractionDigits: displayDecimal ? 2 : 0,
-            maximumFractionDigits: displayDecimal ? 2 : 0,
+            notation: useCompactNotation ? "compact" : "standard",
+            minimumFractionDigits: useCompactNotation ? 0 : (displayDecimal ? 2 : 0),
+            maximumFractionDigits: useCompactNotation ? 1 : (displayDecimal ? 2 : 0),
           }}
         />
       )}

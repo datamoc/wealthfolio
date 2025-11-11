@@ -62,6 +62,9 @@ impl SettingsRepositoryTrait for SettingsRepository {
                 "sync_enabled" => {
                     settings.sync_enabled = value.parse().unwrap_or(true);
                 }
+                "use_compact_notation" => {
+                    settings.use_compact_notation = value.parse().unwrap_or(false);
+                }
                 _ => {} // Ignore unknown settings
             }
         }
@@ -142,6 +145,15 @@ impl SettingsRepositoryTrait for SettingsRepository {
                         .values(&AppSetting {
                             setting_key: "sync_enabled".to_string(),
                             setting_value: sync_enabled.to_string(),
+                        })
+                        .execute(conn)?;
+                }
+
+                if let Some(use_compact_notation) = settings.use_compact_notation {
+                    diesel::replace_into(app_settings)
+                        .values(&AppSetting {
+                            setting_key: "use_compact_notation".to_string(),
+                            setting_value: use_compact_notation.to_string(),
                         })
                         .execute(conn)?;
                 }
