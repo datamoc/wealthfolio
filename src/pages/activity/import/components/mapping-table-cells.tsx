@@ -129,6 +129,7 @@ function ActivityTypeDisplayCell({
   appType,
   handleActivityTypeMapping,
 }: ActivityTypeDisplayCellProps) {
+  const { t } = useTranslation("common");
   const trimmedCsvType = csvType.trim().toUpperCase();
   const displayValue =
     trimmedCsvType.length > 27 ? `${trimmedCsvType.substring(0, 27)}...` : trimmedCsvType;
@@ -180,7 +181,7 @@ function ActivityTypeDisplayCell({
         onValueChange={(newType) =>
           handleActivityTypeMapping(trimmedCsvType, newType as ActivityType)
         }
-        placeholder={useTranslation("common").t("map_to")}
+        placeholder={t("map_to")}
         value=""
       />
     </div>

@@ -109,7 +109,7 @@ export function SavingGoals() {
         <CardContent>
           <Card className="w-full shadow-xs">
             <CardContent className="pt-6">
-              {goals && goals.length === 0 ? (
+              {goals?.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-6 text-center">
                   <Icons.Goal className="text-muted-foreground mb-2 h-12 w-12" />
                   <p className="text-muted-foreground text-sm">{t("no_saving_goals_set")}</p>

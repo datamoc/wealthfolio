@@ -292,3 +292,47 @@ export const fetchAddonStoreListings = async (): Promise<AddonStoreListing[]> =>
     throw error;
   }
 };
+
+/**
+ * Get addon-specific data from database storage
+ * @param addonId The addon ID
+ * @param key The data key
+ * @returns The stored data value
+ */
+export const getAddonData = async (addonId: string, key: string): Promise<string> => {
+  try {
+    switch (getRunEnv()) {
+      case RUN_ENV.DESKTOP:
+        return invokeTauri("get_addon_data", { addonId, key });
+      case RUN_ENV.WEB:
+        return invokeWeb("get_addon_data", { addonId, key });
+      default:
+        throw new Error("Addon storage is only supported on desktop/web");
+    }
+  } catch (error) {
+    logger.error("Error getting addon data.");
+    throw error;
+  }
+};
+
+/**
+ * Set addon-specific data in database storage
+ * @param addonId The addon ID
+ * @param key The data key
+ * @param value The data value to store
+ */
+export const setAddonData = async (addonId: string, key: string, value: string): Promise<void> => {
+  try {
+    switch (getRunEnv()) {
+      case RUN_ENV.DESKTOP:
+        return invokeTauri("set_addon_data", { addonId, key, value });
+      case RUN_ENV.WEB:
+        return invokeWeb("set_addon_data", { addonId, key, value });
+      default:
+        throw new Error("Addon storage is only supported on desktop/web");
+    }
+  } catch (error) {
+    logger.error("Error setting addon data.");
+    throw error;
+  }
+};

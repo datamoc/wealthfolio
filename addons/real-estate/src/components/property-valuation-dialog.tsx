@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -28,14 +29,6 @@ interface PropertyValuationDialogProps {
   existingValuation?: PropertyValuation;
 }
 
-const valuationSources = [
-  { value: "appraisal", label: "Professional Appraisal" },
-  { value: "market", label: "Market Estimate" },
-  { value: "manual", label: "Manual Entry" },
-  { value: "tax_assessment", label: "Tax Assessment" },
-  { value: "refinance", label: "Refinance Appraisal" },
-];
-
 export function PropertyValuationDialog({
   open,
   onOpenChange,
@@ -46,6 +39,16 @@ export function PropertyValuationDialog({
   onSave,
   existingValuation,
 }: PropertyValuationDialogProps) {
+  const { t } = useTranslation("real-estate");
+
+  const valuationSources = [
+    { value: "appraisal", label: t("valuation_source_appraisal") },
+    { value: "market", label: t("valuation_source_market") },
+    { value: "manual", label: t("valuation_source_manual") },
+    { value: "tax_assessment", label: t("valuation_source_tax_assessment") },
+    { value: "refinance", label: t("valuation_source_refinance") },
+  ];
+
   const [formData, setFormData] = useState({
     propertyId,
     value: existingValuation?.value || currentValue,
@@ -80,12 +83,14 @@ export function PropertyValuationDialog({
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>
-            {existingValuation ? "Edit" : "Add"} Valuation - {propertyName}
+            {existingValuation
+              ? t("valuation_dialog_title_edit", { propertyName })
+              : t("valuation_dialog_title_add", { propertyName })}
           </DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="date">Valuation Date</Label>
+            <Label htmlFor="date">{t("valuation_date")}</Label>
             <Input
               id="date"
               type="date"
@@ -96,7 +101,7 @@ export function PropertyValuationDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="value">Property Value ({currency})</Label>
+            <Label htmlFor="value">{t("valuation_amount")} ({currency})</Label>
             <Input
               id="value"
               type="number"
@@ -109,7 +114,7 @@ export function PropertyValuationDialog({
                   value: parseFloat(e.target.value) || 0,
                 })
               }
-              placeholder="Enter property value"
+              placeholder={t("valuation_amount_placeholder")}
               required
             />
             {formData.value !== currentValue && (
@@ -118,19 +123,19 @@ export function PropertyValuationDialog({
               >
                 {valueChange >= 0 ? "+" : ""}
                 {currency} {Math.abs(valueChange).toFixed(2)} ({valueChange >= 0 ? "+" : ""}
-                {valueChangePercent.toFixed(2)}%) from current value
+                {valueChangePercent.toFixed(2)}%) {t("valuation_from_current")}
               </p>
             )}
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="source">Valuation Source</Label>
+            <Label htmlFor="source">{t("valuation_source")}</Label>
             <Select
               value={formData.source}
               onValueChange={(value) => setFormData({ ...formData, source: value })}
             >
               <SelectTrigger id="source">
-                <SelectValue placeholder="Select source" />
+                <SelectValue placeholder={t("valuation_source_placeholder")} />
               </SelectTrigger>
               <SelectContent>
                 {valuationSources.map(({ value, label }) => (
@@ -143,23 +148,23 @@ export function PropertyValuationDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes (Optional)</Label>
+            <Label htmlFor="notes">{t("valuation_notes_optional")}</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes about this valuation"
+              placeholder={t("valuation_notes_placeholder")}
               rows={3}
             />
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t("cancel")}
             </Button>
             <Button type="submit">
               <Icons.Save className="mr-2 h-4 w-4" />
-              Save Valuation
+              {t("save_valuation")}
             </Button>
           </div>
         </form>

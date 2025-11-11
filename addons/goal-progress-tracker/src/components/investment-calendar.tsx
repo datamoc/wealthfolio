@@ -19,6 +19,7 @@ function CalendarDot({
   stepIndex,
   stepAmount,
   stepSize,
+  onHover,
   onLeave,
   onClick,
 }: {

@@ -386,7 +386,7 @@ export const AccountsSummary = React.memo(() => {
         items.push(
           <Link
             key="real-estate"
-            to="/addons/real-estate"
+            to="/addon/real-estate"
             className="border-border bg-card flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-xs transition-all duration-150 hover:shadow-md md:px-5 md:py-4"
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
@@ -493,7 +493,7 @@ export const AccountsSummary = React.memo(() => {
         items.push(
           <Link
             key="real-estate"
-            to="/addons/real-estate"
+            to="/addon/real-estate"
             className="border-border bg-card flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-xs transition-all duration-150 hover:shadow-md md:px-5 md:py-4"
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">

@@ -14,6 +14,7 @@ import goalsEn from "@/locales/en/goals.json";
 import incomeEn from "@/locales/en/income.json";
 import onboardingEn from "@/locales/en/onboarding.json";
 import assetEn from "@/locales/en/asset.json";
+import realEstateEn from "@/locales/en/real-estate.json";
 
 import commonFr from "@/locales/fr/common.json";
 import settingsFr from "@/locales/fr/settings.json";
@@ -26,6 +27,7 @@ import goalsFr from "@/locales/fr/goals.json";
 import incomeFr from "@/locales/fr/income.json";
 import onboardingFr from "@/locales/fr/onboarding.json";
 import assetFr from "@/locales/fr/asset.json";
+import realEstateFr from "@/locales/fr/real-estate.json";
 
 export const defaultNS = "common";
 export const resources = {
@@ -41,6 +43,7 @@ export const resources = {
     income: incomeEn,
     onboarding: onboardingEn,
     asset: assetEn,
+    "real-estate": realEstateEn,
   },
   fr: {
     common: commonFr,
@@ -54,6 +57,7 @@ export const resources = {
     income: incomeFr,
     onboarding: onboardingFr,
     asset: assetFr,
+    "real-estate": realEstateFr,
   },
 } as const;
 
@@ -70,7 +74,7 @@ i18n
     supportedLngs: ["en", "fr"],
     // Enable language detection that works with regional codes (e.g., en-US -> en)
     load: "languageOnly",
-    debug: import.meta.env.DEV,
+    debug: false,
 
     interpolation: {
       escapeValue: false, // React already escapes values
