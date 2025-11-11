@@ -2,6 +2,12 @@
  * Shared Query Keys for React Query
  * These keys should match the main application's query keys to ensure cache consistency
  */
+
+/**
+ * A collection of shared query keys for React Query.
+ * Using these keys ensures that addons can interact with the main application's
+ * data cache in a consistent way.
+ */
 export const QueryKeys = {
   // Account related keys
   ACCOUNTS: 'accounts',

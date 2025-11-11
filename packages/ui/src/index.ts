@@ -1,3 +1,11 @@
+/**
+ * @wealthfolio/ui
+ *
+ * This package provides a set of reusable UI components for the Wealthfolio application.
+ * It includes a variety of form elements, data display components, and layout utilities.
+ * It also exports a set of utility functions and data, such as currency information.
+ */
+
 // Export all UI components
 export * from "./components/ui/accordion";
 export * from "./components/ui/alert";

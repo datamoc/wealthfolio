@@ -52,7 +52,16 @@ function warn(message) {
 // Initialize scaffold service
 const scaffold = new AddonScaffold();
 
-// Command: create
+/**
+ * Creates a new addon from a template.
+ *
+ * This function scaffolds a new addon directory with all the necessary files
+ * to get started with addon development. It can be run interactively to prompt
+ * for configuration details.
+ *
+ * @param {string} name - The name of the addon to create.
+ * @param {object} options - The command-line options.
+ */
 async function createAddon(name, options) {
   try {
     info(`Creating new addon: ${name}`);
@@ -144,7 +153,14 @@ async function createAddon(name, options) {
   }
 }
 
-// Command: dev
+/**
+ * Starts a development server for the addon.
+ *
+ * This server provides hot reloading and serves the addon's files to the main
+ * Wealthfolio application during development.
+ *
+ * @param {number} [port=3001] - The port to run the server on.
+ */
 async function startDev(port = 3001) {
   try {
     const manifestPath = path.resolve(process.cwd(), "manifest.json");
@@ -179,7 +195,11 @@ async function startDev(port = 3001) {
   }
 }
 
-// Command: build
+/**
+ * Builds the addon for production.
+ *
+ * This function runs the `build` script defined in the addon's `package.json`.
+ */
 async function buildAddon() {
   try {
     info("Building addon...");
@@ -197,7 +217,12 @@ async function buildAddon() {
   }
 }
 
-// Command: package
+/**
+ * Packages the addon for distribution.
+ *
+ * This function first builds the addon and then runs the `package` script
+ * defined in the addon's `package.json`.
+ */
 async function packageAddon() {
   try {
     info("Packaging addon...");
@@ -213,7 +238,12 @@ async function packageAddon() {
   }
 }
 
-// Command: test
+/**
+ * Tests the addon development setup.
+ *
+ * This function checks for the presence of a `manifest.json` file, checks if
+ * the addon has been built, and tries to connect to the development server.
+ */
 async function testSetup() {
   try {
     info("Testing addon development setup...");
@@ -258,7 +288,11 @@ async function testSetup() {
   }
 }
 
-// Command: install
+/**
+ * Installs an addon from a ZIP file.
+ *
+ * @param {string} zipPath - The path to the addon's ZIP file.
+ */
 async function installAddon(zipPath) {
   try {
     info(`Installing addon from ${zipPath}`);

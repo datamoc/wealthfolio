@@ -1,3 +1,8 @@
+/**
+ * This module exports a collection of financial components that are used throughout the Wealthfolio application.
+ * These components are designed to handle the display and input of financial data in a consistent way.
+ */
+
 // Export all financial components
 export { AmountDisplay } from "./amount-display";
 export { GainAmount } from "./gain-amount";
