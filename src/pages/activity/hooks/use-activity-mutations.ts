@@ -44,7 +44,7 @@ export function useActivityMutations(
         low: data.unitPrice,
         close: data.unitPrice,
         adjclose: data.unitPrice,
-        volume: data.quantity,
+        volume: data.quantity || 0,
         currency: data.currency || "",
         dataSource: DataSource.MANUAL,
       };
