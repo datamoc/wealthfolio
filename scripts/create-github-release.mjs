@@ -21,6 +21,7 @@ import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import archiver from 'archiver';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -254,21 +255,32 @@ For issues and support, visit: https://github.com/afadil/wealthfolio/issues
     fs.unlinkSync(zipPath);
   }
 
-  try {
-    // Create zip (cross-platform compatible)
-    exec(`cd release-package && zip -r ../${zipName} .`, { stdio: 'pipe' });
-    log(`  ✓ Created ${zipName}`, colors.green);
-  } catch (error) {
-    log('  ✗ Failed to create zip. Trying alternative method...', colors.yellow);
-    // Alternative: use tar if zip is not available
-    try {
-      exec(`tar -czf ${zipName} -C release-package .`, { stdio: 'pipe' });
-      log(`  ✓ Created ${zipName} (using tar)`, colors.green);
-    } catch (tarError) {
-      log('  ✗ Failed to create archive', colors.red);
-      log('  Please manually create a zip of the release-package directory', colors.yellow);
-    }
-  }
+  // Use archiver for cross-platform zip creation
+  await new Promise((resolve, reject) => {
+    const output = fs.createWriteStream(zipPath);
+    const archive = archiver('zip', {
+      zlib: { level: 9 }
+    });
+
+    output.on('close', () => {
+      const sizeKB = (archive.pointer() / 1024).toFixed(2);
+      log(`  ✓ Created ${zipName} (${sizeKB} KB)`, colors.green);
+      resolve();
+    });
+
+    archive.on('error', (err) => {
+      log('  ✗ Failed to create zip', colors.red);
+      log(`    Error: ${err.message}`, colors.red);
+      reject(err);
+    });
+
+    archive.pipe(output);
+
+    // Add all files from release-package directory
+    archive.directory(releaseDir, false);
+
+    archive.finalize();
+  });
 
   // Summary
   log('\n════════════════════════════════════════════════════', colors.bright);
