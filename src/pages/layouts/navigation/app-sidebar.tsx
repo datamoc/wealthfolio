@@ -18,7 +18,6 @@ interface AppSidebarProps {
 }
 
 export function AppSidebar({ navigation }: AppSidebarProps) {
-  const { t } = useTranslation("settings");
   const [collapsed, setCollapsed] = useState(true);
 
   return (

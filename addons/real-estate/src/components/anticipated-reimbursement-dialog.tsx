@@ -13,6 +13,7 @@ import {
   RadioGroup,
   RadioGroupItem,
   Alert,
+  AlertDescription,
   Icons,
 } from "@wealthfolio/ui";
 import type { Loan } from "../lib/types";
@@ -147,9 +148,9 @@ export function AnticipatedReimbursementDialog({
           <div className="space-y-4 py-4">
             <Alert variant="default">
               <Icons.TrendingUp className="h-4 w-4" />
-              <div className="ml-2">
-                <p className="text-sm">{t("anticipatedReimbursement.alertMessage")}</p>
-              </div>
+              <AlertDescription>
+                {t("anticipatedReimbursement.alertMessage")}
+              </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
@@ -296,9 +297,9 @@ export function AnticipatedReimbursementDialog({
             {extraPayment > 0 && !newParameters && (
               <Alert variant="destructive">
                 <Icons.AlertCircle className="h-4 w-4" />
-                <div className="ml-2">
-                  <p className="text-sm">{t("anticipatedReimbursement.calculationError")}</p>
-                </div>
+                <AlertDescription>
+                  {t("anticipatedReimbursement.calculationError")}
+                </AlertDescription>
               </Alert>
             )}
           </div>

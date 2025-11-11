@@ -21,7 +21,7 @@ interface TooltipEntry {
 
 interface TooltipBaseProps {
   active?: boolean;
-  payload?: TooltipEntry[];
+  payload?: readonly TooltipEntry[];
 }
 
 interface CustomTooltipProps extends TooltipBaseProps {

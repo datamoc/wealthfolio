@@ -1,6 +1,4 @@
 import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
-import LanguageDetector from "i18next-browser-languagedetector";
 
 // Import translation files
 import translationEn from "../locales/en/translation.json";
@@ -30,36 +28,7 @@ export function initAddonI18n() {
     if (currentLanguage) {
       i18n.reloadResources(currentLanguage, defaultNS);
     }
-
-    return i18n;
   }
-
-  // If not initialized, create a new instance (fallback for standalone mode)
-  i18n
-    .use(LanguageDetector)
-    .use(initReactI18next)
-    .init({
-      resources,
-      defaultNS,
-      fallbackLng: "en",
-      supportedLngs: ["en", "fr"],
-      load: "languageOnly",
-      debug: false,
-
-      interpolation: {
-        escapeValue: false,
-        prefix: "{",
-        suffix: "}",
-      },
-
-      detection: {
-        order: ["localStorage", "navigator"],
-        caches: ["localStorage"],
-        lookupLocalStorage: "i18nextLng",
-      },
-    });
 
   return i18n;
 }
-
-export default i18n;

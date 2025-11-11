@@ -86,6 +86,10 @@ export const FUNCTION_DISPLAY_NAMES: Record<string, string> = {
   "secrets.set": "Store secure credentials",
   "secrets.delete": "Remove stored credentials",
 
+  // StorageAPI functions
+  "storage.getData": "Read addon data from storage",
+  "storage.setData": "Save addon data to storage",
+
   // EventsAPI functions - Import events
   "events.import.onDropHover": "Detect file drag-and-drop",
   "events.import.onDrop": "Handle file drops",

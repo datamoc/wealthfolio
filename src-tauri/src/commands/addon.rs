@@ -534,7 +534,6 @@ pub async fn get_addon_data(
     let storage_key = format!("addon:{}:{}", addon_id, key);
     state
         .settings_service()
-        .settings_repository
         .get_setting(&storage_key)
         .map_err(|e| format!("Failed to get addon data: {}", e))
 }
@@ -551,8 +550,7 @@ pub async fn set_addon_data(
     let storage_key = format!("addon:{}:{}", addon_id, key);
     state
         .settings_service()
-        .settings_repository
-        .update_setting(&storage_key, &value)
+        .set_setting(&storage_key, &value)
         .await
         .map_err(|e| format!("Failed to set addon data: {}", e))
 }
