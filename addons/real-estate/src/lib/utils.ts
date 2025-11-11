@@ -186,8 +186,8 @@ export function calculateMonthlyPayment(
 }
 
 /**
- * Calculate annual interest rate from monthly payment using Newton-Raphson method
- * This is an iterative approximation since there's no closed-form solution
+ * Calculate annual interest rate from monthly payment using bisection method
+ * This is more robust than Newton-Raphson for this problem
  */
 export function calculateInterestRate(
   principal: number,
@@ -200,35 +200,56 @@ export function calculateInterestRate(
   const minPayment = principal / months;
   if (Math.abs(monthlyPayment - minPayment) < 0.01) return 0;
 
-  // Newton-Raphson method to find the interest rate
-  let rate = 0.05; // Initial guess: 5% annual rate
-  const maxIterations = 100;
-  const tolerance = 0.0001;
+  // If monthly payment is less than minimum, something is wrong
+  if (monthlyPayment < minPayment) return 0;
 
-  for (let i = 0; i < maxIterations; i++) {
-    const monthlyRate = rate / 12;
+  // Helper function to calculate monthly payment for a given annual rate
+  const calcPayment = (annualRate: number): number => {
+    if (annualRate === 0) return principal / months;
+    const monthlyRate = annualRate / 12;
     const x = Math.pow(1 + monthlyRate, months);
+    return (principal * monthlyRate * x) / (x - 1);
+  };
 
-    // Calculate the function value and derivative
-    const fx = principal * monthlyRate * x / (x - 1) - monthlyPayment;
-    const dfx = principal * ((x * (months * (x - 1) - x * monthlyRate * months)) / Math.pow(x - 1, 2)) / 12;
+  // Bisection method to find the interest rate
+  let lowRate = 0; // 0% annual rate
+  let highRate = 0.5; // 50% annual rate (very high upper bound)
+  const maxIterations = 100;
+  const tolerance = 0.00001; // Tight tolerance for accuracy
 
-    if (Math.abs(dfx) < 1e-10) break; // Avoid division by very small number
-
-    const newRate = rate - fx / dfx;
-
-    if (Math.abs(newRate - rate) < tolerance) {
-      return Math.round(newRate * 10000) / 100; // Return as percentage with 2 decimals
-    }
-
-    rate = newRate;
-
-    // Keep rate in reasonable bounds
-    if (rate < 0) rate = 0;
-    if (rate > 1) rate = 1; // Max 100% annual rate
+  // First, check if we need a higher upper bound
+  while (calcPayment(highRate) < monthlyPayment && highRate < 1) {
+    highRate += 0.1;
   }
 
-  return Math.round(rate * 10000) / 100;
+  // Bisection search
+  for (let i = 0; i < maxIterations; i++) {
+    const midRate = (lowRate + highRate) / 2;
+    const calculatedPayment = calcPayment(midRate);
+    const diff = calculatedPayment - monthlyPayment;
+
+    // Check if we're close enough
+    if (Math.abs(diff) < 0.01) {
+      return Math.round(midRate * 10000) / 100; // Return as percentage with 2 decimals
+    }
+
+    // Adjust bounds
+    if (diff > 0) {
+      highRate = midRate; // Rate is too high
+    } else {
+      lowRate = midRate; // Rate is too low
+    }
+
+    // Check if bounds are converging
+    if (Math.abs(highRate - lowRate) < tolerance) {
+      const finalRate = (lowRate + highRate) / 2;
+      return Math.round(finalRate * 10000) / 100;
+    }
+  }
+
+  // Return midpoint if we didn't converge (shouldn't happen with bisection)
+  const finalRate = (lowRate + highRate) / 2;
+  return Math.round(finalRate * 10000) / 100;
 }
 
 /**
