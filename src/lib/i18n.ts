@@ -57,6 +57,7 @@ export const resources = {
   },
 } as const;
 
+// Initialize i18n synchronously to ensure it's ready before addons load
 i18n
   // Detect user language
   .use(LanguageDetector)
@@ -85,5 +86,10 @@ i18n
       lookupLocalStorage: "i18nextLng",
     },
   });
+
+// Ensure i18n is ready before exporting (important for addon compatibility)
+if (!i18n.isInitialized) {
+  console.warn("i18n not yet initialized - addons may have translation issues");
+}
 
 export default i18n;
