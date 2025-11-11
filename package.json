@@ -33,7 +33,9 @@
     "publish:ui": "cd packages/ui && npm publish --access public",
     "publish:addon-dev-tools": "cd packages/addon-dev-tools && npm publish --access public",
     "addon:create": "cd packages/addon-dev-tools && node cli.js create",
-    "addon:dev": "cd packages/addon-dev-tools && node dev-server.js"
+    "addon:dev": "cd packages/addon-dev-tools && node dev-server.js",
+    "release:package": "node scripts/package-release.mjs",
+    "release:create": "node scripts/create-github-release.mjs"
   },
   "dependencies": {
     "@fontsource/ibm-plex-mono": "^5.2.6",

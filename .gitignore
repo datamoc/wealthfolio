@@ -20,6 +20,11 @@ dist-ssr
 build
 out
 
+# Release packaging
+release-package/
+wealthfolio-*.zip
+wealthfolio-*.tar.gz
+
 # Testing
 coverage
 .nyc_output
