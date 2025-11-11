@@ -178,9 +178,11 @@ export const ASSET_SUBCLASS_TYPES = [
   { label: "Stock", value: "Stock" },
   { label: "ETF", value: "ETF" },
   { label: "Mutual Fund", value: "Mutual Fund" },
+  { label: "Fonds Euros", value: "Fonds Euros" },
   { label: "Cryptocurrency", value: "Cryptocurrency" },
   { label: "Commodity", value: "Commodity" },
   { label: "Precious Metal", value: "Precious Metal" },
   { label: "Alternative", value: "Alternative" },
   { label: "Cash", value: "Cash" },
+  { label: "Other", value: "Other" },
 ] as const;
