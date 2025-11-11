@@ -10,13 +10,15 @@ import { useLatestValuations } from "@/hooks/use-latest-valuations";
 import { calculateGoalProgress } from "@/lib/portfolio-helper";
 import { Goal, GoalAllocation } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { AmountDisplay, formatPercent } from "@wealthfolio/ui";
+import { AmountDisplay, formatPercent, Button } from "@wealthfolio/ui";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 export function SavingGoals() {
   const { t } = useTranslation("dashboard");
   const { isBalanceHidden } = useBalancePrivacy();
+  const navigate = useNavigate();
 
   const { accounts, isLoading: isLoadingAccounts, isError: isErrorAccounts } = useAccounts();
 
@@ -131,7 +133,25 @@ export function SavingGoals() {
 
   return (
     <div className="flex flex-wrap gap-4 pb-4">
-      <h2 className="text-md font-semibold">{t("saving_goals")}</h2>
+      <div className="flex w-full items-center justify-between">
+        <h2 className="text-md font-semibold">{t("saving_goals")}</h2>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => navigate("/settings/goals")}
+              aria-label={t("manage_goals")}
+            >
+              <Icons.Settings className="h-4 w-4" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>{t("manage_goals")}</p>
+          </TooltipContent>
+        </Tooltip>
+      </div>
       <Card className="w-full shadow-xs">
         <CardContent className="px-4 pt-6">
           {goals && goals.length > 0 ? (
