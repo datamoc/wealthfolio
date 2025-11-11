@@ -54,17 +54,19 @@ export const bulkHoldingsFormSchema = baseActivitySchema.extend({
 
 export const tradeActivitySchema = baseActivitySchema.extend({
   activityType: z.enum([ActivityType.BUY, ActivityType.SELL]),
-  assetId: z.string().default(""),
+  assetId: z.string().min(1, { message: "Please select a security" }),
   quantity: z.coerce
     .number({
+      required_error: "Please enter a valid quantity.",
       invalid_type_error: "Quantity must be a number.",
     })
-    .default(1),
+    .positive(),
   unitPrice: z.coerce
     .number({
+      required_error: "Please enter a valid unit price.",
       invalid_type_error: "Unit price must be a number.",
     })
-    .default(0),
+    .positive(),
   fee: z.coerce
     .number({
       required_error: "Please enter a valid fee.",
@@ -73,52 +75,6 @@ export const tradeActivitySchema = baseActivitySchema.extend({
     .min(0, { message: "Fee must be a non-negative number." })
     .default(0),
   assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
-  // Simplified mode fields for assets without symbols
-  simplifiedMode: z.boolean().optional().default(false),
-  assetName: z.string().optional(),
-  assetSubClass: z.string().optional(),
-  totalAmount: z.coerce.number().optional(),
-}).superRefine((data, ctx) => {
-  if (data.simplifiedMode) {
-    // Simplified mode: require name and total amount
-    if (!data.assetName || data.assetName.trim() === "") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter an asset name",
-        path: ["assetName"],
-      });
-    }
-    if (!data.totalAmount || data.totalAmount <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter a valid amount",
-        path: ["totalAmount"],
-      });
-    }
-  } else {
-    // Traditional mode: require symbol, quantity, and unit price
-    if (!data.assetId || data.assetId.trim() === "") {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please select a security",
-        path: ["assetId"],
-      });
-    }
-    if (!data.quantity || data.quantity <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter a valid quantity",
-        path: ["quantity"],
-      });
-    }
-    if (!data.unitPrice || data.unitPrice <= 0) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
-        message: "Please enter a valid unit price",
-        path: ["unitPrice"],
-      });
-    }
-  }
 });
 
 export const cashActivitySchema = baseActivitySchema.extend({
