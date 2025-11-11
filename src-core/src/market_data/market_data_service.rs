@@ -554,10 +554,20 @@ impl MarketDataService {
         let public_requests = quote_requests;
         let mut all_quotes = Vec::new();
         let mut failed_syncs = Vec::new();
-        let symbols_with_currencies: Vec<(String, String)> = public_requests
+
+        // Deduplicate symbols to avoid fetching the same asset multiple times
+        // when it appears in different accounts
+        let symbols_set: HashSet<(String, String)> = public_requests
             .iter()
             .map(|req| (req.symbol.clone(), req.currency.clone()))
             .collect();
+        let symbols_with_currencies: Vec<(String, String)> = symbols_set.into_iter().collect();
+
+        debug!(
+            "Deduplication: {} asset requests reduced to {} unique symbols",
+            public_requests.len(),
+            symbols_with_currencies.len()
+        );
 
         let sync_plan =
             self.calculate_sync_plan(refetch_all, &symbols_with_currencies, end_date)?;
