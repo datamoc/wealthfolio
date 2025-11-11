@@ -12,20 +12,64 @@ export const baseActivitySchema = z.object({
 
 export const holdingsActivitySchema = baseActivitySchema.extend({
   activityType: z.enum([ActivityType.ADD_HOLDING, ActivityType.REMOVE_HOLDING]),
-  assetId: z.string().min(1, { message: "Please select a security" }),
+  assetId: z.string().default(""),
   quantity: z.coerce
     .number({
-      required_error: "Please enter a valid quantity.",
       invalid_type_error: "Quantity must be a number.",
     })
-    .positive(),
+    .default(1),
   unitPrice: z.coerce
     .number({
-      required_error: "Please enter a valid average cost.",
       invalid_type_error: "Average cost must be a number.",
     })
-    .positive(),
+    .default(0),
   assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
+  // Simplified mode fields for assets without symbols (like fonds euros)
+  simplifiedMode: z.boolean().optional().default(false),
+  assetName: z.string().optional(),
+  assetSubClass: z.string().optional(),
+  totalAmount: z.coerce.number().optional(),
+}).superRefine((data, ctx) => {
+  if (data.simplifiedMode) {
+    // Simplified mode: require name and total amount
+    if (!data.assetName || data.assetName.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter an asset name",
+        path: ["assetName"],
+      });
+    }
+    if (!data.totalAmount || data.totalAmount <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid amount",
+        path: ["totalAmount"],
+      });
+    }
+  } else {
+    // Traditional mode: require symbol, quantity, and unit price
+    if (!data.assetId || data.assetId.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select a security",
+        path: ["assetId"],
+      });
+    }
+    if (!data.quantity || data.quantity <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid quantity",
+        path: ["quantity"],
+      });
+    }
+    if (!data.unitPrice || data.unitPrice <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid average cost",
+        path: ["unitPrice"],
+      });
+    }
+  }
 });
 
 export const bulkHoldingRowSchema = z.object({
