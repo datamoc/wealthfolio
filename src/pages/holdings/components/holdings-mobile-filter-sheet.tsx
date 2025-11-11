@@ -127,7 +127,7 @@ export const HoldingsMobileFilterSheet = ({
                       setSelectedTypes(newTypes);
                     }}
                   >
-                    <span>{type.label}</span>
+                    <span>{t(type.translationKey)}</span>
                     {selectedTypes.includes(type.value) && <Icons.Check className="h-4 w-4" />}
                   </li>
                 ))}
