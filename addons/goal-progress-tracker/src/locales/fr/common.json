@@ -29,7 +29,7 @@
   "metrics_progress": "Progrès",
   "metrics_step_size": "Taille de l'étape",
   "metrics_steps": "étapes",
-  "tracking_progress_for": "Suivi des progrès pour : {goalTitle}",
+  "tracking_progress_for": "Suivez vos progrès vers l'objectif sélectionné",
   "select_goal_to_track": "Sélectionnez un objectif pour suivre vos progrès d'investissement",
   "track_investment_progress": "Suivez vos progrès d'investissement vers vos objectifs financiers"
 }

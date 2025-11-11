@@ -50,7 +50,7 @@ function InvestmentTargetTracker({ ctx }: { ctx: AddonContext }) {
   const headerDescription =
     goals && goals.length > 0
       ? selectedGoal
-        ? t("tracking_progress_for", { goalTitle: selectedGoal.title })
+        ? t("tracking_progress_for")
         : t("select_goal_to_track")
       : t("track_investment_progress");
 
