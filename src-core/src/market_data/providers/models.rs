@@ -168,6 +168,7 @@ impl fmt::Display for AssetClass {
 }
 
 #[derive(Debug)]
+#[allow(dead_code)] // User-defined variants not constructed by providers
 pub enum AssetSubClass {
     Alternative,
     Cryptocurrency,
