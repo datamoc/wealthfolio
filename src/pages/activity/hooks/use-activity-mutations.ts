@@ -130,6 +130,10 @@ export function useActivityMutations(
             symbol: transformedData.assetId,
             name: (data as any).assetName || transformedData.assetId,
             assetSubClass: (data as any).assetSubClass || "",
+            sectors: "",
+            countries: "",
+            notes: "",
+            assetClass: "",
           });
         } catch (error) {
           logger.error(`Error updating asset profile: ${String(error)}`);

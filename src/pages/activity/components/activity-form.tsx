@@ -91,7 +91,7 @@ export function ActivityForm({ accounts, activity, open, onClose }: ActivityForm
     showCurrencySelect: false,
     // Simplified mode fields
     simplifiedMode: false,
-    assetName: "",
+    assetName: activity?.assetName || "",
     assetSubClass: "",
     totalAmount: undefined,
   };
