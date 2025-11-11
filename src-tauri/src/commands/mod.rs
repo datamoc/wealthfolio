@@ -9,6 +9,7 @@ pub mod market_data;
 pub mod platform;
 pub mod portfolio;
 pub mod providers_settings;
+pub mod reconciliation;
 pub mod secrets;
 pub mod settings;
 #[cfg(feature = "wealthfolio-pro")]

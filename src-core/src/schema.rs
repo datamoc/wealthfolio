@@ -182,10 +182,60 @@ diesel::table! {
     }
 }
 
+diesel::table! {
+    reconciliation_sessions (id) {
+        id -> Text,
+        account_id -> Text,
+        reconciliation_date -> Date,
+        status -> Text,
+        notes -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    reconciliation_items (id) {
+        id -> Text,
+        session_id -> Text,
+        symbol -> Text,
+        quantity -> Double,
+        book_value -> Nullable<Double>,
+        market_value -> Nullable<Double>,
+        currency -> Text,
+        notes -> Nullable<Text>,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
+    reconciliation_discrepancies (id) {
+        id -> Text,
+        session_id -> Text,
+        symbol -> Text,
+        asset_id -> Nullable<Text>,
+        expected_quantity -> Double,
+        actual_quantity -> Double,
+        quantity_difference -> Double,
+        expected_book_value -> Nullable<Double>,
+        actual_book_value -> Nullable<Double>,
+        status -> Text,
+        resolution_activity_id -> Nullable<Text>,
+        notes -> Nullable<Text>,
+        created_at -> Timestamp,
+        updated_at -> Timestamp,
+    }
+}
+
 diesel::joinable!(accounts -> platforms (platform_id));
 diesel::joinable!(goals_allocation -> accounts (account_id));
 diesel::joinable!(goals_allocation -> goals (goal_id));
 diesel::joinable!(quotes -> assets (symbol));
+diesel::joinable!(reconciliation_sessions -> accounts (account_id));
+diesel::joinable!(reconciliation_items -> reconciliation_sessions (session_id));
+diesel::joinable!(reconciliation_discrepancies -> reconciliation_sessions (session_id));
+diesel::joinable!(reconciliation_discrepancies -> assets (asset_id));
+diesel::joinable!(reconciliation_discrepancies -> activities (resolution_activity_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     accounts,
@@ -201,4 +251,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     market_data_providers,
     platforms,
     quotes,
+    reconciliation_sessions,
+    reconciliation_items,
+    reconciliation_discrepancies,
 );

@@ -550,3 +550,71 @@ export interface AddonStoreListing {
   /** Classification tags for filtering */
   tags?: string[];
 }
+
+// Reconciliation Types
+export type ReconciliationStatus = "PENDING" | "COMPLETED" | "CANCELLED";
+export type DiscrepancyStatus = "PENDING" | "RESOLVED" | "IGNORED";
+
+export interface ReconciliationSession {
+  id: string;
+  accountId: string;
+  reconciliationDate: string;
+  status: ReconciliationStatus;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReconciliationItem {
+  id: string;
+  sessionId: string;
+  symbol: string;
+  quantity: number;
+  bookValue?: number;
+  marketValue?: number;
+  currency: string;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface ReconciliationDiscrepancy {
+  id: string;
+  sessionId: string;
+  symbol: string;
+  assetId?: string;
+  expectedQuantity: number;
+  actualQuantity: number;
+  quantityDifference: number;
+  expectedBookValue?: number;
+  actualBookValue?: number;
+  status: DiscrepancyStatus;
+  resolutionActivityId?: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReconciliationSummary {
+  session: ReconciliationSession;
+  items: ReconciliationItem[];
+  discrepancies: ReconciliationDiscrepancy[];
+  totalItems: number;
+  totalDiscrepancies: number;
+  unresolvedDiscrepancies: number;
+}
+
+export interface CreateReconciliationSessionRequest {
+  accountId: string;
+  reconciliationDate: string;
+  notes?: string;
+}
+
+export interface AddReconciliationItemRequest {
+  sessionId: string;
+  symbol: string;
+  quantity: number;
+  bookValue?: number;
+  marketValue?: number;
+  currency: string;
+  notes?: string;
+}
