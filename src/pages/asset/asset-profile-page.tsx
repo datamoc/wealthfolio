@@ -5,12 +5,19 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { InputTags } from "@/components/ui/tag-input";
 import { useHapticFeedback } from "@/hooks";
 import { useQuoteHistory } from "@/hooks/use-quote-history";
-import { DataSource, PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
+import { ASSET_SUBCLASS_TYPES, DataSource, PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
 import { QueryKeys } from "@/lib/query-keys";
 import { Asset, Country, Holding, Quote, Sector } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
@@ -313,14 +320,23 @@ export const AssetProfilePage = () => {
                   )
                 )}
                 {isEditing ? (
-                  <Input
+                  <Select
                     value={formData.assetSubClass}
-                    onChange={(e) =>
-                      setFormData((prev) => ({ ...prev, assetSubClass: e.target.value }))
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, assetSubClass: value }))
                     }
-                    placeholder={t("subclass_placeholder")}
-                    className="w-[180px]"
-                  />
+                  >
+                    <SelectTrigger className="w-[180px]">
+                      <SelectValue placeholder={t("subclass_placeholder")} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ASSET_SUBCLASS_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {t(type.translationKey)}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   formData.assetSubClass && (
                     <Badge variant="secondary" className="flex-none uppercase">
@@ -737,14 +753,23 @@ export const AssetProfilePage = () => {
                     )
                   )}
                   {isEditing ? (
-                    <Input
+                    <Select
                       value={formData.assetSubClass}
-                      onChange={(e) =>
-                        setFormData((prev) => ({ ...prev, assetSubClass: e.target.value }))
+                      onValueChange={(value) =>
+                        setFormData((prev) => ({ ...prev, assetSubClass: value }))
                       }
-                      placeholder={t("subclass_placeholder")}
-                      className="w-[180px]"
-                    />
+                    >
+                      <SelectTrigger className="w-[180px]">
+                        <SelectValue placeholder={t("subclass_placeholder")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {ASSET_SUBCLASS_TYPES.map((type) => (
+                          <SelectItem key={type.value} value={type.value}>
+                            {t(type.translationKey)}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   ) : (
                     formData.assetSubClass && (
                       <Badge variant="secondary" className="flex-none uppercase">
