@@ -11,6 +11,7 @@ import {
   Label,
   Input,
   Alert,
+  AlertDescription,
   Icons,
 } from "@wealthfolio/ui";
 import type { Loan } from "../lib/types";
@@ -81,9 +82,9 @@ export function PostponePaymentsDialog({
           <div className="space-y-4 py-4">
             <Alert variant="default">
               <Icons.AlertCircle className="h-4 w-4" />
-              <div className="ml-2">
-                <p className="text-sm">{t("postponePayments.alertMessage")}</p>
-              </div>
+              <AlertDescription>
+                {t("postponePayments.alertMessage")}
+              </AlertDescription>
             </Alert>
 
             <div className="space-y-2">
