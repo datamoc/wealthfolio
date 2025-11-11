@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { QueryKeys } from "@/lib/query-keys";
+import { getAddonData } from "@/commands/addon";
 
 interface Property {
   id: string;
@@ -42,6 +43,7 @@ interface RealEstateSummary {
   appreciationPercent: number;
 }
 
+const ADDON_ID = "real-estate-addon";
 const STORAGE_KEY = "real-estate-data";
 
 /**
@@ -94,9 +96,9 @@ function getPropertyValueAtDate(
  * @param baseCurrency - The base currency for calculations
  * @param asOfDate - Optional date to calculate historical values (ISO format YYYY-MM-DD)
  */
-function getRealEstateSummary(baseCurrency: string, asOfDate?: string): RealEstateSummary {
+async function getRealEstateSummary(baseCurrency: string, asOfDate?: string): Promise<RealEstateSummary> {
   try {
-    const dataStr = localStorage.getItem(STORAGE_KEY);
+    const dataStr = await getAddonData(ADDON_ID, STORAGE_KEY);
 
     if (!dataStr) {
       return {
@@ -153,19 +155,15 @@ function getRealEstateSummary(baseCurrency: string, asOfDate?: string): RealEsta
 
 /**
  * Hook to get real estate summary for dashboard
- * Only fetches data if real estate addon is installed
+ * Fetches data from addon database storage
  */
 export function useRealEstateSummary(baseCurrency = "USD") {
-  // Check if real estate addon is installed by checking for its data
-  // If no data exists, don't poll (addon likely uninstalled)
-  const hasData = typeof window !== 'undefined' &&
-    localStorage.getItem(STORAGE_KEY) !== null;
-
   return useQuery<RealEstateSummary>({
     queryKey: [QueryKeys.REAL_ESTATE_SUMMARY, baseCurrency],
     queryFn: () => getRealEstateSummary(baseCurrency),
-    // Only poll if data exists (addon is installed)
-    enabled: hasData,
-    refetchInterval: hasData ? 5000 : false,
+    // Poll every 5 seconds to get updates from the addon
+    refetchInterval: 5000,
+    // Don't show errors if addon is not installed (just return empty data)
+    retry: false,
   });
 }
