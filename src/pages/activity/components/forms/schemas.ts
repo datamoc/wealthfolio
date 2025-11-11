@@ -52,78 +52,74 @@ export const bulkHoldingsFormSchema = baseActivitySchema.extend({
   holdings: z.array(bulkHoldingRowSchema).min(1, { message: "At least one holding is required" }),
 });
 
-export const tradeActivitySchema = baseActivitySchema
-  .extend({
-    activityType: z.enum([ActivityType.BUY, ActivityType.SELL]),
-    assetId: z.string().optional(),
-    quantity: z.coerce
-      .number({
-        invalid_type_error: "Quantity must be a number.",
-      })
-      .positive()
-      .optional(),
-    unitPrice: z.coerce
-      .number({
-        invalid_type_error: "Unit price must be a number.",
-      })
-      .positive()
-      .optional(),
-    fee: z.coerce
-      .number({
-        required_error: "Please enter a valid fee.",
-        invalid_type_error: "Fee must be a positive number.",
-      })
-      .min(0, { message: "Fee must be a non-negative number." })
-      .default(0),
-    assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
-    // Simplified mode fields for assets without symbols
-    simplifiedMode: z.boolean().optional().default(false),
-    assetName: z.string().optional(),
-    assetSubClass: z.string().optional(),
-    totalAmount: z.coerce.number().positive().optional(),
-  })
-  .superRefine((data, ctx) => {
-    if (data.simplifiedMode) {
-      // Simplified mode: require name and total amount
-      if (!data.assetName || data.assetName.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter an asset name",
-          path: ["assetName"],
-        });
-      }
-      if (!data.totalAmount || data.totalAmount <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter a valid amount",
-          path: ["totalAmount"],
-        });
-      }
-    } else {
-      // Traditional mode: require symbol, quantity, and unit price
-      if (!data.assetId || data.assetId.trim() === "") {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please select a security",
-          path: ["assetId"],
-        });
-      }
-      if (!data.quantity || data.quantity <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter a valid quantity",
-          path: ["quantity"],
-        });
-      }
-      if (!data.unitPrice || data.unitPrice <= 0) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          message: "Please enter a valid unit price",
-          path: ["unitPrice"],
-        });
-      }
+export const tradeActivitySchema = baseActivitySchema.extend({
+  activityType: z.enum([ActivityType.BUY, ActivityType.SELL]),
+  assetId: z.string().default(""),
+  quantity: z.coerce
+    .number({
+      invalid_type_error: "Quantity must be a number.",
+    })
+    .default(1),
+  unitPrice: z.coerce
+    .number({
+      invalid_type_error: "Unit price must be a number.",
+    })
+    .default(0),
+  fee: z.coerce
+    .number({
+      required_error: "Please enter a valid fee.",
+      invalid_type_error: "Fee must be a positive number.",
+    })
+    .min(0, { message: "Fee must be a non-negative number." })
+    .default(0),
+  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
+  // Simplified mode fields for assets without symbols
+  simplifiedMode: z.boolean().optional().default(false),
+  assetName: z.string().optional(),
+  assetSubClass: z.string().optional(),
+  totalAmount: z.coerce.number().optional(),
+}).superRefine((data, ctx) => {
+  if (data.simplifiedMode) {
+    // Simplified mode: require name and total amount
+    if (!data.assetName || data.assetName.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter an asset name",
+        path: ["assetName"],
+      });
     }
-  });
+    if (!data.totalAmount || data.totalAmount <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid amount",
+        path: ["totalAmount"],
+      });
+    }
+  } else {
+    // Traditional mode: require symbol, quantity, and unit price
+    if (!data.assetId || data.assetId.trim() === "") {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please select a security",
+        path: ["assetId"],
+      });
+    }
+    if (!data.quantity || data.quantity <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid quantity",
+        path: ["quantity"],
+      });
+    }
+    if (!data.unitPrice || data.unitPrice <= 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Please enter a valid unit price",
+        path: ["unitPrice"],
+      });
+    }
+  }
+});
 
 export const cashActivitySchema = baseActivitySchema.extend({
   activityType: z.enum([
