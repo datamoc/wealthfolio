@@ -94,10 +94,13 @@ async function main() {
   log('  Created fresh release-package directory', colors.green);
 
   // Step 2: Install dependencies first
-  log('\n[2/4] Installing dependencies...', colors.yellow);
+  log('\n[2/4] Installing dependencies for all workspace packages...', colors.yellow);
+  log('  This may take a few minutes on first run...', colors.blue);
   try {
-    exec('pnpm install', { stdio: 'pipe' });
-    log('  ✓ Dependencies installed', colors.green);
+    // Install dependencies for all workspace packages (root + packages + addons)
+    // pnpm install in a workspace automatically installs deps for all packages
+    exec('pnpm install', { stdio: 'inherit' });
+    log('  ✓ All workspace dependencies installed', colors.green);
   } catch (error) {
     log('  ✗ Failed to install dependencies', colors.red);
     log('  Please run: pnpm install', colors.yellow);
@@ -128,7 +131,7 @@ async function main() {
 
     // Run bundle script (clean + build + package)
     try {
-      exec(`pnpm --filter ${filterName} run bundle`, { stdio: 'pipe' });
+      exec(`pnpm --filter ${filterName} run bundle`, { stdio: 'inherit' });
 
       // Find the generated zip file
       const addonDistDir = path.join(addonPath, 'dist');
@@ -150,8 +153,8 @@ async function main() {
       }
     } catch (error) {
       log(`  ✗ Failed to build ${addon}`, colors.red);
-      // Don't show full error stack, just the message
-      log(`    ${error.message.split('\n')[0]}`, colors.red);
+      log(`    Error: ${error.message}`, colors.red);
+      // Continue with next addon instead of failing completely
     }
   }
 
