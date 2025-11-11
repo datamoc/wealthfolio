@@ -35,7 +35,7 @@ export const HoldingsMobileFilterSheet = ({
   setSelectedTypes,
   showAccountFilter = true,
 }: HoldingsMobileFilterSheetProps) => {
-  const { t } = useTranslation("holdings");
+  const { t } = useTranslation(["holdings", "asset"]);
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="flex h-[80vh] flex-col rounded-t-xl">
@@ -127,7 +127,7 @@ export const HoldingsMobileFilterSheet = ({
                       setSelectedTypes(newTypes);
                     }}
                   >
-                    <span>{t(type.translationKey)}</span>
+                    <span>{t(`asset:${type.translationKey}`)}</span>
                     {selectedTypes.includes(type.value) && <Icons.Check className="h-4 w-4" />}
                   </li>
                 ))}
