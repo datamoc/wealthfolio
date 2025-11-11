@@ -89,6 +89,11 @@ export function ActivityForm({ accounts, activity, open, onClose }: ActivityForm
     currency: activity?.currency || "",
     assetDataSource: activity?.assetDataSource || DataSource.YAHOO,
     showCurrencySelect: false,
+    // Simplified mode fields
+    simplifiedMode: false,
+    assetName: "",
+    assetSubClass: "",
+    totalAmount: undefined,
   };
 
   const form = useForm<NewActivityFormValues>({
