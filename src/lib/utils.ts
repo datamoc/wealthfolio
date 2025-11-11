@@ -220,22 +220,24 @@ export function formatDateTimeDisplay(date: Date | string | undefined): string {
   // Display format: YYYY/MM/DD HH:mm
   return format(value, "yyyy/MM/dd HH:mm");
 }
-export function formatAmount(amount: number, currency: string, displayCurrency = true) {
+export function formatAmount(amount: number, currency: string, displayCurrency = true, useCompactNotation = false) {
   const locale = i18n.language || "en-US";
 
   // Handle pence (GBp) specially
   if (currency === "GBp" || currency === "GBX") {
     if (!displayCurrency) {
       return new Intl.NumberFormat(locale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
+        notation: useCompactNotation ? "compact" : "standard",
+        minimumFractionDigits: useCompactNotation ? 0 : 2,
+        maximumFractionDigits: useCompactNotation ? 1 : 2,
       }).format(amount);
     }
 
     // For pence, format as "123.45p" or "1,234.56p"
     const formattedNumber = new Intl.NumberFormat(locale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      notation: useCompactNotation ? "compact" : "standard",
+      minimumFractionDigits: useCompactNotation ? 0 : 2,
+      maximumFractionDigits: useCompactNotation ? 1 : 2,
     }).format(amount);
 
     return `${formattedNumber}p`;
@@ -244,8 +246,9 @@ export function formatAmount(amount: number, currency: string, displayCurrency =
   return new Intl.NumberFormat(locale, {
     style: displayCurrency ? "currency" : undefined,
     currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    notation: useCompactNotation ? "compact" : "standard",
+    minimumFractionDigits: useCompactNotation ? 0 : 2,
+    maximumFractionDigits: useCompactNotation ? 1 : 2,
   }).format(amount);
 }
 

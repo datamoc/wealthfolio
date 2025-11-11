@@ -51,6 +51,7 @@ export default function DashboardPage() {
 
   const { settings } = useSettingsContext();
   const baseCurrency = settings?.baseCurrency ?? "USD";
+  const useCompactNotation = settings?.useCompactNotation ?? false;
 
   // Get real estate summary
   const { data: realEstateSummary } = useRealEstateSummary(baseCurrency);
@@ -115,6 +116,7 @@ export default function DashboardPage() {
                     targetValue={totalValue}
                     currency={baseCurrency}
                     displayCurrency={true}
+                    useCompactNotation={useCompactNotation}
                   />
                   <PrivacyToggle />
                 </div>

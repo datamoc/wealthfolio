@@ -14,6 +14,7 @@ pub struct Settings {
     pub menu_bar_visible: bool,
     pub is_pro: bool,
     pub sync_enabled: bool,
+    pub use_compact_notation: bool,
 }
 
 impl Default for Settings {
@@ -28,6 +29,7 @@ impl Default for Settings {
             menu_bar_visible: true,
             is_pro: false,
             sync_enabled: true,
+            use_compact_notation: false,
         }
     }
 }
@@ -43,6 +45,7 @@ pub struct SettingsUpdate {
     pub menu_bar_visible: Option<bool>,
     pub is_pro: Option<bool>,
     pub sync_enabled: Option<bool>,
+    pub use_compact_notation: Option<bool>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
