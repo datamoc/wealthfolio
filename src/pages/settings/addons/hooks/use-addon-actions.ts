@@ -164,7 +164,16 @@ export function useAddonActions() {
         fileData,
         onApprove: async () => {
           setPermissionDialog({ open: false });
-          await performAddonInstallation(fileData);
+          try {
+            await performAddonInstallation(fileData);
+          } catch (installError) {
+            console.error("Error installing addon:", installError);
+            toast({
+              title: "Installation failed",
+              description: installError instanceof Error ? installError.message : "Failed to install addon. Check console for details.",
+              variant: "destructive",
+            });
+          }
         },
       });
     } catch (error) {
@@ -177,7 +186,16 @@ export function useAddonActions() {
       });
 
       // Still allow installation but with warning
-      await performAddonInstallation(fileData);
+      try {
+        await performAddonInstallation(fileData);
+      } catch (installError) {
+        console.error("Error installing addon:", installError);
+        toast({
+          title: "Installation failed",
+          description: installError instanceof Error ? installError.message : "Failed to install addon. Check console for details.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
@@ -207,13 +225,19 @@ export function useAddonActions() {
             description: `${extractedAddon.metadata.name} has been installed and is now active.`,
           });
         } catch (error) {
+          console.error("Error installing addon from store:", error);
           // Clear staging for this specific addon on installation failure
           try {
             await clearAddonStaging(extractedAddon.metadata.id);
           } catch (cleanupError) {
             console.error("Failed to clear staging after installation failure:", cleanupError);
           }
-          throw error;
+          // Show error to user
+          toast({
+            title: "Installation failed",
+            description: error instanceof Error ? error.message : "Failed to install addon. Check console for details.",
+            variant: "destructive",
+          });
         }
       },
       onCancel: async () => {
