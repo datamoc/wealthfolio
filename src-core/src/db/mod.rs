@@ -124,6 +124,15 @@ pub fn get_db_path(input: &str) -> String {
         // Desktop/server behavior:
         // 1) Prefer DATABASE_URL if provided (preserve legacy semantics, including relative paths)
         if let Ok(url) = std::env::var("DATABASE_URL") {
+            let url_path = Path::new(&url);
+            // If DATABASE_URL points to an existing directory, append app.db
+            if url_path.exists() && url_path.is_dir() {
+                return url_path.join("app.db").to_str().unwrap().to_string();
+            }
+            // If it has no extension and doesn't exist yet, treat as directory
+            if url_path.extension().is_none() && !url_path.exists() {
+                return url_path.join("app.db").to_str().unwrap().to_string();
+            }
             return url;
         }
 
@@ -543,5 +552,76 @@ impl DbTransactionExecutor for Arc<DbPool> {
         E: Into<Error>,
     {
         (**self).execute(f)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+    use tempfile::TempDir;
+
+    #[test]
+    fn test_get_db_path_appends_app_db_for_directory() {
+        // Create a temporary directory
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path().to_str().unwrap();
+
+        // Test that get_db_path appends app.db to a directory path
+        let result = get_db_path(dir_path);
+        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db', got: {}", result);
+        assert!(result.contains(dir_path), "Expected path to contain directory path");
+    }
+
+    #[test]
+    fn test_get_db_path_with_database_url_directory() {
+        // Save the current DATABASE_URL if it exists
+        let original_url = env::var("DATABASE_URL").ok();
+
+        // Create a temporary directory
+        let temp_dir = TempDir::new().unwrap();
+        let dir_path = temp_dir.path().to_str().unwrap();
+
+        // Set DATABASE_URL to a directory path
+        env::set_var("DATABASE_URL", dir_path);
+
+        // Test that get_db_path appends app.db when DATABASE_URL is a directory
+        let result = get_db_path("/some/other/path");
+        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db' when DATABASE_URL is a directory, got: {}", result);
+
+        // Clean up
+        if let Some(url) = original_url {
+            env::set_var("DATABASE_URL", url);
+        } else {
+            env::remove_var("DATABASE_URL");
+        }
+    }
+
+    #[test]
+    fn test_get_db_path_with_database_url_file() {
+        // Save the current DATABASE_URL if it exists
+        let original_url = env::var("DATABASE_URL").ok();
+
+        // Test with a file path (has .db extension)
+        let file_path = "/path/to/database.db";
+        env::set_var("DATABASE_URL", file_path);
+
+        let result = get_db_path("/some/other/path");
+        assert_eq!(result, file_path, "Expected DATABASE_URL with file extension to be used as-is");
+
+        // Clean up
+        if let Some(url) = original_url {
+            env::set_var("DATABASE_URL", url);
+        } else {
+            env::remove_var("DATABASE_URL");
+        }
+    }
+
+    #[test]
+    fn test_get_db_path_preserves_file_with_extension() {
+        // Test that paths with extensions are preserved
+        let file_path = "/path/to/custom.db";
+        let result = get_db_path(file_path);
+        assert_eq!(result, file_path, "Expected file path with extension to be preserved");
     }
 }
