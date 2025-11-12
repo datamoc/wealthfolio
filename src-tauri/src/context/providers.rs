@@ -29,9 +29,17 @@ pub struct InitializationResult {
 pub async fn initialize_context(
     app_data_dir: &str,
 ) -> Result<InitializationResult, Box<dyn std::error::Error>> {
+    log::info!("Starting application context initialization");
+    log::info!("App data directory: {}", app_data_dir);
+
     let db_path = db::init(app_data_dir)?;
+    log::info!("Database initialization completed, path: {}", db_path);
+
     let pool = db::create_pool(&db_path)?;
+    log::info!("Database connection pool created");
+
     let writer = write_actor::spawn_writer(pool.as_ref().clone());
+    log::info!("Database write actor spawned");
 
     // Run migrations with auto-recovery on failure
     let mut recovery_backup_path: Option<String> = None;
@@ -47,30 +55,36 @@ pub async fn initialize_context(
         // Attempt recovery
         match db::recover_corrupted_database(&db_path) {
             Ok(backup_path) => {
-                log::info!("Database backed up to: {}", backup_path);
-                log::info!("Creating fresh database...");
+                log::info!("Corrupted database backed up to: {}", backup_path);
+                log::info!("Creating fresh database at: {}", db_path);
 
                 recovery_backup_path = Some(backup_path);
 
                 // Re-initialize with fresh database
+                log::info!("Re-initializing database after recovery");
                 let pool = db::create_pool(&db_path)?;
                 let writer = write_actor::spawn_writer(pool.as_ref().clone());
                 db::run_migrations(&pool)?;
 
+                log::info!("Database recovery successful, initializing services");
                 let context = initialize_services(pool, writer).await?;
+                log::info!("Application context initialized successfully (after recovery)");
                 return Ok(InitializationResult {
                     context,
                     recovery_backup_path,
                 });
             }
             Err(recovery_error) => {
-                log::error!("Recovery failed: {}", recovery_error);
+                log::error!("Database recovery failed: {}", recovery_error);
+                log::error!("Original migration error: {}", migration_error);
                 return Err(Box::new(migration_error));
             }
         }
     }
 
+    log::info!("Initializing services");
     let context = initialize_services(pool, writer).await?;
+    log::info!("Application context initialized successfully");
     Ok(InitializationResult {
         context,
         recovery_backup_path,
