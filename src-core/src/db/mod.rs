@@ -22,6 +22,9 @@ pub mod write_actor;
 pub use write_actor::WriteHandle;
 
 pub fn init(app_data_dir: &str) -> Result<String> {
+    info!("Initializing database system");
+    info!("App data directory: {}", app_data_dir);
+
     // First, validate that app_data_dir path itself is correct
     let app_data_path = Path::new(app_data_dir);
 
@@ -46,6 +49,7 @@ pub fn init(app_data_dir: &str) -> Result<String> {
 
     // Ensure app_data_dir exists as a directory
     if !app_data_path.exists() {
+        info!("App data directory does not exist, creating: {}", app_data_dir);
         fs::create_dir_all(app_data_path).map_err(|e| {
             error!("Failed to create app data directory: {}", e);
             Error::Database(DatabaseError::Internal(format!(
@@ -54,16 +58,54 @@ pub fn init(app_data_dir: &str) -> Result<String> {
             )))
         })?;
         info!("Created app data directory: {}", app_data_dir);
+    } else {
+        info!("App data directory already exists: {}", app_data_dir);
     }
 
     let db_path = get_db_path(app_data_dir);
+    info!("Database path: {}", db_path);
+
+    // Check if database file exists
+    let db_file_path = Path::new(&db_path);
+    let db_exists = db_file_path.exists();
+
+    if db_exists {
+        info!("Database file already exists at: {}", db_path);
+
+        // Verify it's actually a file and not a directory
+        if !db_file_path.is_file() {
+            error!("Database path exists but is not a file: {}", db_path);
+            return Err(Error::Database(DatabaseError::Internal(format!(
+                "Database path '{}' exists but is not a file",
+                db_path
+            ))));
+        }
+
+        // Check if file is readable
+        match fs::metadata(&db_path) {
+            Ok(metadata) => {
+                info!("Database file size: {} bytes", metadata.len());
+            }
+            Err(e) => {
+                error!("Cannot read database file metadata: {}", e);
+                return Err(Error::Database(DatabaseError::Internal(format!(
+                    "Cannot read database file '{}': {}",
+                    db_path, e
+                ))));
+            }
+        }
+    } else {
+        info!("Database file does not exist, will be created at: {}", db_path);
+    }
 
     // 2. Ensure database directory exists
     let db_dir = Path::new(&db_path).parent().unwrap();
     if !db_dir.exists() {
+        info!("Creating database directory: {}", db_dir.display());
         fs::create_dir_all(db_dir)?;
     }
 
+    info!("Establishing database connection and setting SQLite pragmas");
     {
         let mut conn = SqliteConnection::establish(&db_path)?;
         conn.batch_execute(
@@ -71,10 +113,17 @@ pub fn init(app_data_dir: &str) -> Result<String> {
         )?;
     }
 
+    if !db_exists {
+        info!("Database file successfully created at: {}", db_path);
+    } else {
+        info!("Database connection established successfully");
+    }
+
     Ok(db_path)
 }
 
 pub fn create_pool(db_path: &str) -> Result<Arc<DbPool>> {
+    info!("Creating database connection pool for: {}", db_path);
     let manager = ConnectionManager::<SqliteConnection>::new(db_path);
     let pool = r2d2::Pool::builder()
         .max_size(8)
@@ -82,13 +131,20 @@ pub fn create_pool(db_path: &str) -> Result<Arc<DbPool>> {
         .connection_timeout(std::time::Duration::from_secs(30))
         .connection_customizer(Box::new(ConnectionCustomizer {}))
         .build(manager)
-        .map_err(|e| DatabaseError::PoolCreationFailed(e))?;
+        .map_err(|e| {
+            error!("Failed to create database connection pool: {}", e);
+            DatabaseError::PoolCreationFailed(e)
+        })?;
+    info!("Database connection pool created successfully (max size: 8, min idle: 1)");
     Ok(Arc::new(pool))
 }
 
 pub fn run_migrations(pool: &DbPool) -> Result<()> {
-    info!("Running database migrations");
-    let mut connection = get_connection(pool)?;
+    info!("Checking for database migrations");
+    let mut connection = get_connection(pool).map_err(|e| {
+        error!("Failed to get database connection for migrations: {}", e);
+        e
+    })?;
 
     let result = connection.run_pending_migrations(MIGRATIONS).map_err(|e| {
         error!("Database migration failed: {}", e);
@@ -96,9 +152,9 @@ pub fn run_migrations(pool: &DbPool) -> Result<()> {
     })?;
 
     if result.is_empty() {
-        info!("No pending migrations to apply.");
+        info!("No pending migrations to apply - database schema is up to date");
     } else {
-        info!("Applied the following migrations:");
+        info!("Successfully applied {} migration(s):", result.len());
         for migration_version in &result {
             info!("  - {}", migration_version);
         }
@@ -122,15 +178,30 @@ pub fn get_db_path(input: &str) -> String {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         // Desktop/server behavior:
-        // 1) Prefer DATABASE_URL if provided (preserve legacy semantics, including relative paths)
+        // 1) Check DATABASE_URL if provided
         if let Ok(url) = std::env::var("DATABASE_URL") {
-            return url;
+            let url_path = Path::new(&url);
+
+            // Check if this is actually a database file by checking for .db extension
+            // (Don't just check for any extension, as directories like "com.teymz.wealthfolio" have dots)
+            if let Some(ext) = url_path.extension() {
+                if ext == "db" || ext == "sqlite" || ext == "sqlite3" {
+                    info!("Using DATABASE_URL as database file path: {}", url);
+                    return url;
+                }
+            }
+
+            // If DATABASE_URL is a directory (or has a non-database extension), append app.db to it
+            warn!("DATABASE_URL appears to be a directory or has non-database extension, appending 'app.db': {}", url);
+            return url_path.join("app.db").to_str().unwrap().to_string();
         }
 
-        // 2) If input looks like a file (has an extension), use it directly
+        // 2) If input looks like a database file (has .db extension), use it directly
         let p = Path::new(input);
-        if p.extension().is_some() {
-            return p.to_str().unwrap().to_string();
+        if let Some(ext) = p.extension() {
+            if ext == "db" || ext == "sqlite" || ext == "sqlite3" {
+                return p.to_str().unwrap().to_string();
+            }
         }
 
         // 3) Otherwise, treat it as a directory and append default filename
