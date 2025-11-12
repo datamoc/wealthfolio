@@ -21,15 +21,66 @@ use wealthfolio_core::{
 
 // Other imports
 
+pub struct InitializationResult {
+    pub context: ServiceContext,
+    pub recovery_backup_path: Option<String>,
+}
+
 pub async fn initialize_context(
     app_data_dir: &str,
-) -> Result<ServiceContext, Box<dyn std::error::Error>> {
+) -> Result<InitializationResult, Box<dyn std::error::Error>> {
     let db_path = db::init(app_data_dir)?;
     let pool = db::create_pool(&db_path)?;
     let writer = write_actor::spawn_writer(pool.as_ref().clone());
 
-    // Run migrations using the pool directly if run_migrations expects a Pool
-    db::run_migrations(&pool)?;
+    // Run migrations with auto-recovery on failure
+    let mut recovery_backup_path: Option<String> = None;
+
+    if let Err(migration_error) = db::run_migrations(&pool) {
+        log::error!("Migration failed: {}", migration_error);
+        log::warn!("Attempting to recover by backing up corrupted database and starting fresh...");
+
+        // Drop the pool to release database connections
+        drop(writer);
+        drop(pool);
+
+        // Attempt recovery
+        match db::recover_corrupted_database(&db_path) {
+            Ok(backup_path) => {
+                log::info!("Database backed up to: {}", backup_path);
+                log::info!("Creating fresh database...");
+
+                recovery_backup_path = Some(backup_path);
+
+                // Re-initialize with fresh database
+                let pool = db::create_pool(&db_path)?;
+                let writer = write_actor::spawn_writer(pool.as_ref().clone());
+                db::run_migrations(&pool)?;
+
+                let context = initialize_services(pool, writer).await?;
+                return Ok(InitializationResult {
+                    context,
+                    recovery_backup_path,
+                });
+            }
+            Err(recovery_error) => {
+                log::error!("Recovery failed: {}", recovery_error);
+                return Err(Box::new(migration_error));
+            }
+        }
+    }
+
+    let context = initialize_services(pool, writer).await?;
+    Ok(InitializationResult {
+        context,
+        recovery_backup_path,
+    })
+}
+
+async fn initialize_services(
+    pool: std::sync::Arc<db::DbPool>,
+    writer: db::WriteHandle,
+) -> Result<ServiceContext, Box<dyn std::error::Error>> {
 
     // Instantiate Repositories
     let settings_repository = Arc::new(SettingsRepository::new(pool.clone(), writer.clone()));

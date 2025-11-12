@@ -31,14 +31,61 @@ pub async fn install_addon_zip(
     let extracted = addons::extract_addon_zip_internal(zip_data)?;
     let addon_id = extracted.metadata.id.clone();
 
-    // Create addon directory
+    // Create addon directory with retry logic for Windows
     let addon_dir = addons::get_addon_path(&app_data_dir, &addon_id)?;
+
+    // Remove existing directory if it exists
     if addon_dir.exists() {
-        fs::remove_dir_all(&addon_dir)
-            .map_err(|e| format!("Failed to remove existing addon directory: {}", e))?;
+        // On Windows, retry deletion a few times with small delays
+        let mut attempts = 0;
+        let max_attempts = 5;
+        loop {
+            match fs::remove_dir_all(&addon_dir) {
+                Ok(_) => break,
+                Err(e) if attempts < max_attempts => {
+                    attempts += 1;
+                    log::warn!(
+                        "Failed to remove addon directory (attempt {}/{}): {}. Retrying...",
+                        attempts,
+                        max_attempts,
+                        e
+                    );
+                    std::thread::sleep(std::time::Duration::from_millis(100));
+                }
+                Err(e) => {
+                    return Err(format!("Failed to remove existing addon directory after {} attempts: {}", max_attempts, e));
+                }
+            }
+        }
+        // Small delay to ensure Windows finishes cleanup
+        std::thread::sleep(std::time::Duration::from_millis(50));
     }
-    fs::create_dir_all(&addon_dir)
-        .map_err(|e| format!("Failed to create addon directory: {}", e))?;
+
+    // Create the directory with retry logic
+    let mut attempts = 0;
+    let max_attempts = 5;
+    loop {
+        match fs::create_dir_all(&addon_dir) {
+            Ok(_) => break,
+            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists && attempts < max_attempts => {
+                // Directory might still exist from previous operation, try to clean it
+                attempts += 1;
+                log::warn!(
+                    "Directory already exists (attempt {}/{}): {}. Waiting and retrying...",
+                    attempts,
+                    max_attempts,
+                    e
+                );
+                std::thread::sleep(std::time::Duration::from_millis(100));
+                // Try removing it again
+                let _ = fs::remove_dir_all(&addon_dir);
+                std::thread::sleep(std::time::Duration::from_millis(50));
+            }
+            Err(e) => {
+                return Err(format!("Failed to create addon directory: {}", e));
+            }
+        }
+    }
 
     // Write all addon files
     for file in &extracted.files {

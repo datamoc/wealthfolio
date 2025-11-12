@@ -227,16 +227,21 @@ pub fn run() {
             // Desktop platforms: perform essential async setup synchronously
             #[cfg(not(any(target_os = "android", target_os = "ios")))]
             {
-                tauri::async_runtime::block_on(async {
+                let result = tauri::async_runtime::block_on(async {
                     // Initialize context asynchronously
-                    let context = match context::initialize_context(&app_data_dir).await {
-                        Ok(ctx) => Arc::new(ctx),
+                    let init_result = match context::initialize_context(&app_data_dir).await {
+                        Ok(result) => result,
                         Err(e) => {
                             error!("Failed to initialize context: {}", e);
+                            // Log detailed error information
+                            error!("App data directory: {}", app_data_dir);
+                            error!("Error details: {:?}", e);
                             // Propagate the original boxed error
                             return Err(e);
                         }
                     };
+
+                    let context = Arc::new(init_result.context);
 
                     // Make context available to all commands before setup returns
                     handle.manage(context.clone());
@@ -245,13 +250,42 @@ pub fn run() {
                     let instance_id = context.instance_id.clone();
                     spawn_background_tasks(handle.clone(), context.clone(), instance_id);
 
+                    // Notify user if database was recovered
+                    if let Some(backup_path) = init_result.recovery_backup_path {
+                        events::emit_database_recovered(&handle, backup_path);
+                    }
+
                     // Optionally notify frontend that the app is ready
                     emit_app_ready(&handle);
 
                     Ok(())
-                })
-                .map_err(|e: Box<dyn std::error::Error>| {
+                });
+
+                if let Err(e) = &result {
                     error!("Critical setup failed: {}", e);
+
+                    // Show native error dialog to user
+                    let logs_path = handle
+                        .path()
+                        .app_log_dir()
+                        .ok()
+                        .and_then(|p| p.to_str().map(|s| s.to_string()))
+                        .unwrap_or_else(|| "%APPDATA%\\com.teymz.wealthfolio\\logs\\".to_string());
+
+                    let error_message = format!(
+                        "Failed to initialize Wealthfolio:\n\n{}\n\nPlease check the logs at:\n{}",
+                        e, logs_path
+                    );
+
+                    // Use rfd to show a native blocking message dialog
+                    rfd::MessageDialog::new()
+                        .set_title("Wealthfolio Startup Error")
+                        .set_description(&error_message)
+                        .set_level(rfd::MessageLevel::Error)
+                        .show();
+                }
+
+                result.map_err(|e| {
                     // Forward the original error
                     e
                 })?;
@@ -264,12 +298,16 @@ pub fn run() {
                 let app_data_dir_clone = app_data_dir.clone();
                 tauri::async_runtime::spawn(async move {
                     match context::initialize_context(&app_data_dir_clone).await {
-                        Ok(ctx) => {
-                            let ctx = Arc::new(ctx);
+                        Ok(init_result) => {
+                            let ctx = Arc::new(init_result.context);
                             handle_clone.manage(ctx.clone());
                             // Spawn background non-critical tasks
                             let instance_id = ctx.instance_id.clone();
                             spawn_background_tasks(handle_clone.clone(), ctx.clone(), instance_id);
+                            // Notify user if database was recovered
+                            if let Some(backup_path) = init_result.recovery_backup_path {
+                                events::emit_database_recovered(&handle_clone, backup_path);
+                            }
                             // Signal readiness to the frontend
                             emit_app_ready(&handle_clone);
                         }

@@ -34,6 +34,9 @@ pub const MARKET_SYNC_ERROR: &str = "market:sync-error";
 /// Event emitted whenever an application resource changes (account, activity, etc.).
 pub const RESOURCE_CHANGED: &str = "resource:changed";
 
+/// Event emitted when the database has been automatically recovered from corruption
+pub const DATABASE_RECOVERED: &str = "database:recovered";
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 pub struct ResourceEventPayload {
     pub resource_type: String,
@@ -165,5 +168,28 @@ pub fn emit_resource_changed(handle: &tauri::AppHandle, payload: ResourceEventPa
 pub fn emit_app_ready(handle: &tauri::AppHandle) {
     handle.emit(APP_READY, &()).unwrap_or_else(|e| {
         log::error!("Failed to emit {} event: {}", APP_READY, e);
+    });
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct DatabaseRecoveryPayload {
+    pub backup_path: String,
+    pub message: String,
+}
+
+/// Emits the DATABASE_RECOVERED event when database corruption is detected and recovered
+pub fn emit_database_recovered(handle: &tauri::AppHandle, backup_path: String) {
+    let payload = DatabaseRecoveryPayload {
+        backup_path: backup_path.clone(),
+        message: format!(
+            "Your database was corrupted and has been automatically recovered. \
+            A backup of the old data was saved to: {}. \
+            You are now starting with a fresh database.",
+            backup_path
+        ),
+    };
+
+    handle.emit(DATABASE_RECOVERED, &payload).unwrap_or_else(|e| {
+        log::error!("Failed to emit {} event: {}", DATABASE_RECOVERED, e);
     });
 }
