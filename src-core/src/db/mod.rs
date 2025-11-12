@@ -122,18 +122,23 @@ pub fn get_db_path(input: &str) -> String {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
         // Desktop/server behavior:
-        // 1) Prefer DATABASE_URL if provided (preserve legacy semantics, including relative paths)
+        // 1) Prefer DATABASE_URL if provided and it's an absolute path (ignore relative dev paths)
         if let Ok(url) = std::env::var("DATABASE_URL") {
             let url_path = Path::new(&url);
-            // If DATABASE_URL points to an existing directory, append app.db
-            if url_path.exists() && url_path.is_dir() {
-                return url_path.join("app.db").to_str().unwrap().to_string();
+
+            // Only use DATABASE_URL if it's an absolute path (ignore relative dev paths like ../db/app.db)
+            if url_path.is_absolute() {
+                // If DATABASE_URL points to an existing directory, append app.db
+                if url_path.exists() && url_path.is_dir() {
+                    return url_path.join("app.db").to_str().unwrap().to_string();
+                }
+                // If it has no extension and doesn't exist yet, treat as directory
+                if url_path.extension().is_none() && !url_path.exists() {
+                    return url_path.join("app.db").to_str().unwrap().to_string();
+                }
+                return url;
             }
-            // If it has no extension and doesn't exist yet, treat as directory
-            if url_path.extension().is_none() && !url_path.exists() {
-                return url_path.join("app.db").to_str().unwrap().to_string();
-            }
-            return url;
+            // If DATABASE_URL is relative, ignore it and fall through to use app_data_dir
         }
 
         // 2) If input looks like a file (has an extension), use it directly
@@ -582,12 +587,12 @@ mod tests {
         let temp_dir = TempDir::new().unwrap();
         let dir_path = temp_dir.path().to_str().unwrap();
 
-        // Set DATABASE_URL to a directory path
+        // Set DATABASE_URL to an absolute directory path
         env::set_var("DATABASE_URL", dir_path);
 
-        // Test that get_db_path appends app.db when DATABASE_URL is a directory
+        // Test that get_db_path appends app.db when DATABASE_URL is an absolute directory
         let result = get_db_path("/some/other/path");
-        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db' when DATABASE_URL is a directory, got: {}", result);
+        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db' when DATABASE_URL is an absolute directory, got: {}", result);
 
         // Clean up
         if let Some(url) = original_url {
@@ -602,12 +607,37 @@ mod tests {
         // Save the current DATABASE_URL if it exists
         let original_url = env::var("DATABASE_URL").ok();
 
-        // Test with a file path (has .db extension)
+        // Test with an absolute file path (has .db extension)
+        #[cfg(target_os = "windows")]
+        let file_path = "C:\\path\\to\\database.db";
+        #[cfg(not(target_os = "windows"))]
         let file_path = "/path/to/database.db";
+
         env::set_var("DATABASE_URL", file_path);
 
         let result = get_db_path("/some/other/path");
-        assert_eq!(result, file_path, "Expected DATABASE_URL with file extension to be used as-is");
+        assert_eq!(result, file_path, "Expected absolute DATABASE_URL with file extension to be used as-is");
+
+        // Clean up
+        if let Some(url) = original_url {
+            env::set_var("DATABASE_URL", url);
+        } else {
+            env::remove_var("DATABASE_URL");
+        }
+    }
+
+    #[test]
+    fn test_get_db_path_ignores_relative_database_url() {
+        // Save the current DATABASE_URL if it exists
+        let original_url = env::var("DATABASE_URL").ok();
+
+        // Set DATABASE_URL to a relative path (like in development .env)
+        env::set_var("DATABASE_URL", "../db/app.db");
+
+        // Test that relative DATABASE_URL is ignored and app_data_dir is used instead
+        let result = get_db_path("/absolute/app/data/dir");
+        assert!(result.contains("/absolute/app/data/dir"), "Expected relative DATABASE_URL to be ignored, got: {}", result);
+        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db', got: {}", result);
 
         // Clean up
         if let Some(url) = original_url {
