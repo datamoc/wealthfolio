@@ -14,6 +14,7 @@ import { EmptyPlaceholder } from "@/components/ui/empty-placeholder";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { useIsMobileViewport } from "@/hooks/use-platform";
 import { PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
+import { exportSvgToFile } from "@/lib/svg-export";
 import { DateRange, PerformanceMetrics, ReturnData, TrackedItem } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import NumberFlow from "@number-flow/react";
@@ -40,9 +41,10 @@ import {
   PageContent,
   PageHeader,
   Separator,
+  toast,
 } from "@wealthfolio/ui";
 import { subMonths } from "date-fns";
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { AccountSelector } from "../../components/account-selector";
 import { AccountSelectorMobile } from "../../components/account-selector-mobile";
@@ -241,6 +243,22 @@ export default function PerformancePage() {
   // State for mobile dropdown menu
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [benchmarkSheetOpen, setBenchmarkSheetOpen] = useState(false);
+
+  // Ref for the card containing the chart
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  // Export handler
+  const handleExportSvg = async () => {
+    try {
+      const success = await exportSvgToFile(cardRef.current);
+      if (success) {
+        toast.success(t("export_svg_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export SVG:", error);
+      toast.error(t("export_svg_error"));
+    }
+  };
 
   // Helper function to sort comparison items (accounts first, then symbols)
   const sortComparisonItems = (items: TrackedItem[]): TrackedItem[] => {
@@ -490,19 +508,33 @@ export default function PerformancePage() {
         />
 
         <div className="flex h-[calc(100vh-19rem)] flex-col md:h-[calc(100vh-12rem)]">
-          <Card className="flex min-h-0 flex-1 flex-col">
+          <Card ref={cardRef} className="flex min-h-0 flex-1 flex-col">
             <CardHeader className={cn("pb-2", isMobile ? "px-3 py-3" : "pb-1")}>
               <div className={cn("space-y-3", isMobile ? "space-y-2" : "sm:space-y-4")}>
                 <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
-                  <div>
-                    <CardTitle className={cn("text-lg sm:text-xl", isMobile && "text-sm")}>
-                      {t("performance")}
-                    </CardTitle>
-                    <CardDescription
-                      className={cn("text-xs sm:text-sm", isMobile && "text-[10px]")}
-                    >
-                      {displayDateRange}
-                    </CardDescription>
+                  <div className="flex items-center gap-2">
+                    <div>
+                      <CardTitle className={cn("text-lg sm:text-xl", isMobile && "text-sm")}>
+                        {t("performance")}
+                      </CardTitle>
+                      <CardDescription
+                        className={cn("text-xs sm:text-sm", isMobile && "text-[10px]")}
+                      >
+                        {displayDateRange}
+                      </CardDescription>
+                    </div>
+                    {chartData && chartData.length > 0 && (
+                      <Button
+                        variant="ghost"
+                        size={isMobile ? "icon-sm" : "icon"}
+                        onClick={handleExportSvg}
+                        className="flex-shrink-0"
+                        aria-label={t("export_svg")}
+                        title={t("export_svg")}
+                      >
+                        <Icons.Download className={cn("h-4 w-4", isMobile && "h-3.5 w-3.5")} />
+                      </Button>
+                    )}
                   </div>
                   {performanceData && performanceData.length > 0 && (
                     <>
