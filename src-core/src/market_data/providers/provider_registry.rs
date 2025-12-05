@@ -1,15 +1,18 @@
 use crate::market_data::market_data_constants::{
-    DATA_SOURCE_ALPHA_VANTAGE, DATA_SOURCE_MANUAL, DATA_SOURCE_MARKET_DATA_APP,
-    DATA_SOURCE_METAL_PRICE_API, DATA_SOURCE_YAHOO,
+    DATA_SOURCE_ALPHA_VANTAGE, DATA_SOURCE_EODHD, DATA_SOURCE_MANUAL,
+    DATA_SOURCE_MARKET_DATA_APP, DATA_SOURCE_MARKETSTACK, DATA_SOURCE_METAL_PRICE_API,
+    DATA_SOURCE_YAHOO,
 };
 use crate::market_data::market_data_errors::MarketDataError;
 use crate::market_data::market_data_model::{
     MarketDataProviderSetting, Quote as ModelQuote, QuoteSummary,
 };
 use crate::market_data::providers::alpha_vantage_provider::AlphaVantageProvider;
+use crate::market_data::providers::eodhd_provider::EodhdProvider;
 use crate::market_data::providers::manual_provider::ManualProvider;
 use crate::market_data::providers::market_data_provider::{AssetProfiler, MarketDataProvider};
 use crate::market_data::providers::marketdata_app_provider::MarketDataAppProvider;
+use crate::market_data::providers::marketstack_provider::MarketstackProvider;
 use crate::market_data::providers::metal_price_api_provider::MetalPriceApiProvider;
 use crate::market_data::providers::yahoo_provider::YahooProvider;
 use crate::secrets::SecretManager;
@@ -118,6 +121,40 @@ impl ProviderRegistry {
                         }
                     } else {
                         warn!("MetalPriceApi provider '{}' (ID: {}) is enabled but requires an API key, which was not found or resolved. Skipping.", setting.name, setting.id);
+                        (None, None)
+                    }
+                }
+                DATA_SOURCE_EODHD => {
+                    if let Some(key) = api_key {
+                        if !key.is_empty() {
+                            let p = Arc::new(EodhdProvider::new(key));
+                            (
+                                Some(p.clone() as Arc<dyn MarketDataProvider + Send + Sync>),
+                                Some(p as Arc<dyn AssetProfiler + Send + Sync>),
+                            )
+                        } else {
+                            warn!("EODHD provider '{}' (ID: {}) is enabled but API key is empty. Skipping.", setting.name, setting.id);
+                            (None, None)
+                        }
+                    } else {
+                        warn!("EODHD provider '{}' (ID: {}) is enabled but requires an API key, which was not found or resolved. Skipping.", setting.name, setting.id);
+                        (None, None)
+                    }
+                }
+                DATA_SOURCE_MARKETSTACK => {
+                    if let Some(key) = api_key {
+                        if !key.is_empty() {
+                            let p = Arc::new(MarketstackProvider::new(key));
+                            (
+                                Some(p.clone() as Arc<dyn MarketDataProvider + Send + Sync>),
+                                Some(p as Arc<dyn AssetProfiler + Send + Sync>),
+                            )
+                        } else {
+                            warn!("MarketStack provider '{}' (ID: {}) is enabled but API key is empty. Skipping.", setting.name, setting.id);
+                            (None, None)
+                        }
+                    } else {
+                        warn!("MarketStack provider '{}' (ID: {}) is enabled but requires an API key, which was not found or resolved. Skipping.", setting.name, setting.id);
                         (None, None)
                     }
                 }
