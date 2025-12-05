@@ -6,11 +6,14 @@ import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useSettingsContext } from "@/lib/settings-provider";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 const displayFormatFormSchema = z.object({
   useCompactNotation: z.boolean(),
+  chartColorScheme: z.string(),
 });
 
 type DisplayFormatFormValues = z.infer<typeof displayFormatFormSchema>;
@@ -22,22 +25,36 @@ export function DisplayFormatForm() {
 
   const defaultValues: Partial<DisplayFormatFormValues> = {
     useCompactNotation: settings?.useCompactNotation || false,
+    chartColorScheme: settings?.chartColorScheme || "classic",
   };
 
   const form = useForm<DisplayFormatFormValues>({
     resolver: zodResolver(displayFormatFormSchema),
     defaultValues,
     // Reset form when settings change from external source
-    values: { useCompactNotation: settings?.useCompactNotation || false },
+    values: {
+      useCompactNotation: settings?.useCompactNotation || false,
+      chartColorScheme: settings?.chartColorScheme || "classic",
+    },
   });
 
   async function onSubmit(data: DisplayFormatFormValues) {
     try {
-      await updateSettings({ useCompactNotation: data.useCompactNotation });
+      await updateSettings({
+        useCompactNotation: data.useCompactNotation,
+        chartColorScheme: data.chartColorScheme,
+      });
     } catch (error) {
       console.error("Failed to update display format settings:", error);
     }
   }
+
+  const colorSchemes = [
+    { value: "classic", label: t("chart_color_classic") },
+    { value: "rainbow", label: t("chart_color_rainbow") },
+    { value: "warm", label: t("chart_color_warm") },
+    { value: "cool", label: t("chart_color_cool") },
+  ];
 
   return (
     <Form {...form}>
@@ -58,6 +75,37 @@ export function DisplayFormatForm() {
                   checked={field.value}
                   onCheckedChange={field.onChange}
                 />
+              </FormControl>
+            </FormItem>
+          )}
+        />
+        <Separator className="my-4" />
+        <FormField
+          control={form.control}
+          name="chartColorScheme"
+          render={({ field }) => (
+            <FormItem className="space-y-3">
+              <FormLabel>{t("chart_color_scheme_label")}</FormLabel>
+              <FormDescription>
+                {t("chart_color_scheme_description")}
+              </FormDescription>
+              <FormControl>
+                <RadioGroup
+                  onValueChange={field.onChange}
+                  defaultValue={field.value}
+                  className="flex flex-col space-y-1"
+                >
+                  {colorSchemes.map((scheme) => (
+                    <FormItem key={scheme.value} className="flex items-center space-x-3 space-y-0">
+                      <FormControl>
+                        <RadioGroupItem value={scheme.value} />
+                      </FormControl>
+                      <FormLabel className="font-normal">
+                        {scheme.label}
+                      </FormLabel>
+                    </FormItem>
+                  ))}
+                </RadioGroup>
               </FormControl>
             </FormItem>
           )}

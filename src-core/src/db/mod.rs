@@ -121,34 +121,26 @@ pub fn get_db_path(input: &str) -> String {
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        // Desktop/server behavior:
-        // 1) Prefer DATABASE_URL if provided and it's an absolute path (ignore relative dev paths)
-        if let Ok(url) = std::env::var("DATABASE_URL") {
-            let url_path = Path::new(&url);
+        let path_str = std::env::var("DATABASE_URL")
+            .ok()
+            .filter(|url| Path::new(url).is_absolute())
+            .unwrap_or_else(|| input.to_string());
 
-            // Only use DATABASE_URL if it's an absolute path (ignore relative dev paths like ../db/app.db)
-            if url_path.is_absolute() {
-                // If DATABASE_URL points to an existing directory, append app.db
-                if url_path.exists() && url_path.is_dir() {
-                    return url_path.join("app.db").to_str().unwrap().to_string();
-                }
-                // If it has no extension and doesn't exist yet, treat as directory
-                if url_path.extension().is_none() && !url_path.exists() {
-                    return url_path.join("app.db").to_str().unwrap().to_string();
-                }
-                return url;
-            }
-            // If DATABASE_URL is relative, ignore it and fall through to use app_data_dir
+        let path = Path::new(&path_str);
+
+        // If it's a directory, append the default filename.
+        if path.is_dir() {
+            return path.join("app.db").to_str().unwrap().to_string();
         }
 
-        // 2) If input looks like a file (has an extension), use it directly
-        let p = Path::new(input);
-        if p.extension().is_some() {
-            return p.to_str().unwrap().to_string();
+        // If it has no extension and doesn't exist, treat it as a directory path.
+        // This allows creating a database in a new directory specified by DATABASE_URL.
+        if path.extension().is_none() && !path.exists() {
+            return path.join("app.db").to_str().unwrap().to_string();
         }
 
-        // 3) Otherwise, treat it as a directory and append default filename
-        return p.join("app.db").to_str().unwrap().to_string();
+        // Otherwise, assume it's a full file path.
+        path_str
     }
 }
 

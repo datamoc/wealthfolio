@@ -250,7 +250,7 @@ export default function IncomePage() {
                     className="mx-auto aspect-square max-h-[62px]"
                   >
                     <PieChart>
-                      <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
+                      <ChartTooltip cursor={{ stroke: "transparent" }} content={<ChartTooltipContent hideLabel />} />
                       <Pie data={currencyData} dataKey="amount" nameKey="currency" paddingAngle={4}>
                         {currencyData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={`var(--chart-${index + 2})`} />

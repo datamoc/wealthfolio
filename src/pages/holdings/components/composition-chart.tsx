@@ -4,12 +4,18 @@ import { EmptyPlaceholder } from "@/components/ui/empty-placeholder";
 import { Icons } from "@/components/ui/icons";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { usePersistentState } from "@/hooks/use-persistent-state";
 import { useSettingsContext } from "@/lib/settings-provider";
 import { Holding } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { AnimatedToggleGroup, formatAmount, formatPercent } from "@wealthfolio/ui";
-import { useMemo, type FC } from "react";
+import { AnimatedToggleGroup, formatAmount, formatPercent, toast } from "@wealthfolio/ui";
+import { useMemo, useRef, type FC } from "react";
 import { Link } from "react-router-dom";
 import { Tooltip as ChartTooltip, ResponsiveContainer, Treemap } from "recharts";
 import { useTranslation } from "react-i18next";
@@ -266,9 +272,41 @@ export function PortfolioComposition({ holdings, isLoading }: PortfolioCompositi
     "symbol",
   );
   const { settings } = useSettingsContext();
+  const chartContentRef = useRef<HTMLDivElement>(null);
 
   const toggleDisplayMode = () => {
     setDisplayMode((prev) => (prev === "symbol" ? "name" : "symbol"));
+  };
+
+  const handleExportSvgChart = async () => {
+    try {
+      const { exportSvgToFile } = await import("@/lib/svg-export");
+      const success = await exportSvgToFile(chartContentRef.current);
+      if (success) {
+        toast.success(t("export_svg_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export SVG:", error);
+      toast.error(t("export_svg_error"));
+    }
+  };
+
+  const handleExportSvgFull = async () => {
+    try {
+      const { exportSvgWithHeader } = await import("@/lib/svg-export");
+      const subtitle = `${t(returnType === "daily" ? "daily" : "total")} ${t("return")}`;
+      const success = await exportSvgWithHeader(
+        chartContentRef.current,
+        t("composition"),
+        subtitle,
+      );
+      if (success) {
+        toast.success(t("export_full_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export full SVG:", error);
+      toast.error(t("export_full_error"));
+    }
   };
   const data = useMemo(() => {
     let maxGain = -Infinity;
@@ -378,9 +416,24 @@ export function PortfolioComposition({ holdings, isLoading }: PortfolioCompositi
             onValueChange={(value: ReturnMode) => setReturnType(value)}
             size="sm"
           />
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon-sm" className="rounded-full">
+                <Icons.Download className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleExportSvgChart}>
+                {t("export_chart")}
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={handleExportSvgFull}>
+                {t("export_full")}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
-      <CardContent className="pl-2">
+      <CardContent className="pl-2" ref={chartContentRef}>
         <ResponsiveContainer width="100%" height={500}>
           <Treemap
             width={400}

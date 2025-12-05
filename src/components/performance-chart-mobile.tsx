@@ -10,6 +10,7 @@ import { PERFORMANCE_CHART_COLORS } from "@/components/performance-chart-colors"
 import { ReturnData } from "@/lib/types";
 import { formatPercent } from "@wealthfolio/ui";
 import { differenceInDays, differenceInMonths, format, parseISO } from "date-fns";
+import { getDateFnsLocale } from "@/lib/utils";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
 
@@ -60,20 +61,21 @@ export function PerformanceChartMobile({ data }: PerformanceChartMobileProps) {
     const lastDate = parseISO(String(formattedData[formattedData.length - 1].date));
     const monthsDiff = differenceInMonths(lastDate, firstDate);
     const daysDiff = differenceInDays(lastDate, firstDate);
+    const locale = getDateFnsLocale();
 
     if (daysDiff <= 7) {
-      return format(date, "MMM d"); // e.g., "Sep 15"
+      return format(date, "MMM d", { locale }); // e.g., "Sep 15"
     }
     if (daysDiff <= 31) {
-      return format(date, "MMM d"); // e.g., "Sep 15"
+      return format(date, "MMM d", { locale }); // e.g., "Sep 15"
     }
     if (monthsDiff <= 12) {
-      return format(date, "MMM"); // e.g., "Sep"
+      return format(date, "MMM", { locale }); // e.g., "Sep"
     }
     if (monthsDiff <= 36) {
-      return format(date, "MMM yy"); // e.g., "Sep 23"
+      return format(date, "MMM yy", { locale }); // e.g., "Sep 23"
     }
-    return format(date, "yyyy"); // e.g., "2023"
+    return format(date, "yyyy", { locale }); // e.g., "2023"
   };
 
   const chartConfig = data.reduce((config, series, index) => {
@@ -92,7 +94,7 @@ export function PerformanceChartMobile({ data }: PerformanceChartMobileProps) {
     return [formattedValue + " - ", name.toString()];
   };
 
-  const tooltipLabelFormatter = (label: string) => format(parseISO(label), "MMM d, yyyy");
+  const tooltipLabelFormatter = (label: string) => format(parseISO(label), "MMM d, yyyy", { locale: getDateFnsLocale() });
 
   return (
     <div className="h-full w-full">
@@ -119,7 +121,7 @@ export function PerformanceChartMobile({ data }: PerformanceChartMobileProps) {
               width={40}
             />
             <ChartTooltip
-              cursor={false}
+              cursor={{ stroke: "transparent" }}
               content={
                 <ChartTooltipContent
                   formatter={tooltipFormatter}
@@ -127,7 +129,7 @@ export function PerformanceChartMobile({ data }: PerformanceChartMobileProps) {
                 />
               }
             />
-            <ChartLegend content={<ChartLegendContent payload={[]} />} />
+            <ChartLegend content={<ChartLegendContent />} />
             {data.map((series, seriesIndex) => (
               <Line
                 key={series.id}

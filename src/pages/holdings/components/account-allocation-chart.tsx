@@ -11,8 +11,17 @@ import {
   DonutChart,
   EmptyPlaceholder,
   Skeleton,
+  toast,
 } from "@wealthfolio/ui";
-import { useMemo, useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Icons } from "@/components/ui/icons";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface AccountAllocationChartProps {
@@ -26,6 +35,7 @@ export function AccountAllocationChart({
 }: AccountAllocationChartProps) {
   const { t } = useTranslation("holdings");
   const [activeIndex, setActiveIndex] = useState(0);
+  const chartContentRef = useRef<HTMLDivElement>(null);
 
   const { data: accounts, isLoading: isLoadingAccounts } = useQuery<Account[], Error>({
     queryKey: [QueryKeys.ACCOUNTS],
@@ -105,6 +115,36 @@ export function AccountAllocationChart({
     }
   };
 
+  const handleExportSvgChart = async () => {
+    try {
+      const { exportSvgToFile } = await import("@/lib/svg-export");
+      const success = await exportSvgToFile(chartContentRef.current);
+      if (success) {
+        toast.success(t("export_svg_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export SVG:", error);
+      toast.error(t("export_svg_error"));
+    }
+  };
+
+  const handleExportSvgFull = async () => {
+    try {
+      const { exportSvgWithHeader } = await import("@/lib/svg-export");
+      const success = await exportSvgWithHeader(
+        chartContentRef.current,
+        t("account_allocation"),
+        "",
+      );
+      if (success) {
+        toast.success(t("export_full_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export full SVG:", error);
+      toast.error(t("export_full_error"));
+    }
+  };
+
   return (
     <Card className="overflow-hidden backdrop-blur-sm">
       <CardHeader>
@@ -112,9 +152,26 @@ export function AccountAllocationChart({
           <CardTitle className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
             {t("account_allocation")}
           </CardTitle>
+          {data.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon-sm" className="rounded-full">
+                  <Icons.Download className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportSvgChart}>
+                  {t("export_chart")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportSvgFull}>
+                  {t("export_full")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0" ref={chartContentRef}>
         {data.length > 0 ? (
           <DonutChart
             data={data}

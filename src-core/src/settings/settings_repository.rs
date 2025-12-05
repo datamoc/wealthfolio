@@ -65,6 +65,9 @@ impl SettingsRepositoryTrait for SettingsRepository {
                 "use_compact_notation" => {
                     settings.use_compact_notation = value.parse().unwrap_or(false);
                 }
+                "chart_color_scheme" => {
+                    settings.chart_color_scheme = value;
+                }
                 _ => {} // Ignore unknown settings
             }
         }
@@ -158,6 +161,15 @@ impl SettingsRepositoryTrait for SettingsRepository {
                         .execute(conn)?;
                 }
 
+                if let Some(ref chart_color_scheme) = settings.chart_color_scheme {
+                    diesel::replace_into(app_settings)
+                        .values(&AppSetting {
+                            setting_key: "chart_color_scheme".to_string(),
+                            setting_value: chart_color_scheme.clone(),
+                        })
+                        .execute(conn)?;
+                }
+
                 Ok(())
             })
             .await
@@ -181,6 +193,7 @@ impl SettingsRepositoryTrait for SettingsRepository {
                     "auto_update_check_enabled" => "true",
                     "menu_bar_visible" => "true",
                     "sync_enabled" => "true",
+                    "chart_color_scheme" => "classic",
                     _ => return Err(Error::from(diesel::result::Error::NotFound)),
                 };
                 Ok(default_value.to_string())

@@ -1,12 +1,26 @@
 import { logger } from "@/adapters";
 import { type ClassValue, clsx } from "clsx";
 import { format, isValid, parse, parseISO } from "date-fns";
+import { enUS, fr, type Locale } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
 import { AccountValuation } from "./types";
 import i18n from "./i18n";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Get the date-fns locale based on the current i18n language
+ * @returns The appropriate date-fns locale object
+ */
+export function getDateFnsLocale() {
+  const language = i18n.language || "en";
+  const locales: Record<string, Locale> = {
+    en: enUS,
+    fr: fr,
+  };
+  return locales[language] || enUS;
 }
 
 /**
@@ -133,7 +147,7 @@ export function formatDate(input: string | number | Date | null | undefined): st
   }
 
   if (date && isValid(date)) {
-    return format(date, "MMM d, yyyy");
+    return format(date, "MMM d, yyyy", { locale: getDateFnsLocale() });
   }
 
   logger.warn(`Failed to format invalid date input: ${String(input)}`);

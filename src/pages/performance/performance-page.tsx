@@ -244,19 +244,46 @@ export default function PerformancePage() {
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [benchmarkSheetOpen, setBenchmarkSheetOpen] = useState(false);
 
-  // Ref for the card containing the chart
-  const cardRef = useRef<HTMLDivElement>(null);
+  // Refs for different export options
+  const chartContentRef = useRef<HTMLDivElement>(null); // Just the chart (for SVG)
+  const cardRef = useRef<HTMLDivElement>(null); // Entire card (for PNG with title/metrics)
 
-  // Export handler
-  const handleExportSvg = async () => {
+  // Export handler for SVG (chart only)
+  const handleExportSvgChart = async () => {
     try {
-      const success = await exportSvgToFile(cardRef.current);
+      const success = await exportSvgToFile(chartContentRef.current);
       if (success) {
         toast.success(t("export_svg_success"));
       }
     } catch (error) {
       console.error("Failed to export SVG:", error);
       toast.error(t("export_svg_error"));
+    }
+  };
+
+  // Export handler for SVG with title and date
+  const handleExportSvgFull = async () => {
+    try {
+      const { exportSvgWithHeader } = await import("@/lib/svg-export");
+
+      // Prepare legend items from chartData
+      const legendItems = chartData.map((series, index) => ({
+        name: series.name,
+        color: chartColorMap.get(series.id) || PERFORMANCE_CHART_COLORS[index % PERFORMANCE_CHART_COLORS.length],
+      }));
+
+      const success = await exportSvgWithHeader(
+        chartContentRef.current,
+        t("performance"),
+        displayDateRange || "",
+        legendItems,
+      );
+      if (success) {
+        toast.success(t("export_full_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export full SVG:", error);
+      toast.error(t("export_full_error"));
     }
   };
 
@@ -524,16 +551,29 @@ export default function PerformancePage() {
                       </CardDescription>
                     </div>
                     {chartData && chartData.length > 0 && (
-                      <Button
-                        variant="ghost"
-                        size={isMobile ? "icon-sm" : "icon"}
-                        onClick={handleExportSvg}
-                        className="flex-shrink-0"
-                        aria-label={t("export_svg")}
-                        title={t("export_svg")}
-                      >
-                        <Icons.Download className={cn("h-4 w-4", isMobile && "h-3.5 w-3.5")} />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="outline"
+                            size={isMobile ? "icon-sm" : "icon"}
+                            className="flex-shrink-0 hover:bg-accent"
+                            aria-label={t("export")}
+                            title={t("export")}
+                          >
+                            <Icons.Download className={cn("h-4 w-4", isMobile && "h-3.5 w-3.5")} />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={handleExportSvgFull}>
+                            <Icons.FileText className="mr-2 h-4 w-4" />
+                            {t("export_full")}
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={handleExportSvgChart}>
+                            <Icons.FileText className="mr-2 h-4 w-4" />
+                            {t("export_chart")}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                   {performanceData && performanceData.length > 0 && (
@@ -711,7 +751,7 @@ export default function PerformancePage() {
                 </div>
               </div>
             </CardHeader>
-            <CardContent className={cn("min-h-0 flex-1", isMobile ? "p-2" : "p-3 sm:p-6")}>
+            <CardContent ref={chartContentRef} className={cn("min-h-0 flex-1", isMobile ? "p-2" : "p-3 sm:p-6")}>
               <PerformanceContent
                 chartData={chartData}
                 isLoading={isLoadingPerformance}

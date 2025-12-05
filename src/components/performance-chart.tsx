@@ -8,6 +8,7 @@ import {
 } from "@/components/ui/chart";
 import { PERFORMANCE_CHART_COLORS } from "@/components/performance-chart-colors";
 import { ReturnData } from "@/lib/types";
+import { getDateFnsLocale } from "@/lib/utils";
 import { formatPercent } from "@wealthfolio/ui";
 import { differenceInDays, differenceInMonths, format, parseISO } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
@@ -60,14 +61,15 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
     const lastDate = parseISO(String(formattedData[formattedData.length - 1].date));
     const monthsDiff = differenceInMonths(lastDate, firstDate);
     const daysDiff = differenceInDays(lastDate, firstDate);
+    const locale = getDateFnsLocale();
 
     if (daysDiff <= 31) {
-      return format(date, "MMM d"); // e.g., "Sep 15"
+      return format(date, "MMM d", { locale }); // e.g., "Sep 15"
     }
     if (monthsDiff <= 36) {
-      return format(date, "MMM yyyy"); // e.g., "Sep 2023"
+      return format(date, "MMM yyyy", { locale }); // e.g., "Sep 2023"
     }
-    return format(date, "yyyy"); // e.g., "2023"
+    return format(date, "yyyy", { locale }); // e.g., "2023"
   };
 
   // Update the chartConfig and Line components to use PERFORMANCE_CHART_COLORS
@@ -87,7 +89,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
     return [formattedValue + " - ", name.toString()];
   };
 
-  const tooltipLabelFormatter = (label: string) => format(parseISO(label), "PPP");
+  const tooltipLabelFormatter = (label: string) => format(parseISO(label), "PPP", { locale: getDateFnsLocale() });
 
   return (
     <div className="h-full w-full">
@@ -111,7 +113,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
               domain={[-0.12, "auto"]}
             />
             <ChartTooltip
-              cursor={false}
+              cursor={{ stroke: "transparent" }}
               content={
                 <ChartTooltipContent
                   formatter={tooltipFormatter}
@@ -119,7 +121,7 @@ export function PerformanceChart({ data }: PerformanceChartProps) {
                 />
               }
             />
-            <ChartLegend content={<ChartLegendContent payload={[]} />} />
+            <ChartLegend content={<ChartLegendContent />} />
             {data.map((series, seriesIndex) => (
               <Line
                 key={series.id}

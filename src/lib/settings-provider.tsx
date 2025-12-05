@@ -11,7 +11,7 @@ interface ExtendedSettingsContextType extends SettingsContextType {
     updates: Partial<
       Pick<
         Settings,
-        "theme" | "font" | "baseCurrency" | "onboardingCompleted" | "menuBarVisible" | "syncEnabled" | "useCompactNotation"
+        "theme" | "font" | "baseCurrency" | "onboardingCompleted" | "menuBarVisible" | "syncEnabled" | "useCompactNotation" | "chartColorScheme"
       >
     >,
   ) => Promise<void>;
@@ -37,7 +37,7 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
     updates: Partial<
       Pick<
         Settings,
-        "theme" | "font" | "baseCurrency" | "onboardingCompleted" | "menuBarVisible" | "syncEnabled" | "useCompactNotation"
+        "theme" | "font" | "baseCurrency" | "onboardingCompleted" | "menuBarVisible" | "syncEnabled" | "useCompactNotation" | "chartColorScheme"
       >
     >,
   ) => {
@@ -119,11 +119,66 @@ function cleanupSystemThemeListeners() {
   mediaQueryList = null;
 }
 
+// Color palettes for charts
+const COLOR_PALETTES: Record<string, string[]> = {
+  classic: [
+    "hsl(40 3% 20%)",   // Muted dark brown
+    "hsl(45 2% 33%)",   // Medium gray
+    "hsl(50 3% 42%)",   // Light gray
+    "hsl(43 3% 52%)",   // Lighter gray
+    "hsl(47 4% 61%)",   // Even lighter
+    "hsl(49 7% 70%)",   // Very light gray
+    "hsl(55 10% 79%)",  // Near white
+    "hsl(50 14% 83%)",  // Off white
+    "hsl(51 21% 88%)",  // Almost white
+  ],
+  rainbow: [
+    "hsl(0 70% 50%)",    // Red
+    "hsl(30 80% 55%)",   // Orange
+    "hsl(50 90% 50%)",   // Yellow
+    "hsl(120 60% 45%)",  // Green
+    "hsl(200 70% 50%)",  // Blue
+    "hsl(270 60% 50%)",  // Purple
+    "hsl(330 70% 50%)",  // Pink
+    "hsl(180 60% 45%)",  // Cyan
+    "hsl(300 65% 45%)",  // Magenta
+  ],
+  warm: [
+    "hsl(0 70% 50%)",    // Red
+    "hsl(15 75% 55%)",   // Red-Orange
+    "hsl(30 80% 55%)",   // Orange
+    "hsl(40 85% 50%)",   // Orange-Yellow
+    "hsl(50 90% 50%)",   // Yellow
+    "hsl(330 70% 50%)",  // Pink
+    "hsl(350 75% 55%)",  // Rose
+    "hsl(20 70% 45%)",   // Burnt Orange
+    "hsl(35 75% 50%)",   // Amber
+  ],
+  cool: [
+    "hsl(200 70% 50%)",  // Blue
+    "hsl(190 65% 45%)",  // Ocean Blue
+    "hsl(180 60% 45%)",  // Cyan
+    "hsl(170 55% 45%)",  // Teal
+    "hsl(160 60% 45%)",  // Turquoise
+    "hsl(220 65% 50%)",  // Royal Blue
+    "hsl(240 60% 50%)",  // Navy Blue
+    "hsl(260 55% 50%)",  // Indigo
+    "hsl(270 60% 50%)",  // Purple
+  ],
+};
+
 // Helper function to apply settings to the document
 const applySettingsToDocument = (newSettings: Settings) => {
   // Font classes
   document.body.classList.remove("font-mono", "font-sans", "font-serif");
   document.body.classList.add(newSettings.font);
+
+  // Apply chart color scheme
+  const colorScheme = newSettings.chartColorScheme || "classic";
+  const colors = COLOR_PALETTES[colorScheme] || COLOR_PALETTES.classic;
+  colors.forEach((color, index) => {
+    document.documentElement.style.setProperty(`--chart-${index + 1}`, color);
+  });
 
   // Always clean up previous listeners before applying a new theme mode
   cleanupSystemThemeListeners();

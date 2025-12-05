@@ -80,8 +80,9 @@ export function SectorsChart({ holdings, isLoading, onSectorSectionClick }: Sect
             </div>
           ) : (
             <div className="space-y-4 pt-2">
-              {sectors.map((sector) => {
+              {sectors.map((sector, index) => {
                 const percent = total > 0 ? sector.value / total : 0;
+                const chartColorIndex = (index % 9) + 1;
                 return (
                   <Tooltip key={sector.name} delayDuration={100}>
                     <TooltipTrigger asChild>
@@ -100,9 +101,10 @@ export function SectorsChart({ holdings, isLoading, onSectorSectionClick }: Sect
                         <div className="bg-secondary relative h-5 flex-1 overflow-hidden rounded">
                           {/* Actual Progress Fill */}
                           <div
-                            className="bg-chart-2 absolute top-0 left-0 h-full rounded"
+                            className="absolute top-0 left-0 h-full rounded"
                             style={{
                               width: `${percent * 100}%`,
+                              backgroundColor: `var(--chart-${chartColorIndex})`,
                             }}
                           />
                           {/* Conditional Text Block */}

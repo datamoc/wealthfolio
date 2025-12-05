@@ -1,7 +1,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Icons } from "@/components/ui/icons";
 import { Country, Holding } from "@/lib/types";
-import { DonutChart, EmptyPlaceholder, Skeleton } from "@wealthfolio/ui";
-import { useMemo, useState } from "react";
+import { DonutChart, EmptyPlaceholder, Skeleton, toast } from "@wealthfolio/ui";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface CountryChartProps {
@@ -13,6 +21,7 @@ interface CountryChartProps {
 export const CountryChart = ({ holdings, isLoading, onCountrySectionClick }: CountryChartProps) => {
   const { t } = useTranslation("holdings");
   const [activeIndex, setActiveIndex] = useState(0);
+  const chartContentRef = useRef<HTMLDivElement>(null);
 
   const data = useMemo(() => {
     if (!holdings || holdings.length === 0) return [];
@@ -72,6 +81,36 @@ export const CountryChart = ({ holdings, isLoading, onCountrySectionClick }: Cou
     }
   };
 
+  const handleExportSvgChart = async () => {
+    try {
+      const { exportSvgToFile } = await import("@/lib/svg-export");
+      const success = await exportSvgToFile(chartContentRef.current);
+      if (success) {
+        toast.success(t("export_svg_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export SVG:", error);
+      toast.error(t("export_svg_error"));
+    }
+  };
+
+  const handleExportSvgFull = async () => {
+    try {
+      const { exportSvgWithHeader } = await import("@/lib/svg-export");
+      const success = await exportSvgWithHeader(
+        chartContentRef.current,
+        t("country_allocation"),
+        "",
+      );
+      if (success) {
+        toast.success(t("export_full_success"));
+      }
+    } catch (error) {
+      console.error("Failed to export full SVG:", error);
+      toast.error(t("export_full_error"));
+    }
+  };
+
   return (
     <Card className="overflow-hidden backdrop-blur-sm">
       <CardHeader>
@@ -79,9 +118,26 @@ export const CountryChart = ({ holdings, isLoading, onCountrySectionClick }: Cou
           <CardTitle className="text-muted-foreground text-sm font-medium tracking-wider uppercase">
             {t("country_allocation")}
           </CardTitle>
+          {data.length > 0 && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon-sm" className="rounded-full">
+                  <Icons.Download className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportSvgChart}>
+                  {t("export_chart")}
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportSvgFull}>
+                  {t("export_full")}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
-      <CardContent className="pt-0">
+      <CardContent className="pt-0" ref={chartContentRef}>
         {data.length > 0 ? (
           <DonutChart
             data={data}

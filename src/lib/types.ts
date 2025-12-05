@@ -346,6 +346,7 @@ export interface Settings {
   isPro: boolean;
   syncEnabled: boolean;
   useCompactNotation: boolean;
+  chartColorScheme: string;
 }
 
 export interface SettingsContextType {

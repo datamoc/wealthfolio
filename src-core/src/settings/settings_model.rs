@@ -15,6 +15,7 @@ pub struct Settings {
     pub is_pro: bool,
     pub sync_enabled: bool,
     pub use_compact_notation: bool,
+    pub chart_color_scheme: String,
 }
 
 impl Default for Settings {
@@ -30,6 +31,7 @@ impl Default for Settings {
             is_pro: false,
             sync_enabled: true,
             use_compact_notation: false,
+            chart_color_scheme: "classic".to_string(),
         }
     }
 }
@@ -46,6 +48,7 @@ pub struct SettingsUpdate {
     pub is_pro: Option<bool>,
     pub sync_enabled: Option<bool>,
     pub use_compact_notation: Option<bool>,
+    pub chart_color_scheme: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
