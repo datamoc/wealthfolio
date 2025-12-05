@@ -1,11 +1,26 @@
 import { logger } from "@/adapters";
 import { type ClassValue, clsx } from "clsx";
 import { format, isValid, parse, parseISO } from "date-fns";
+import { enUS, fr, type Locale } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
+import i18n from "./i18n";
 import { AccountValuation } from "./types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
+}
+
+/**
+ * Get the date-fns locale based on the current i18n language
+ * @returns The appropriate date-fns locale object
+ */
+export function getDateFnsLocale() {
+  const language = i18n.language || "en";
+  const locales: Record<string, Locale> = {
+    en: enUS,
+    fr: fr,
+  };
+  return locales[language] || enUS;
 }
 
 /**

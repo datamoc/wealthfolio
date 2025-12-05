@@ -1,15 +1,14 @@
 import { PERFORMANCE_CHART_COLORS } from "@/components/performance-chart-colors";
 import {
-  ChartConfig,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
-  ChartTooltip,
-  ChartTooltipContent,
+    ChartConfig,
+    ChartContainer,
+    ChartLegend,
+    ChartLegendContent,
+    ChartTooltip,
+    ChartTooltipContent,
 } from "@/components/ui/chart";
 import { ReturnData } from "@/lib/types";
-import { getDateFnsLocale } from "@/lib/utils";
-import { formatPercent } from "@wealthfolio/ui";
+import { formatPercent, getDateFnsLocale } from "@/lib/utils";
 import { differenceInDays, differenceInMonths, format, parseISO } from "date-fns";
 import { CartesianGrid, Line, LineChart, ResponsiveContainer, XAxis, YAxis } from "recharts";
 import { NameType, ValueType } from "recharts/types/component/DefaultTooltipContent";
