@@ -4,6 +4,7 @@ use wealthfolio_core::{
     accounts::{AccountRepository, AccountService},
     activities::{ActivityRepository, ActivityService},
     db::{self, write_actor},
+    finance_database::FinanceDatabaseService,
     fx::{FxRepository, FxService, FxServiceTrait},
     goals::{GoalRepository, GoalService},
     limits::{ContributionLimitRepository, ContributionLimitService},
@@ -191,6 +192,8 @@ async fn initialize_services(
         holdings_valuation_service.clone(),
     ));
 
+    let finance_database_service = Arc::new(FinanceDatabaseService::new(pool.clone()));
+
     Ok(ServiceContext {
         base_currency,
         instance_id,
@@ -207,5 +210,6 @@ async fn initialize_services(
         snapshot_service,
         holdings_service,
         valuation_service,
+        finance_database_service,
     })
 }

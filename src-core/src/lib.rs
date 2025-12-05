@@ -8,6 +8,7 @@ pub mod db;
 pub use wealthfolio_sync as sync;
 
 pub mod errors;
+pub mod finance_database;
 pub mod fx;
 pub mod goals;
 pub mod limits;

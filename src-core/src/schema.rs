@@ -109,6 +109,24 @@ diesel::table! {
 }
 
 diesel::table! {
+    finance_database_assets (id) {
+        id -> Text,
+        symbol -> Text,
+        name -> Text,
+        asset_type -> Text,
+        currency -> Text,
+        summary -> Nullable<Text>,
+        category_group -> Nullable<Text>,
+        category -> Nullable<Text>,
+        family -> Nullable<Text>,
+        exchange -> Nullable<Text>,
+        cryptocurrency -> Nullable<Text>,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::table! {
     goals (id) {
         id -> Text,
         title -> Text,
@@ -195,6 +213,7 @@ diesel::allow_tables_to_appear_in_same_query!(
     assets,
     contribution_limits,
     daily_account_valuation,
+    finance_database_assets,
     goals,
     goals_allocation,
     holdings_snapshots,
