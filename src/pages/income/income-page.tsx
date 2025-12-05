@@ -13,59 +13,46 @@ import { AmountDisplay, AnimatedToggleGroup, GainPercent, PrivacyAmount } from "
 import React, { useState } from "react";
 import { Cell, Pie, PieChart } from "recharts";
 import { IncomeHistoryChart } from "./income-history-chart";
-import { useTranslation } from "react-i18next";
 
-const usePeriods = () => {
-  const { t } = useTranslation("income");
-  return [
-    { value: "YTD" as const, label: t("year_to_date") },
-    { value: "LAST_YEAR" as const, label: t("last_year") },
-    { value: "TOTAL" as const, label: t("all_time") },
-  ];
-};
+const periods = [
+  { value: "YTD" as const, label: "Year to Date" },
+  { value: "LAST_YEAR" as const, label: "Last Year" },
+  { value: "TOTAL" as const, label: "All Time" },
+];
 
-const useMobilePeriods = () => {
-  const { t } = useTranslation("income");
-  return [
-    { value: "YTD" as const, label: t("ytd") },
-    { value: "LAST_YEAR" as const, label: t("last_yr") },
-    { value: "TOTAL" as const, label: t("all") },
-  ];
-};
+const mobilePeriods = [
+  { value: "YTD" as const, label: "YTD" },
+  { value: "LAST_YEAR" as const, label: "Last Yr" },
+  { value: "TOTAL" as const, label: "All" },
+];
 
 const IncomePeriodSelector: React.FC<{
   selectedPeriod: "TOTAL" | "YTD" | "LAST_YEAR";
   onPeriodSelect: (period: "TOTAL" | "YTD" | "LAST_YEAR") => void;
-}> = ({ selectedPeriod, onPeriodSelect }) => {
-  const periods = usePeriods();
-  const mobilePeriods = useMobilePeriods();
-
-  return (
-    <>
-      <div className="hidden sm:block">
-        <AnimatedToggleGroup
-          variant="secondary"
-          size="sm"
-          items={periods}
-          value={selectedPeriod}
-          onValueChange={onPeriodSelect}
-        />
-      </div>
-      <div className="block sm:hidden">
-        <AnimatedToggleGroup
-          variant="secondary"
-          size="xs"
-          items={mobilePeriods}
-          value={selectedPeriod}
-          onValueChange={onPeriodSelect}
-        />
-      </div>
-    </>
-  );
-};
+}> = ({ selectedPeriod, onPeriodSelect }) => (
+  <>
+    <div className="hidden sm:block">
+      <AnimatedToggleGroup
+        variant="secondary"
+        size="sm"
+        items={periods}
+        value={selectedPeriod}
+        onValueChange={onPeriodSelect}
+      />
+    </div>
+    <div className="block sm:hidden">
+      <AnimatedToggleGroup
+        variant="secondary"
+        size="xs"
+        items={mobilePeriods}
+        value={selectedPeriod}
+        onValueChange={onPeriodSelect}
+      />
+    </div>
+  </>
+);
 
 export default function IncomePage() {
-  const { t } = useTranslation("income");
   const [selectedPeriod, setSelectedPeriod] = useState<"TOTAL" | "YTD" | "LAST_YEAR">("TOTAL");
   const { isBalanceHidden } = useBalancePrivacy();
 
@@ -83,7 +70,7 @@ export default function IncomePage() {
   }
 
   if (error || !incomeData) {
-    return <div>{t("failed_to_load")} {error?.message || "Unknown error"}</div>;
+    return <div>Failed to load income summary: {error?.message || "Unknown error"}</div>;
   }
 
   const periodSummary = incomeData.find((summary) => summary.period === selectedPeriod);
@@ -91,30 +78,11 @@ export default function IncomePage() {
 
   if (!periodSummary || !totalSummary) {
     return (
-<<<<<<< HEAD
-      <Page>
-        <PageHeader
-          heading={t("income")}
-          actions={
-            <IncomePeriodSelector
-              selectedPeriod={selectedPeriod}
-              onPeriodSelect={setSelectedPeriod}
-            />
-          }
-        />
-        <PageContent>
-          <EmptyPlaceholder
-            className="mx-auto flex max-w-[420px] items-center justify-center"
-            icon={<Icons.DollarSign className="h-10 w-10" />}
-            title={t("no_income_data")}
-            description={t("no_income_data_desc")}
-=======
       <>
         <div className="pointer-events-auto fixed top-4 right-2 z-20 lg:right-4">
           <IncomePeriodSelector
             selectedPeriod={selectedPeriod}
             onPeriodSelect={setSelectedPeriod}
->>>>>>> upstream/main
           />
         </div>
         <EmptyPlaceholder
@@ -189,12 +157,6 @@ export default function IncomePage() {
   }));
 
   return (
-<<<<<<< HEAD
-    <Page>
-      <PageHeader
-        heading={t("income")}
-        actions={
-=======
     <>
       {/* Period selector - fixed position in header area */}
       <div className="pointer-events-auto fixed top-4 right-2 z-20 hidden md:block lg:right-4">
@@ -203,7 +165,6 @@ export default function IncomePage() {
 
       <div className="space-y-6">
         <div className="flex justify-end md:hidden">
->>>>>>> upstream/main
           <IncomePeriodSelector
             selectedPeriod={selectedPeriod}
             onPeriodSelect={setSelectedPeriod}
@@ -214,10 +175,10 @@ export default function IncomePage() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">
                 {selectedPeriod === "TOTAL"
-                  ? t("all_time_income")
+                  ? "All Time Income"
                   : selectedPeriod === "LAST_YEAR"
-                    ? t("last_year_income")
-                    : t("this_year_income")}
+                    ? "Last Year Income"
+                    : "This Year Income"}
               </CardTitle>
               <Icons.DollarSign className="text-muted-foreground h-4 w-4" />
             </CardHeader>
@@ -240,12 +201,12 @@ export default function IncomePage() {
                           animated={true}
                         />
                         <span className="text-muted-foreground ml-2 text-xs">
-                          {t("year_over_year")}
+                          Year-over-year growth
                         </span>
                       </div>
                     ) : (
                       <p className="text-muted-foreground text-xs">
-                        {t("cumulative_income")}
+                        Cumulative income since inception
                       </p>
                     )}
                   </div>
@@ -265,7 +226,7 @@ export default function IncomePage() {
                     className="mx-auto aspect-square max-h-[62px]"
                   >
                     <PieChart>
-                      <ChartTooltip cursor={{ stroke: "transparent" }} content={<ChartTooltipContent hideLabel />} />
+                      <ChartTooltip cursor={false} content={<ChartTooltipContent hideLabel />} />
                       <Pie data={currencyData} dataKey="amount" nameKey="currency" paddingAngle={4}>
                         {currencyData.map((_entry, index) => (
                           <Cell key={`cell-${index}`} fill={`var(--chart-${index + 2})`} />
@@ -279,7 +240,7 @@ export default function IncomePage() {
           </Card>
           <Card className="border-yellow-500/10 bg-yellow-500/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t("monthly_average")}</CardTitle>
+              <CardTitle className="text-sm font-medium">Monthly Average</CardTitle>
               <Icons.DollarSign className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
@@ -292,20 +253,20 @@ export default function IncomePage() {
               </div>
               <div className="flex items-center text-xs">
                 <GainPercent value={monthlyAverageChange} className="text-left text-xs" />
-                <span className="text-muted-foreground ml-2 text-xs">{t("since_last_period")}</span>
+                <span className="text-muted-foreground ml-2 text-xs">Since last period</span>
               </div>
             </CardContent>
           </Card>
           <Card className="border-yellow-500/10 bg-yellow-500/10">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{t("income_sources")}</CardTitle>
+              <CardTitle className="text-sm font-medium">Income Sources</CardTitle>
               <Icons.PieChart className="text-muted-foreground h-4 w-4" />
             </CardHeader>
             <CardContent>
               <div className="space-y-2">
                 {[
                   {
-                    name: t("dividends"),
+                    name: "Dividends",
                     amount: (
                       <AmountDisplay
                         value={dividendIncome}
@@ -316,7 +277,7 @@ export default function IncomePage() {
                     percentage: dividendPercentage,
                   },
                   {
-                    name: t("interest"),
+                    name: "Interest",
                     amount: (
                       <AmountDisplay
                         value={interestIncome}
@@ -369,15 +330,15 @@ export default function IncomePage() {
           />
           <Card className="flex flex-col">
             <CardHeader>
-              <CardTitle className="text-sm font-medium">{t("top_10_dividend_sources")}</CardTitle>
+              <CardTitle className="text-sm font-medium">Top 10 Dividend Sources</CardTitle>
             </CardHeader>
             <CardContent className="flex-1 overflow-auto">
               {topDividendStocks.length === 0 ? (
                 <EmptyPlaceholder
                   className="mx-auto flex h-[300px] max-w-[420px] items-center justify-center"
                   icon={<Icons.DollarSign className="h-10 w-10" />}
-                  title={t("no_dividend_income_recorded")}
-                  description={t("no_dividend_sources_desc")}
+                  title="No dividend income recorded"
+                  description="There are no dividend sources for the selected period. Try selecting a different time range or check back later."
                 />
               ) : (
                 <div className="space-y-6">
@@ -398,8 +359,8 @@ export default function IncomePage() {
                         ...(otherTotal > 0
                           ? [
                               {
-                                symbol: t("other_sources"),
-                                companyName: `${otherStocks.length} ${t("other_sources").toLowerCase()}`,
+                                symbol: "Other",
+                                companyName: `${otherStocks.length} other sources`,
                                 income: otherTotal,
                                 isOther: true,
                               },
@@ -440,7 +401,7 @@ export default function IncomePage() {
                                   <PrivacyAmount value={item.income} currency={currency} />
                                 </div>
                                 <div className="text-muted-foreground text-xs">
-                                  {percentage.toFixed(1)}% {t("of_total")}
+                                  {percentage.toFixed(1)}% of total
                                 </div>
                                 {/* Tooltip arrow */}
                                 <div className="border-t-border absolute top-full left-1/2 h-0 w-0 -translate-x-1/2 transform border-t-4 border-r-4 border-l-4 border-r-transparent border-l-transparent"></div>
