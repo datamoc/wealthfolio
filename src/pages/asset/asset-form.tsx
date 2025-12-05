@@ -5,12 +5,12 @@ import * as z from "zod";
 
 import { Button } from "@/components/ui/button";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
+    Form,
+    FormControl,
+    FormField,
+    FormItem,
+    FormLabel,
+    FormMessage,
 } from "@/components/ui/form";
 import { Icons } from "@/components/ui/icons";
 import { Input } from "@/components/ui/input";
@@ -28,7 +28,7 @@ const assetFormSchema = z.object({
   assetClass: z.string().optional(),
   assetSubClass: z.string().optional(),
   currency: z.string().min(1),
-  dataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]),
+  dataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL, DataSource.FINANCE_DATABASE]),
   notes: z.string().optional(),
   sectors: z.array(z.string()),
   countries: z.array(z.string()),

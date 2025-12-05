@@ -5,33 +5,33 @@
 
 import type { EventCallback, UnlistenFn } from "@/adapters";
 import type {
-  Account,
-  AccountValuation,
-  Activity,
-  ActivityBulkMutationRequest,
-  ActivityBulkMutationResult,
-  ActivityCreate,
-  ActivityDetails,
-  ActivityImport,
-  ActivitySearchResponse,
-  ActivityUpdate,
-  Asset,
-  ContributionLimit,
-  DepositsCalculation,
-  ExchangeRate,
-  Goal,
-  GoalAllocation,
-  Holding,
-  ImportMappingData,
-  IncomeSummary,
-  MarketDataProviderInfo,
-  NewContributionLimit,
-  PerformanceMetrics,
-  Quote,
-  QuoteSummary,
-  Settings,
-  SimplePerformanceMetrics,
-  UpdateAssetProfile,
+    Account,
+    AccountValuation,
+    Activity,
+    ActivityBulkMutationRequest,
+    ActivityBulkMutationResult,
+    ActivityCreate,
+    ActivityDetails,
+    ActivityImport,
+    ActivitySearchResponse,
+    ActivityUpdate,
+    Asset,
+    ContributionLimit,
+    DepositsCalculation,
+    ExchangeRate,
+    Goal,
+    GoalAllocation,
+    Holding,
+    ImportMappingData,
+    IncomeSummary,
+    MarketDataProviderInfo,
+    NewContributionLimit,
+    PerformanceMetrics,
+    Quote,
+    QuoteSummary,
+    Settings,
+    SimplePerformanceMetrics,
+    UpdateAssetProfile,
 } from "@/lib/types";
 import type { HostAPI as SDKHostAPI } from "@wealthfolio/addon-sdk";
 
@@ -126,6 +126,10 @@ export interface InternalHostAPI {
   // File operations
   openCsvFileDialog(): Promise<null | string | string[]>;
   openFileSaveDialog(fileContent: Uint8Array | Blob | string, fileName: string): Promise<unknown>;
+
+  // Storage operations
+  getAddonData(addonId: string, key: string): Promise<string | null>;
+  setAddonData(addonId: string, key: string, value: string): Promise<void>;
 
   // Event listeners - Import
   listenImportFileDropHover<T>(handler: EventCallback<T>): Promise<UnlistenFn>;

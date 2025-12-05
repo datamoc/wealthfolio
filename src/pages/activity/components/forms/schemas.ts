@@ -1,5 +1,5 @@
-import { z } from "zod";
 import { ActivityType, DataSource } from "@/lib/constants";
+import { z } from "zod";
 
 export const baseActivitySchema = z.object({
   id: z.string().uuid().optional(),
@@ -25,7 +25,7 @@ export const holdingsActivitySchema = baseActivitySchema.extend({
     })
     .positive()
     .optional(),
-  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
+  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL, DataSource.FINANCE_DATABASE]).default(DataSource.YAHOO),
   // Simplified mode fields
   simplifiedMode: z.boolean().optional().default(false),
   assetName: z.string().optional(),
@@ -51,7 +51,7 @@ export const bulkHoldingRowSchema = z.object({
     .positive({ message: "Average cost must be greater than 0" }),
   totalValue: z.number().optional(),
   assetId: z.string().optional(),
-  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).optional(),
+  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL, DataSource.FINANCE_DATABASE]).optional(),
 });
 
 export const bulkHoldingsFormSchema = baseActivitySchema.extend({
@@ -80,7 +80,7 @@ export const tradeActivitySchema = baseActivitySchema.extend({
     })
     .min(0, { message: "Fee must be a non-negative number." })
     .default(0),
-  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.YAHOO),
+  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL, DataSource.FINANCE_DATABASE]).default(DataSource.YAHOO),
 });
 
 export const cashActivitySchema = baseActivitySchema.extend({
@@ -104,7 +104,7 @@ export const cashActivitySchema = baseActivitySchema.extend({
     .min(0, { message: "Fee must be a non-negative number." })
     .default(0)
     .optional(),
-  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL]).default(DataSource.MANUAL),
+  assetDataSource: z.enum([DataSource.YAHOO, DataSource.MANUAL, DataSource.FINANCE_DATABASE]).default(DataSource.MANUAL),
 });
 
 export const incomeActivitySchema = baseActivitySchema.extend({

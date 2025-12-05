@@ -1,33 +1,33 @@
-import i18n from "i18next";
-import { initReactI18next } from "react-i18next";
+import i18next from "i18next";
 import LanguageDetector from "i18next-browser-languagedetector";
+import { initReactI18next } from "react-i18next";
 
 // Import translation files
-import commonEn from "@/locales/en/common.json";
-import settingsEn from "@/locales/en/settings.json";
-import dashboardEn from "@/locales/en/dashboard.json";
-import activityEn from "@/locales/en/activity.json";
-import holdingsEn from "@/locales/en/holdings.json";
-import performanceEn from "@/locales/en/performance.json";
 import accountEn from "@/locales/en/account.json";
+import activityEn from "@/locales/en/activity.json";
+import assetEn from "@/locales/en/asset.json";
+import commonEn from "@/locales/en/common.json";
+import dashboardEn from "@/locales/en/dashboard.json";
 import goalsEn from "@/locales/en/goals.json";
+import holdingsEn from "@/locales/en/holdings.json";
 import incomeEn from "@/locales/en/income.json";
 import onboardingEn from "@/locales/en/onboarding.json";
-import assetEn from "@/locales/en/asset.json";
+import performanceEn from "@/locales/en/performance.json";
 import realEstateEn from "@/locales/en/real-estate.json";
+import settingsEn from "@/locales/en/settings.json";
 
-import commonFr from "@/locales/fr/common.json";
-import settingsFr from "@/locales/fr/settings.json";
-import dashboardFr from "@/locales/fr/dashboard.json";
-import activityFr from "@/locales/fr/activity.json";
-import holdingsFr from "@/locales/fr/holdings.json";
-import performanceFr from "@/locales/fr/performance.json";
 import accountFr from "@/locales/fr/account.json";
+import activityFr from "@/locales/fr/activity.json";
+import assetFr from "@/locales/fr/asset.json";
+import commonFr from "@/locales/fr/common.json";
+import dashboardFr from "@/locales/fr/dashboard.json";
 import goalsFr from "@/locales/fr/goals.json";
+import holdingsFr from "@/locales/fr/holdings.json";
 import incomeFr from "@/locales/fr/income.json";
 import onboardingFr from "@/locales/fr/onboarding.json";
-import assetFr from "@/locales/fr/asset.json";
+import performanceFr from "@/locales/fr/performance.json";
 import realEstateFr from "@/locales/fr/real-estate.json";
+import settingsFr from "@/locales/fr/settings.json";
 
 export const defaultNS = "common";
 export const resources = {
@@ -61,7 +61,9 @@ export const resources = {
   },
 } as const;
 
-i18n
+const i18nInstance = (i18next as any).default || i18next;
+
+i18nInstance
   // Detect user language
   .use(LanguageDetector)
   // Pass the i18n instance to react-i18next
@@ -90,4 +92,4 @@ i18n
     },
   });
 
-export default i18n;
+export default i18nInstance;
