@@ -3,6 +3,7 @@ pub mod activity;
 pub mod addon;
 pub mod asset;
 pub mod error;
+pub mod finance_database;
 pub mod goal;
 pub mod limits;
 pub mod market_data;
