@@ -1,14 +1,17 @@
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
 
 import { Button } from "@/components/ui/button";
 
-import { worldCurrencies } from "@wealthfolio/ui";
-import { ExchangeRate } from "@/lib/types";
-import { Icons } from "@/components/ui/icons";
+import {
+  Command,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
 import {
   DialogDescription,
   DialogFooter,
@@ -19,52 +22,88 @@ import {
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { Icons } from "@/components/ui/icons";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Command,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { useMarketDataProviders } from "@/hooks/use-market-data-providers";
+import { ExchangeRate } from "@/lib/types";
 import { cn } from "@/lib/utils";
-import { MoneyInput } from "@wealthfolio/ui";
+import { MoneyInput, worldCurrencies } from "@wealthfolio/ui";
 
-type TranslateFn = ReturnType<typeof useTranslation<"settings">>["t"];
+const exchangeRateSchema = z
+  .object({
+    fromCurrency: z.string().min(1, "From Currency is required"),
+    toCurrency: z.string().min(1, "To Currency is required"),
+    rate: z.coerce
+      .number({
+        invalid_type_error: "Rate must be a valid positive number.",
+      })
+      .min(0, { message: "Rate must be a non-negative number." })
+      .optional(),
+    source: z.string().min(1, "Data source is required"),
+  })
+  .refine(
+    (data) => {
+      // Rate is required only for MANUAL source
+      if (data.source === "MANUAL") {
+        return data.rate !== undefined && data.rate > 0;
+      }
+      return true;
+    },
+    {
+      message: "Please enter a valid exchange rate.",
+      path: ["rate"],
+    },
+  );
 
-const exchangeRateSchema = (t: TranslateFn) => z.object({
-  fromCurrency: z.string().min(1, t("exchange_rates_from_required")),
-  toCurrency: z.string().min(1, t("exchange_rates_to_required")),
-  rate: z.coerce
-    .number({
-      required_error: t("exchange_rates_rate_required"),
-      invalid_type_error: t("exchange_rates_rate_positive"),
-    })
-    .min(0, { message: t("exchange_rates_rate_positive") }),
-});
+type ExchangeRateFormData = z.infer<typeof exchangeRateSchema>;
 
 interface AddExchangeRateFormProps {
   onSubmit: (newRate: Omit<ExchangeRate, "id">) => void;
   onCancel: () => void;
 }
 
-// Separate component for currency field to properly use hooks
-function CurrencyFieldComponent({
-  fieldName,
-  form,
-  t,
-}: {
-  fieldName: "fromCurrency" | "toCurrency";
-  form: ReturnType<typeof useForm<z.infer<ReturnType<typeof exchangeRateSchema>>>>;
-  t: TranslateFn;
-}) {
-  const [searchValue, setSearchValue] = useState("");
+export function AddExchangeRateForm({ onSubmit, onCancel }: AddExchangeRateFormProps) {
+  const { data: providers } = useMarketDataProviders();
+  const form = useForm<ExchangeRateFormData>({
+    resolver: zodResolver(exchangeRateSchema),
+    defaultValues: {
+      fromCurrency: "",
+      toCurrency: "",
+      rate: undefined,
+      source: "MANUAL",
+    },
+  });
+
+  const selectedSource = form.watch("source");
+  const isManualSource = selectedSource === "MANUAL";
+
+  const handleSubmit = (data: ExchangeRateFormData) => {
+    onSubmit({
+      fromCurrency: data.fromCurrency,
+      toCurrency: data.toCurrency,
+      source: data.source,
+      // Only include rate for manual sources
+      rate: isManualSource ? data.rate! : 1,
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const renderCurrencyField = (fieldName: "fromCurrency" | "toCurrency") => {
+    const [searchValue, setSearchValue] = useState("");
 
     const handleSearchChange = (value: string) => {
       setSearchValue(value);
@@ -84,7 +123,7 @@ function CurrencyFieldComponent({
         name={fieldName}
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>{fieldName === "fromCurrency" ? t("exchange_rates_from_currency") : t("exchange_rates_to_currency")}</FormLabel>
+            <FormLabel>{fieldName === "fromCurrency" ? "From Currency" : "To Currency"}</FormLabel>
             <Popover modal={true}>
               <PopoverTrigger asChild>
                 <FormControl>
@@ -96,7 +135,7 @@ function CurrencyFieldComponent({
                     {field.value
                       ? worldCurrencies.find((currency) => currency.value === field.value)?.label ||
                         field.value
-                      : t("exchange_rates_select_currency")}
+                      : "Select currency"}
                     <Icons.ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
                   </Button>
                 </FormControl>
@@ -104,7 +143,7 @@ function CurrencyFieldComponent({
               <PopoverContent className="w-full p-0">
                 <Command>
                   <CommandInput
-                    placeholder={t("exchange_rates_search_currency")}
+                    placeholder="Search currency..."
                     onValueChange={handleSearchChange}
                   />
                   <CommandList>
@@ -124,7 +163,7 @@ function CurrencyFieldComponent({
                                 searchValue === field.value ? "opacity-100" : "opacity-0",
                               )}
                             />
-                            <span className="font-semibold italic">{t("exchange_rates_custom", { value: searchValue })}</span>
+                            <span className="font-semibold italic">Custom ({searchValue})</span>
                           </CommandItem>
                         )}
 
@@ -162,66 +201,77 @@ function CurrencyFieldComponent({
         )}
       />
     );
-}
-
-export function AddExchangeRateForm({ onSubmit, onCancel }: AddExchangeRateFormProps) {
-  const { t } = useTranslation("settings");
-
-  type ExchangeRateFormData = z.infer<ReturnType<typeof exchangeRateSchema>>;
-
-  const form = useForm<ExchangeRateFormData>({
-    resolver: zodResolver(exchangeRateSchema(t)),
-    defaultValues: {
-      fromCurrency: "",
-      toCurrency: "",
-      rate: 0,
-    },
-  });
-
-  const handleSubmit = (data: ExchangeRateFormData) => {
-    onSubmit({
-      ...data,
-      source: "MANUAL",
-      timestamp: new Date().toISOString(),
-    });
   };
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <DialogHeader>
-          <DialogTitle>{t("exchange_rates_add_title")}</DialogTitle>
-          <DialogDescription>{t("exchange_rates_add_description")}</DialogDescription>
+          <DialogTitle>Add Exchange Rate</DialogTitle>
+          <DialogDescription>Add a new exchange rate to the system.</DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-10 p-4">
-          <CurrencyFieldComponent fieldName="fromCurrency" form={form} t={t} />
-          <CurrencyFieldComponent fieldName="toCurrency" form={form} t={t} />
+          {renderCurrencyField("fromCurrency")}
+          {renderCurrencyField("toCurrency")}
 
           <FormField
             control={form.control}
-            name="rate"
+            name="source"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>{t("exchange_rates_exchange_rate")}</FormLabel>
-                <FormControl>
-                  <MoneyInput placeholder={t("exchange_rates_enter_rate")} {...field} />
-                </FormControl>
+                <FormLabel>Data Source</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a data source" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="MANUAL">Manual</SelectItem>
+                    {providers?.map((provider) => (
+                      <SelectItem key={provider.id} value={provider.id}>
+                        {provider.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormDescription>
+                  {isManualSource
+                    ? "You'll need to manually update this rate."
+                    : "Rate will be automatically fetched from the selected provider."}
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
           />
+
+          {isManualSource && (
+            <FormField
+              control={form.control}
+              name="rate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Exchange Rate</FormLabel>
+                  <FormControl>
+                    <MoneyInput placeholder="Enter exchange rate" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
         </div>
 
         <DialogFooter>
           <DialogTrigger asChild>
             <Button variant="outline" onClick={onCancel}>
-              {t("common_cancel")}
+              Cancel
             </Button>
           </DialogTrigger>
           <Button type="submit">
             <Icons.Plus className="h-4 w-4" />
-            <span className="hidden sm:ml-2 sm:inline">{t("exchange_rates_add_title")}</span>
+            <span className="hidden sm:ml-2 sm:inline">Add Exchange Rate</span>
           </Button>
         </DialogFooter>
       </form>

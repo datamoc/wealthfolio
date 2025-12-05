@@ -1,131 +1,124 @@
-import { getVersion } from "@tauri-apps/api/app";
-import { appDataDir, appLogDir } from "@tauri-apps/api/path";
-import { check } from "@tauri-apps/plugin-updater";
 import { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
 
+import { getAppInfo } from "@/commands/app";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/ui/icons";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/components/ui/use-toast";
 import { usePlatform } from "@/hooks/use-platform";
+import { useCheckForUpdates } from "@/hooks/use-updater";
 import { SettingsHeader } from "../settings-header";
 
 export default function AboutSettingsPage() {
-  const { t } = useTranslation("settings");
   const [version, setVersion] = useState<string>("");
-  const [dbDir, setDbDir] = useState<string>("");
+  const [dbPath, setDbPath] = useState<string>("");
   const [logsDir, setLogsDir] = useState<string>("");
   const { isMobile } = usePlatform();
+  const checkUpdateMutation = useCheckForUpdates();
 
   useEffect(() => {
-    // Load version
-    getVersion()
-      .then(setVersion)
-      .catch(() => setVersion("")); // ignore errors
-
-    // Resolve directories (OS-specific via Tauri path API) - only on desktop
+    // Use unified command for both desktop and web
     if (!isMobile) {
-      (async () => {
-        try {
-          const dataDir = await appDataDir();
-          setDbDir(dataDir);
-        } catch {
-          setDbDir("");
-        }
-        try {
-          const logDir = await appLogDir();
-          setLogsDir(logDir);
-        } catch {
-          setLogsDir("");
-        }
-      })();
+      getAppInfo().then((info) => {
+        setVersion(info.version);
+        setDbPath(info.dbPath || "");
+        setLogsDir(info.logsDir);
+      });
+    } else {
+      // On mobile, only get version
+      getAppInfo().then((info) => {
+        setVersion(info.version);
+        setDbPath(info.dbPath || "");
+      });
     }
   }, [isMobile]);
 
-  const handleCheckForUpdates = async () => {
-    try {
-      const update = await check();
-      if (update) {
-        toast({
-          title: t("about_update_available"),
-          description: t("about_update_available_description", { version: update.version }),
-        });
-      } else {
-        toast({ title: t("about_up_to_date"), description: t("about_up_to_date_description") });
-      }
-    } catch (error) {
-      toast({
-        title: t("about_update_error"),
-        description: t("about_update_error_description"),
-        variant: "destructive",
-      });
-      console.error("Failed to check for updates:", error);
-    }
+  const handleCheckForUpdates = () => {
+    checkUpdateMutation.mutate();
   };
+
+  const isCheckingUpdate = checkUpdateMutation.isPending;
 
   const handleCopy = async (value: string, label: string) => {
     try {
       await navigator.clipboard.writeText(value);
-      toast({ title: t("about_copied"), description: t("about_copied_description", { label }) });
+      toast({ title: "Copied", description: `${label} copied to clipboard.` });
     } catch (error) {
       toast({
-        title: t("about_copy_failed"),
-        description: t("about_copy_failed_description", { label: label.toLowerCase() }),
+        title: "Copy failed",
+        description: `Could not copy ${label.toLowerCase()}.`,
         variant: "destructive",
       });
       console.error("Failed to copy to clipboard:", error);
     }
   };
 
-  const handleOpenLink = (url: string) => {
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
   return (
     <div className="space-y-6">
-      <SettingsHeader heading={t("about_title")} text={t("about_description")} />
+      <SettingsHeader heading="About" text="Application information" />
       <Separator />
 
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
-          <img src="/logo.svg" alt={t("about_app_logo_alt")} className="h-12 w-12 rounded-md shadow" />
+          <img src="/logo.svg" alt="Wealthfolio logo" className="h-12 w-12 rounded-md shadow" />
           <div className="flex flex-col">
-            <CardTitle className="text-xl">{t("about_app_name")}</CardTitle>
-            <CardDescription>{t("about_version", { version: version || "N/A" })}</CardDescription>
+            <CardTitle className="text-xl">Wealthfolio</CardTitle>
+            <CardDescription>Version {version || "N/A"}</CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              {t("about_tagline")}
+              A beautiful, simple, and secure personal finance and investment tracker that helps you
+              take control of your wealth.
             </p>
-            <div className="flex flex-wrap items-center gap-3">
-              {!isMobile && <Button onClick={handleCheckForUpdates}>{t("about_check_update_button")}</Button>}
+            <div className="flex flex-wrap items-center gap-2">
+              {!isMobile && (
+                <Button size="sm" onClick={handleCheckForUpdates} disabled={isCheckingUpdate}>
+                  Check for Update
+                </Button>
+              )}
               <Button
+                asChild
                 variant="outline"
-                onClick={() => handleOpenLink("https://wealthfolio.app")}
+                size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <Icons.Globe className="h-4 w-4" />
-                {t("about_website_button")}
+                <a href="https://wealthfolio.app" target="_blank" rel="noreferrer noopener">
+                  <Icons.Globe className="h-4 w-4" />
+                  Website
+                </a>
               </Button>
               <Button
+                asChild
                 variant="outline"
-                onClick={() => handleOpenLink("https://wealthfolio.app/docs/introduction/")}
+                size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <Icons.FileText className="h-4 w-4" />
-                {t("about_docs_button")}
+                <a
+                  href="https://wealthfolio.app/docs/introduction/"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <Icons.FileText className="h-4 w-4" />
+                  Docs
+                </a>
               </Button>
               <Button
+                asChild
                 variant="outline"
-                onClick={() => handleOpenLink("https://github.com/afadil/wealthfolio")}
+                size="sm"
                 className="inline-flex items-center gap-2"
               >
-                <Icons.ExternalLink className="h-4 w-4" />
-                {t("about_github_button")}
+                <a
+                  href="https://github.com/afadil/wealthfolio"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <Icons.ExternalLink className="h-4 w-4" />
+                  GitHub
+                </a>
               </Button>
             </div>
           </div>
@@ -137,40 +130,39 @@ export default function AboutSettingsPage() {
               <div className="grid gap-4">
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                    {t("about_database_directory")}
+                    Database path
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="bg-muted text-muted-foreground flex-1 truncate rounded-md px-3 py-2 font-mono text-xs">
-                      {dbDir || t("about_unavailable")}
+                      {dbPath || "Unavailable"}
                     </p>
                     <Button
                       variant="ghost"
                       size="icon"
-                      disabled={!dbDir}
-                      onClick={() => dbDir && handleCopy(dbDir, t("about_database_directory"))}
+                      disabled={!dbPath}
+                      onClick={() => dbPath && handleCopy(dbPath, "Database path")}
                     >
                       <Icons.Copy className="h-4 w-4" />
-                      <span className="sr-only">{t("about_copy_aria", { label: t("about_database_directory") })}</span>
+                      <span className="sr-only">Copy database path</span>
                     </Button>
                   </div>
-                  <p className="text-muted-foreground text-xs" dangerouslySetInnerHTML={{ __html: t("about_database_file") }} />
                 </div>
                 <div className="space-y-1">
                   <p className="text-muted-foreground text-xs tracking-wide uppercase">
-                    {t("about_logs_directory")}
+                    Logs directory
                   </p>
                   <div className="flex items-center gap-2">
                     <p className="bg-muted text-muted-foreground flex-1 truncate rounded-md px-3 py-2 font-mono text-xs">
-                      {logsDir || t("about_unavailable")}
+                      {logsDir || "Unavailable"}
                     </p>
                     <Button
                       variant="ghost"
                       size="icon"
                       disabled={!logsDir}
-                      onClick={() => logsDir && handleCopy(logsDir, t("about_logs_directory"))}
+                      onClick={() => logsDir && handleCopy(logsDir, "Logs directory")}
                     >
                       <Icons.Copy className="h-4 w-4" />
-                      <span className="sr-only">{t("about_copy_aria", { label: t("about_logs_directory") })}</span>
+                      <span className="sr-only">Copy logs directory</span>
                     </Button>
                   </div>
                 </div>
@@ -182,27 +174,35 @@ export default function AboutSettingsPage() {
 
           <div className="space-y-4">
             <p className="text-muted-foreground text-sm">
-              {t("about_support_message")}{" "}
+              Have questions or found a bug? Please email us at{" "}
               <span className="font-mono font-semibold select-all">wealthfolio@teymz.com</span>
             </p>
             <div className="flex flex-wrap items-center gap-2">
               <Button
+                asChild
                 variant="outline"
                 size="sm"
-                onClick={() => handleOpenLink("mailto:wealthfolio@teymz.com")}
                 className="inline-flex items-center gap-2"
               >
-                <Icons.ExternalLink className="h-4 w-4" />
-                {t("about_email_button")}
+                <a href="mailto:wealthfolio@teymz.com">
+                  <Icons.ExternalLink className="h-4 w-4" />
+                  Email Us
+                </a>
               </Button>
               <Button
+                asChild
                 variant="outline"
                 size="sm"
-                onClick={() => handleOpenLink("https://github.com/afadil/wealthfolio/issues")}
                 className="inline-flex items-center gap-2"
               >
-                <Icons.AlertCircle className="h-4 w-4" />
-                {t("about_report_issue_button")}
+                <a
+                  href="https://github.com/afadil/wealthfolio/issues"
+                  target="_blank"
+                  rel="noreferrer noopener"
+                >
+                  <Icons.AlertCircle className="h-4 w-4" />
+                  Report Issue
+                </a>
               </Button>
             </div>
 
@@ -215,7 +215,7 @@ export default function AboutSettingsPage() {
                 rel="noreferrer noopener"
                 className="hover:text-foreground underline underline-offset-4"
               >
-                {t("about_privacy_policy")}
+                Privacy Policy
               </a>
               <span className="mx-2">•</span>
               <a
@@ -224,7 +224,7 @@ export default function AboutSettingsPage() {
                 rel="noreferrer noopener"
                 className="hover:text-foreground underline underline-offset-4"
               >
-                {t("about_terms_of_use")}
+                Terms of Use
               </a>
               <span className="mx-2">•</span>
               <a
@@ -233,7 +233,7 @@ export default function AboutSettingsPage() {
                 rel="noreferrer noopener"
                 className="hover:text-foreground underline underline-offset-4"
               >
-                {t("about_website_link")}
+                Website
               </a>
             </p>
           </div>

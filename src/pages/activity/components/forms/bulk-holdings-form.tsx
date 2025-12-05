@@ -2,7 +2,8 @@ import { AccountSelector } from "@/components/account-selector";
 import { TickerAvatar } from "@/components/ticker-avatar";
 import TickerSearchInput from "@/components/ticker-search";
 import { Icons } from "@/components/ui/icons";
-import { Account } from "@/lib/types";
+import { Account, QuoteSummary } from "@/lib/types";
+import { DataSource } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import {
   Button,
@@ -19,7 +20,10 @@ import {
 } from "@wealthfolio/ui";
 import { memo, useCallback, useMemo, useState } from "react";
 import { useFieldArray, useFormContext, useWatch } from "react-hook-form";
-import { useTranslation } from "react-i18next";
+import { z } from "zod";
+import { bulkHoldingsFormSchema } from "./schemas";
+
+type BulkHoldingsFormValues = z.infer<typeof bulkHoldingsFormSchema>;
 
 export interface BulkHoldingRow {
   id: string;
@@ -29,6 +33,7 @@ export interface BulkHoldingRow {
   averageCost: number | string;
   totalValue: number;
   assetId?: string;
+  assetDataSource?: DataSource;
 }
 
 interface BulkHoldingsFormProps {
@@ -55,11 +60,10 @@ const HoldingRow = memo(
     isLast: boolean;
     isSelected: boolean;
     onSelectRow: (id: string) => void;
-    setFocus: (name: string) => void;
+    setFocus: ReturnType<typeof useFormContext<BulkHoldingsFormValues>>["setFocus"];
     canRemove: boolean;
   }) => {
-    const { t } = useTranslation("activity");
-    const { control } = useFormContext();
+    const { control, setValue } = useFormContext<BulkHoldingsFormValues>();
 
     // Use useWatch for specific fields instead of watch() in parent
     const ticker = useWatch({
@@ -113,10 +117,15 @@ const HoldingRow = memo(
     );
 
     const handleTickerSelect = useCallback(
-      (_symbol: string) => {
+      (_symbol: string, quoteSummary?: QuoteSummary) => {
+        if (quoteSummary?.dataSource === DataSource.MANUAL) {
+          setValue(`holdings.${index}.assetDataSource`, DataSource.MANUAL, { shouldDirty: true });
+        } else {
+          setValue(`holdings.${index}.assetDataSource`, DataSource.YAHOO, { shouldDirty: true });
+        }
         setFocus(`holdings.${index}.sharesOwned`);
       },
-      [index, setFocus],
+      [index, setFocus, setValue],
     );
 
     const handleRemoveClick = useCallback(
@@ -150,12 +159,12 @@ const HoldingRow = memo(
                 render={({ field: tickerField }) => (
                   <TickerSearchInput
                     ref={tickerField.ref}
-                    onSelectResult={(symbol: string) => {
+                    onSelectResult={(symbol: string, quoteSummary) => {
                       tickerField.onChange(symbol);
-                      handleTickerSelect(symbol);
+                      handleTickerSelect(symbol, quoteSummary);
                     }}
                     value={tickerField.value}
-                    placeholder={t("search_ticker_placeholder")}
+                    placeholder="Search ticker..."
                     className="focus:border-input focus:bg-background h-9 truncate border-none bg-transparent text-sm focus:border"
                   />
                 )}
@@ -172,7 +181,7 @@ const HoldingRow = memo(
             render={({ field: sharesField }) => (
               <QuantityInput
                 {...sharesField}
-                placeholder={t("field_shares")}
+                placeholder="Shares"
                 className="focus:border-input focus:bg-background h-9 border-none bg-transparent text-sm focus:border"
                 onKeyDown={handleSharesKeyDown}
               />
@@ -188,7 +197,7 @@ const HoldingRow = memo(
             render={({ field: priceField }) => (
               <MoneyInput
                 {...priceField}
-                placeholder={t("field_average_cost")}
+                placeholder="Average cost"
                 className="focus:border-input focus:bg-background h-9 border-none bg-transparent text-sm focus:border"
                 onKeyDown={handleCostKeyDown}
               />
@@ -230,8 +239,7 @@ const HoldingRow = memo(
 HoldingRow.displayName = "HoldingRow";
 
 export const BulkHoldingsForm = ({ onAccountChange }: BulkHoldingsFormProps) => {
-  const { t } = useTranslation("activity");
-  const { control, setFocus } = useFormContext();
+  const { control, setFocus } = useFormContext<BulkHoldingsFormValues>();
   const { fields, append, remove } = useFieldArray({
     control,
     name: "holdings",
@@ -263,6 +271,9 @@ export const BulkHoldingsForm = ({ onAccountChange }: BulkHoldingsFormProps) => 
       ticker: "",
       name: "",
       assetId: "",
+      assetDataSource: DataSource.YAHOO,
+      sharesOwned: 0,
+      averageCost: 0,
     });
 
     // Use requestAnimationFrame for smoother focus transition
@@ -304,7 +315,7 @@ export const BulkHoldingsForm = ({ onAccountChange }: BulkHoldingsFormProps) => 
               name="accountId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("field_account")}</FormLabel>
+                  <FormLabel>Account</FormLabel>
                   <FormControl>
                     <AccountSelector
                       ref={field.ref}
@@ -327,7 +338,7 @@ export const BulkHoldingsForm = ({ onAccountChange }: BulkHoldingsFormProps) => 
               name="activityDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>{t("field_start_date")}</FormLabel>
+                  <FormLabel>Start Date</FormLabel>
                   <FormControl>
                     <DatePickerInput value={field.value} onChange={field.onChange} />
                   </FormControl>
@@ -339,10 +350,10 @@ export const BulkHoldingsForm = ({ onAccountChange }: BulkHoldingsFormProps) => 
 
           {/* Table Header */}
           <div className="text-muted-foreground grid grid-cols-12 gap-3 border-b pb-3 text-sm">
-            <div className="col-span-6">{t("tickers")}</div>
-            <div className="col-span-1 text-right">{t("field_shares")}</div>
-            <div className="col-span-2 text-right">{t("field_average_cost")}</div>
-            <div className="col-span-2 text-right whitespace-nowrap">{t("total_value")}</div>
+            <div className="col-span-6">Tickers</div>
+            <div className="col-span-1 text-right">Shares</div>
+            <div className="col-span-2 text-right">Average cost</div>
+            <div className="col-span-2 text-right whitespace-nowrap">Total value</div>
             <div className="col-span-1 text-right"></div>
           </div>
 
@@ -374,7 +385,7 @@ export const BulkHoldingsForm = ({ onAccountChange }: BulkHoldingsFormProps) => 
               className="border-muted-foreground/25 text-muted-foreground hover:border-muted-foreground/50 hover:text-foreground h-10 w-full border border-dashed"
             >
               <Icons.PlusCircle className="mr-2 h-4 w-4" />
-              {t("add_another_holding")}
+              Add Another Holding
             </Button>
           </div>
         </CardContent>

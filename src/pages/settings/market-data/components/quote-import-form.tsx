@@ -7,34 +7,26 @@ import {
   CardHeader,
   CardTitle,
 } from "@wealthfolio/ui/components/ui/card";
-import { Checkbox } from "@wealthfolio/ui/components/ui/checkbox";
 import { Icons } from "@wealthfolio/ui/components/ui/icons";
 import { Input } from "@wealthfolio/ui/components/ui/input";
-import { Label } from "@wealthfolio/ui/components/ui/label";
 import { AnimatePresence, motion } from "motion/react";
 import React, { useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
 
 interface QuoteImportFormProps {
   file: File | null;
   isValidating: boolean;
   error: string | null;
-  overwriteExisting: boolean;
   onFileSelect: (file: File | null) => void;
   onValidate: () => void;
-  onOverwriteChange: (overwrite: boolean) => void;
 }
 
 export function QuoteImportForm({
   file,
   isValidating,
   error,
-  overwriteExisting,
   onFileSelect,
   onValidate,
-  onOverwriteChange,
 }: QuoteImportFormProps) {
-  const { t } = useTranslation("settings");
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -49,7 +41,7 @@ export function QuoteImportForm({
     setIsDragging(false);
 
     const droppedFile = event.dataTransfer.files?.[0];
-    if (droppedFile?.type === "text/csv") {
+    if (droppedFile && droppedFile.type === "text/csv") {
       onFileSelect(droppedFile);
     }
   };
@@ -142,9 +134,9 @@ export function QuoteImportForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">{t("quote_import_form_title")}</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-lg">Select CSV File</CardTitle>
         <CardDescription>
-          {t("quote_import_form_description")}
+          Choose a CSV file containing historical quote data to import
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -168,7 +160,7 @@ export function QuoteImportForm({
                   className="flex items-center gap-1.5 px-3"
                 >
                   <Icons.Trash className="h-4 w-4" />
-                  <span>{t("quote_import_remove_file")}</span>
+                  <span>Remove File</span>
                 </Button>
               </div>
             </div>
@@ -242,7 +234,7 @@ export function QuoteImportForm({
                     transition={{ duration: 0.2 }}
                     className="text-xs font-medium"
                   >
-                    {t("quote_import_processing")}
+                    Processing file...
                   </motion.p>
                 ) : file && error ? (
                   <motion.div
@@ -281,9 +273,9 @@ export function QuoteImportForm({
                     transition={{ duration: 0.2 }}
                   >
                     <p className="text-xs font-medium">
-                      <span className="text-primary">{t("quote_import_click_upload")}</span> {t("quote_import_or_drop")}
+                      <span className="text-primary">Click to upload</span> or drop
                     </p>
-                    <p className="text-muted-foreground text-xs">{t("quote_import_csv_only")}</p>
+                    <p className="text-muted-foreground text-xs">CSV only</p>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -308,24 +300,17 @@ export function QuoteImportForm({
           </Alert>
         )}
 
-        {/* Import Options */}
-        <div className="space-y-3">
-          <div className="flex items-center space-x-2">
-            <Checkbox
-              id="overwrite"
-              checked={overwriteExisting}
-              onCheckedChange={onOverwriteChange}
-              className="h-6 w-6"
-            />
-            <Label htmlFor="overwrite" className="text-sm">
-              {t("quote_import_overwrite")}
-            </Label>
-          </div>
-        </div>
+        <Alert>
+          <Icons.Info className="h-4 w-4" />
+          <AlertDescription className="text-xs sm:text-sm">
+            Quotes with the same symbol and date in your CSV will overwrite existing data during
+            import.
+          </AlertDescription>
+        </Alert>
 
         {/* Validate Button */}
         <Button onClick={onValidate} disabled={!file || isValidating} className="w-full">
-          {isValidating ? t("quote_import_validating") : t("quote_import_validate")}
+          {isValidating ? "Validating..." : "Validate File"}
         </Button>
       </CardContent>
     </Card>

@@ -6,13 +6,11 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useLatestValuations } from "@/hooks/use-latest-valuations";
-import { useRealEstateSummary } from "@/hooks/use-real-estate-summary";
 import { useSettingsContext } from "@/lib/settings-provider";
 import type { AccountValuation } from "@/lib/types";
 import { calculatePerformanceMetrics } from "@/lib/utils";
 import { GainAmount, GainPercent, PrivacyAmount } from "@wealthfolio/ui";
 import React, { useCallback, useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 interface AccountSummaryDisplayData {
@@ -30,20 +28,23 @@ interface AccountSummaryDisplayData {
   isGroup?: boolean;
   accountCount?: number;
   accounts?: AccountSummaryDisplayData[];
+  displayInAccountCurrency?: boolean;
 }
 
 const AccountSummarySkeleton = () => (
   <div className="flex w-full items-center justify-between gap-3">
-    <div className="flex flex-1 flex-col gap-2">
+    <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
       <Skeleton className="h-5 w-40 rounded md:h-6" />
       <Skeleton className="h-4 w-32 rounded md:h-4" />
     </div>
-    <div className="flex items-center gap-2">
-      <div className="flex flex-col items-end gap-2">
+    <div className="flex shrink-0 items-center gap-2 md:gap-3">
+      <div className="flex min-h-[3rem] flex-col items-end justify-center gap-1 md:gap-1.5">
         <Skeleton className="h-5 w-24 rounded md:h-6" />
         <Skeleton className="h-4 w-32 rounded md:h-4" />
       </div>
-      <Skeleton className="h-6 w-6 rounded-full" />
+      <div className="flex items-center justify-center">
+        <Skeleton className="h-5 w-5 rounded-full" />
+      </div>
     </div>
   </div>
 );
@@ -64,23 +65,22 @@ const AccountSummaryComponent = React.memo(
     displayInAccountCurrency?: boolean;
     isNested?: boolean;
   }) => {
-    const { t } = useTranslation("dashboard");
     const isGroup = item.isGroup ?? false;
-    const useAccountCurrency = !isGroup && displayInAccountCurrency;
+    const useAccountCurrency =
+      displayInAccountCurrency || (item.displayInAccountCurrency && Boolean(item.accountCurrency));
 
     if (!isGroup && isLoadingValuation) {
+      const skeletonContent = <AccountSummarySkeleton />;
+
+      if (isNested) {
+        return (
+          <div className="flex w-full items-center justify-between gap-3">{skeletonContent}</div>
+        );
+      }
+
       return (
-        <div className="flex w-full items-center justify-between gap-3">
-          <div className="flex min-w-0 flex-1 flex-col gap-2 md:gap-2">
-            <Skeleton className="h-5 w-32 rounded md:h-6" />
-            <Skeleton className="h-4 w-40 rounded md:h-4" />
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex flex-col items-end gap-2">
-              <Skeleton className="h-5 w-24 rounded md:h-6" />
-              <Skeleton className="h-4 w-32 rounded md:h-4" />
-            </div>
-          </div>
+        <div className="border-border bg-card flex w-full items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-xs md:px-5 md:py-4">
+          {skeletonContent}
         </div>
       );
     }
@@ -88,10 +88,10 @@ const AccountSummaryComponent = React.memo(
     const name = item.accountName;
     const accountId = item.accountId;
 
-    const subText = useAccountCurrency
-      ? item.accountCurrency
-      : isGroup
-        ? `${item.accountCount} ${item.accountCount === 1 ? t("account") : t("accounts_plural")}`
+    const subText = isGroup
+      ? `${item.accountCount} ${item.accountCount === 1 ? "account" : "accounts"}`
+      : useAccountCurrency
+        ? (item.accountCurrency ?? item.baseCurrency)
         : item.baseCurrency;
 
     const totalValue = useAccountCurrency
@@ -116,7 +116,7 @@ const AccountSummaryComponent = React.memo(
           <p className="text-muted-foreground truncate text-xs md:text-sm">{subText}</p>
         </div>
         <div className="flex shrink-0 items-center gap-2 md:gap-3">
-          <div className="flex flex-col items-end gap-1 md:gap-1.5">
+          <div className="flex min-h-[3rem] flex-col items-end justify-center gap-1 md:gap-1.5">
             <p className="text-sm leading-tight font-semibold md:text-base md:font-semibold">
               <PrivacyAmount value={totalValue} currency={currency} />
             </p>
@@ -206,7 +206,6 @@ const AccountSummaryComponent = React.memo(
 AccountSummaryComponent.displayName = "AccountSummaryComponent";
 
 export const AccountsSummary = React.memo(() => {
-  const { t } = useTranslation("dashboard");
   const { accountsGrouped, setAccountsGrouped, settings } = useSettingsContext();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
@@ -220,10 +219,6 @@ export const AccountsSummary = React.memo(() => {
   const accountIds = useMemo(() => accounts?.map((acc) => acc.id) ?? [], [accounts]);
 
   const { latestValuations, isLoading: isLoadingValuations } = useLatestValuations(accountIds);
-
-  // Get real estate summary
-  const baseCurrency = settings?.baseCurrency ?? "USD";
-  const { data: realEstateSummary } = useRealEstateSummary(baseCurrency);
 
   const combinedAccountViews = useMemo((): AccountSummaryDisplayData[] => {
     if (!accounts) return [];
@@ -298,7 +293,7 @@ export const AccountsSummary = React.memo(() => {
       return (
         <div className="border-destructive/30 bg-destructive/5 rounded-lg border p-4 md:p-5">
           <p className="text-destructive text-sm font-medium">
-            {t("error_loading_accounts")}: {errorAccounts?.message}
+            Error loading accounts: {errorAccounts?.message}
           </p>
         </div>
       );
@@ -306,8 +301,15 @@ export const AccountsSummary = React.memo(() => {
 
     if (!combinedAccountViews || combinedAccountViews.length === 0) {
       return (
-        <div className="border-border/50 bg-secondary/30 rounded-lg border p-6 text-center md:p-8">
-          <p className="text-muted-foreground text-sm">{t("no_accounts_found")}</p>
+        <div className="border-border/50 bg-success/10 rounded-lg border p-6 text-center md:p-8">
+          <p className="text-sm">No accounts found.</p>
+          <Link
+            to="/settings/accounts"
+            className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
+          >
+            Add your first account
+            <Icons.ChevronRight className="h-3 w-3" />
+          </Link>
         </div>
       );
     }
@@ -319,8 +321,8 @@ export const AccountsSummary = React.memo(() => {
       const standaloneAccounts: AccountSummaryDisplayData[] = [];
 
       combinedAccountViews.forEach((account) => {
-        const groupName = account.accountGroup ?? t("uncategorized");
-        if (groupName === t("uncategorized")) {
+        const groupName = account.accountGroup ?? "Uncategorized";
+        if (groupName === "Uncategorized") {
           standaloneAccounts.push(account);
         } else {
           if (!groups[groupName]) {
@@ -337,6 +339,15 @@ export const AccountsSummary = React.memo(() => {
           standaloneAccounts.push(groupAccounts[0]);
         } else {
           const baseCurrency = groupAccounts[0]?.baseCurrency ?? settings?.baseCurrency ?? "USD";
+          const groupCurrencies = new Set(
+            groupAccounts
+              .map((acc) => acc.accountCurrency ?? acc.baseCurrency)
+              .filter((currency): currency is string => Boolean(currency)),
+          );
+          const groupDisplaysAccountCurrency = groupCurrencies.size === 1;
+          const groupDisplayCurrency = groupDisplaysAccountCurrency
+            ? (groupAccounts[0]?.accountCurrency ?? groupAccounts[0]?.baseCurrency ?? baseCurrency)
+            : baseCurrency;
 
           const totalValueBaseCurrency = groupAccounts.reduce(
             (sum, acc) => sum + Number(acc.totalValueBaseCurrency),
@@ -354,10 +365,42 @@ export const AccountsSummary = React.memo(() => {
             return sum + netContribution;
           }, 0);
 
-          const groupTotalReturnPercent =
+          const groupTotalReturnPercentBase =
             totalNetContributionBase !== 0
               ? totalGainLossAmountBase / totalNetContributionBase
               : null;
+
+          const totalValueAccountCurrency = groupDisplaysAccountCurrency
+            ? groupAccounts.reduce(
+                (sum, acc) =>
+                  sum + Number(acc.totalValueAccountCurrency ?? acc.totalValueBaseCurrency),
+                0,
+              )
+            : undefined;
+
+          const totalGainLossAmountAccountCurrency = groupDisplaysAccountCurrency
+            ? groupAccounts.reduce(
+                (sum, acc) => sum + Number(acc.totalGainLossAmountAccountCurrency ?? 0),
+                0,
+              )
+            : undefined;
+
+          const totalNetContributionAccountCurrency = groupDisplaysAccountCurrency
+            ? groupAccounts.reduce((sum, acc) => {
+                const accountValue = Number(
+                  acc.totalValueAccountCurrency ?? acc.totalValueBaseCurrency,
+                );
+                const accountGainLoss = Number(acc.totalGainLossAmountAccountCurrency ?? 0);
+                return sum + (accountValue - accountGainLoss);
+              }, 0)
+            : undefined;
+
+          const groupTotalReturnPercent = groupDisplaysAccountCurrency
+            ? totalNetContributionAccountCurrency !== undefined &&
+              totalNetContributionAccountCurrency !== 0
+              ? (totalGainLossAmountAccountCurrency ?? 0) / totalNetContributionAccountCurrency
+              : null
+            : groupTotalReturnPercentBase;
 
           actualGroups.push({
             accountName: groupName,
@@ -365,9 +408,13 @@ export const AccountsSummary = React.memo(() => {
             baseCurrency,
             totalGainLossAmountBaseCurrency: totalGainLossAmountBase,
             totalGainLossPercent: groupTotalReturnPercent,
+            accountCurrency: groupDisplayCurrency,
+            totalValueAccountCurrency,
+            totalGainLossAmountAccountCurrency: totalGainLossAmountAccountCurrency ?? null,
             isGroup: true,
             accountCount: groupAccounts.length,
             accounts: groupAccounts,
+            displayInAccountCurrency: groupDisplaysAccountCurrency,
           });
         }
       });
@@ -379,174 +426,68 @@ export const AccountsSummary = React.memo(() => {
         (a, b) => Number(b.totalValueBaseCurrency) - Number(a.totalValueBaseCurrency),
       );
 
-      const items = [];
+      return (
+        <>
+          {actualGroups.map((group) => {
+            const isExpanded = expandedGroups[group.accountName];
+            const sortedAccounts = [...(group.accounts ?? [])].sort(
+              (a, b) => Number(b.totalValueBaseCurrency) - Number(a.totalValueBaseCurrency),
+            );
 
-      // Add real estate card first if there's any data
-      if (realEstateSummary && realEstateSummary.propertyCount > 0) {
-        items.push(
-          <Link
-            key="real-estate"
-            to="/addon/real-estate"
-            className="border-border bg-card flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-xs transition-all duration-150 hover:shadow-md md:px-5 md:py-4"
-          >
-            <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
-              <h3 className="truncate text-sm leading-tight font-semibold md:text-base md:font-semibold">
-                {t("real_estate")}
-              </h3>
-              <p className="text-muted-foreground truncate text-xs md:text-sm">
-                {realEstateSummary.propertyCount} {realEstateSummary.propertyCount === 1 ? t("property") : t("properties")}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 md:gap-3">
-              <div className="flex flex-col items-end gap-1 md:gap-1.5">
-                <p className="text-sm leading-tight font-semibold md:text-base md:font-semibold">
-                  <PrivacyAmount value={realEstateSummary.totalEquity} currency={baseCurrency} />
-                </p>
-                {realEstateSummary.totalAppreciation !== 0 && (
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <GainAmount
-                      className="text-xs font-medium md:text-sm md:font-medium"
-                      value={realEstateSummary.totalAppreciation}
-                      currency={baseCurrency}
-                      displayCurrency={false}
-                      showSign={false}
-                    />
-                    <Separator orientation="vertical" className="h-3 md:h-4" />
-                    <GainPercent
-                      className="text-xs font-medium md:text-sm md:font-medium"
-                      value={realEstateSummary.appreciationPercent}
-                    />
+            return (
+              <div
+                key={group.accountName}
+                className="border-border bg-card overflow-hidden rounded-lg border shadow-xs transition-shadow duration-150 hover:shadow-md"
+              >
+                <div className="cursor-pointer">
+                  <AccountSummaryComponent
+                    item={group}
+                    isExpanded={isExpanded}
+                    onToggle={() => toggleGroup(group.accountName)}
+                  />
+                </div>
+                {isExpanded && (
+                  <div className="border-border/50 border-t">
+                    <div className="divide-border/50 divide-y">
+                      {sortedAccounts.map((account) => (
+                        <div key={account.accountId} className="px-4 py-3 md:px-5 md:py-4">
+                          <AccountSummaryComponent
+                            item={account}
+                            isLoadingValuation={isLoadingPerformance}
+                            displayInAccountCurrency
+                            isNested
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-center">
-                <Icons.ChevronRight className="text-muted-foreground h-5 w-5 shrink-0" />
-              </div>
-            </div>
-          </Link>
-        );
-      }
-
-      // Add grouped accounts
-      items.push(
-        ...actualGroups.map((group) => {
-          const isExpanded = expandedGroups[group.accountName];
-          const sortedAccounts = [...(group.accounts ?? [])].sort(
-            (a, b) => Number(b.totalValueBaseCurrency) - Number(a.totalValueBaseCurrency),
-          );
-
-          return (
-            <div
-              key={group.accountName}
-              className="border-border bg-card overflow-hidden rounded-lg border shadow-xs transition-shadow duration-150 hover:shadow-md"
-            >
-              <div className="cursor-pointer">
-                <AccountSummaryComponent
-                  item={group}
-                  isExpanded={isExpanded}
-                  onToggle={() => toggleGroup(group.accountName)}
-                />
-              </div>
-              {isExpanded && (
-                <div className="border-border/50 border-t">
-                  <div className="divide-border/50 divide-y">
-                    {sortedAccounts.map((account) => (
-                      <div key={account.accountId} className="px-4 py-3 md:px-5 md:py-4">
-                        <AccountSummaryComponent
-                          item={account}
-                          isLoadingValuation={isLoadingPerformance}
-                          displayInAccountCurrency
-                          isNested
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          );
-        })
+            );
+          })}
+          {standaloneAccounts.map((account) => (
+            <AccountSummaryComponent
+              key={account.accountId}
+              item={account}
+              isLoadingValuation={isLoadingPerformance}
+              displayInAccountCurrency
+            />
+          ))}
+        </>
       );
-
-      // Add standalone accounts
-      items.push(
-        ...standaloneAccounts.map((account) => (
-          <AccountSummaryComponent
-            key={account.accountId}
-            item={account}
-            isLoadingValuation={isLoadingPerformance}
-            displayInAccountCurrency={false}
-          />
-        ))
-      );
-
-      return items;
     } else {
       const sortedAccounts = [...combinedAccountViews].sort(
         (a, b) => Number(b.totalValueBaseCurrency) - Number(a.totalValueBaseCurrency),
       );
 
-      const items = [];
-
-      // Add real estate card first if there's any data
-      if (realEstateSummary && realEstateSummary.propertyCount > 0) {
-        items.push(
-          <Link
-            key="real-estate"
-            to="/addon/real-estate"
-            className="border-border bg-card flex w-full cursor-pointer items-center justify-between gap-3 rounded-lg border px-4 py-3 shadow-xs transition-all duration-150 hover:shadow-md md:px-5 md:py-4"
-          >
-            <div className="flex min-w-0 flex-1 flex-col gap-1 md:gap-1.5">
-              <h3 className="truncate text-sm leading-tight font-semibold md:text-base md:font-semibold">
-                {t("real_estate")}
-              </h3>
-              <p className="text-muted-foreground truncate text-xs md:text-sm">
-                {realEstateSummary.propertyCount} {realEstateSummary.propertyCount === 1 ? t("property") : t("properties")}
-              </p>
-            </div>
-            <div className="flex shrink-0 items-center gap-2 md:gap-3">
-              <div className="flex flex-col items-end gap-1 md:gap-1.5">
-                <p className="text-sm leading-tight font-semibold md:text-base md:font-semibold">
-                  <PrivacyAmount value={realEstateSummary.totalEquity} currency={baseCurrency} />
-                </p>
-                {realEstateSummary.totalAppreciation !== 0 && (
-                  <div className="flex items-center gap-1.5 md:gap-2">
-                    <GainAmount
-                      className="text-xs font-medium md:text-sm md:font-medium"
-                      value={realEstateSummary.totalAppreciation}
-                      currency={baseCurrency}
-                      displayCurrency={false}
-                      showSign={false}
-                    />
-                    <Separator orientation="vertical" className="h-3 md:h-4" />
-                    <GainPercent
-                      className="text-xs font-medium md:text-sm md:font-medium"
-                      value={realEstateSummary.appreciationPercent}
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center justify-center">
-                <Icons.ChevronRight className="text-muted-foreground h-5 w-5 shrink-0" />
-              </div>
-            </div>
-          </Link>
-        );
-      }
-
-      // Add account cards
-      items.push(
-        ...sortedAccounts.map((account) => (
-          <AccountSummaryComponent
-            key={account.accountId}
-            item={account}
-            isLoadingValuation={isLoadingPerformance}
-            displayInAccountCurrency={false}
-          />
-        ))
-      );
-
-      return items;
+      return sortedAccounts.map((account) => (
+        <AccountSummaryComponent
+          key={account.accountId}
+          item={account}
+          isLoadingValuation={isLoadingPerformance}
+          displayInAccountCurrency
+        />
+      ));
     }
   }, [
     combinedAccountViews,
@@ -558,22 +499,19 @@ export const AccountsSummary = React.memo(() => {
     isErrorAccounts,
     errorAccounts,
     settings?.baseCurrency,
-    realEstateSummary,
-    baseCurrency,
-    t,
   ]);
 
   return (
     <div className="mb-4 w-full space-y-0">
       <div className="flex flex-row items-center justify-between gap-2 pb-2">
-        <h2 className="text-md font-semibold tracking-tight">{t("accounts")}</h2>
+        <h2 className="text-md font-semibold tracking-tight">Accounts</h2>
         <Button
           variant="outline"
-          className="rounded-lg bg-transparent transition-colors duration-150"
+          className="hover:bg-success/10 rounded-lg bg-transparent transition-colors duration-150"
           size="sm"
           onClick={() => setAccountsGrouped(!accountsGrouped)}
-          aria-label={accountsGrouped ? t("list_view") : t("group_view")}
-          title={accountsGrouped ? t("switch_to_list_view") : t("switch_to_group_view")}
+          aria-label={accountsGrouped ? "List view" : "Group view"}
+          title={accountsGrouped ? "Switch to list view" : "Switch to group view"}
           disabled={isLoadingAccounts || combinedAccountViews.length === 0}
         >
           {accountsGrouped ? (

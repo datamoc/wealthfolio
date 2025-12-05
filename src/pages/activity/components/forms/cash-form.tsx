@@ -71,7 +71,7 @@ export const CashForm = ({ accounts }: { accounts: AccountSelectOption[] }) => {
                 <FormItem>
                   <FormLabel>{t("field_amount")}</FormLabel>
                   <FormControl>
-                    <MoneyInput {...field} />
+                    <MoneyInput {...field} aria-label="Amount" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -84,7 +84,7 @@ export const CashForm = ({ accounts }: { accounts: AccountSelectOption[] }) => {
                 <FormItem>
                   <FormLabel>{t("field_fee")}</FormLabel>
                   <FormControl>
-                    <MoneyInput {...field} />
+                    <MoneyInput {...field} aria-label="Fee" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

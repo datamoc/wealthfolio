@@ -262,13 +262,9 @@ class AddonDevServer {
 
     // Start vite build in watch mode
     const { spawn } = require("child_process");
-    const isWindows = process.platform === "win32";
-
-    // Use .cmd extension on Windows, no shell needed (prevents DEP0190 warning)
-    this.viteWatcher = spawn(isWindows ? "npm.cmd" : "npm", ["run", "dev"], {
+    this.viteWatcher = spawn("pnpm", ["run", "dev"], {
       cwd: this.config.addonPath,
       stdio: ["ignore", "pipe", "pipe"],
-      shell: true, // Required for Windows to properly spawn npm
     });
 
     this.viteWatcher.stdout.on("data", (data) => {
@@ -317,47 +313,20 @@ class AddonDevServer {
     // Handle graceful shutdown
     process.on("SIGINT", () => {
       this.stop();
-      // Wait for cleanup before exiting
-      setTimeout(() => process.exit(0), 1500);
+      process.exit(0);
     });
 
     process.on("SIGTERM", () => {
       this.stop();
-      // Wait for cleanup before exiting
-      setTimeout(() => process.exit(0), 1500);
+      process.exit(0);
     });
   }
 
   stop() {
     console.log("🛑 Shutting down dev server...");
 
-    if (this.viteWatcher && this.viteWatcher.pid) {
-      const isWindows = process.platform === "win32";
-
-      if (isWindows) {
-        // On Windows, kill the entire process tree
-        try {
-          exec(`taskkill /pid ${this.viteWatcher.pid} /T /F`, (error) => {
-            if (error) {
-              console.error("Error killing process tree:", error.message);
-            }
-          });
-        } catch (e) {
-          console.error("Failed to kill process tree:", e);
-        }
-      } else {
-        // On Unix, try graceful shutdown first
-        this.viteWatcher.kill("SIGTERM");
-
-        // Force kill after timeout if still running
-        setTimeout(() => {
-          if (this.viteWatcher && !this.viteWatcher.killed) {
-            console.log("⚠️ Force killing Vite watcher...");
-            this.viteWatcher.kill("SIGKILL");
-          }
-        }, 1000);
-      }
-
+    if (this.viteWatcher) {
+      this.viteWatcher.kill("SIGTERM");
       this.viteWatcher = null;
     }
   }
@@ -373,7 +342,7 @@ function main() {
     port,
     addonPath: path.resolve(addonPath),
     manifestPath: path.resolve(addonPath, "manifest.json"),
-    buildCommand: "npm run build",
+    buildCommand: "pnpm run build",
     watchPaths: [path.resolve(addonPath, "src"), path.resolve(addonPath, "manifest.json")],
   };
 

@@ -24,7 +24,6 @@ import {
 } from "@wealthfolio/ui";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
-import { useTranslation } from "react-i18next";
 import type { AccountSelectOption } from "../activity-form";
 import type { NewActivityFormValues } from "../forms/schemas";
 
@@ -34,7 +33,6 @@ interface MobileDetailsStepProps {
 }
 
 export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepProps) {
-  const { t } = useTranslation("activity");
   const { control, watch, setValue } = useFormContext<NewActivityFormValues>();
   const isManualAsset = watch("assetDataSource") === DataSource.MANUAL;
   const showCurrencySelect = watch("showCurrencySelect");
@@ -42,9 +40,17 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
   const [accountSheetOpen, setAccountSheetOpen] = useState(false);
   const [symbolSheetOpen, setSymbolSheetOpen] = useState(false);
 
-  const needsAssetSymbol = ["BUY", "SELL", "ADD_HOLDING", "REMOVE_HOLDING", "DIVIDEND"].includes(
-    activityType,
-  );
+  const isFeeActivity = activityType === "FEE";
+  const isTaxActivity = activityType === "TAX";
+  const needsAssetSymbol = [
+    "BUY",
+    "SELL",
+    "ADD_HOLDING",
+    "REMOVE_HOLDING",
+    "DIVIDEND",
+    "INTEREST",
+    "SPLIT",
+  ].includes(activityType);
   const needsQuantity = ["BUY", "SELL", "ADD_HOLDING", "REMOVE_HOLDING"].includes(activityType);
   const needsUnitPrice = ["BUY", "SELL", "ADD_HOLDING", "REMOVE_HOLDING"].includes(activityType);
   const needsAmount = [
@@ -54,7 +60,6 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
     "TRANSFER_OUT",
     "DIVIDEND",
     "INTEREST",
-    "FEE",
     "TAX",
   ].includes(activityType);
   const needsFee = [
@@ -67,13 +72,14 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
     "INTEREST",
   ].includes(activityType);
 
-  const showSkipSymbolLookup = needsAssetSymbol;
+  const needsSplitRatio = activityType === "SPLIT";
+  const showSkipSymbolLookup = needsAssetSymbol && activityType !== "INTEREST";
   const showCurrencyOption = true;
 
   const selectedAccount = accounts.find((acc) => acc.value === accountId);
   const displayAccountText = selectedAccount
     ? `${selectedAccount.label} (${selectedAccount.currency})`
-    : t("select_account_placeholder");
+    : "Select an account";
 
   return (
     <div className="flex h-full flex-col">
@@ -85,7 +91,7 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
             name="accountId"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-base font-medium">{t("field_account")}</FormLabel>
+                <FormLabel className="text-base font-medium">Account</FormLabel>
                 <FormControl>
                   <Button
                     variant="outline"
@@ -112,7 +118,7 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
             name="activityDate"
             render={({ field }) => (
               <FormItem className="flex flex-col">
-                <FormLabel className="text-base font-medium">{t("mobile_date_time")}</FormLabel>
+                <FormLabel className="text-base font-medium">Date & Time</FormLabel>
                 <DatePickerInput
                   onChange={(date: Date | undefined) => field.onChange(date)}
                   value={field.value}
@@ -137,7 +143,7 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
                         htmlFor="use-lookup-checkbox"
                         className="cursor-pointer text-sm font-medium"
                       >
-                        {t("skip_symbol_lookup")}
+                        Skip Symbol Lookup
                       </label>
                       <Checkbox
                         id="use-lookup-checkbox"
@@ -163,7 +169,7 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
                         htmlFor="use-different-currency-checkbox"
                         className="cursor-pointer text-sm font-medium"
                       >
-                        {t("use_different_currency")}
+                        Use Different Currency
                       </label>
                       <Checkbox
                         id="use-different-currency-checkbox"
@@ -185,11 +191,11 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
               name="assetId"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">{t("field_symbol")}</FormLabel>
+                  <FormLabel className="text-base font-medium">Symbol</FormLabel>
                   <FormControl>
                     {isManualAsset ? (
                       <Input
-                        placeholder={t("symbol_placeholder")}
+                        placeholder="Enter symbol"
                         {...field}
                         onChange={(e) => field.onChange(e.target.value.toUpperCase())}
                       />
@@ -216,7 +222,7 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
                 name="quantity"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium">{t("field_shares")}</FormLabel>
+                    <FormLabel className="text-base font-medium">Shares</FormLabel>
                     <FormControl>
                       <QuantityInput {...field} />
                     </FormControl>
@@ -231,8 +237,8 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
                   <FormItem>
                     <FormLabel className="text-base font-medium">
                       {activityType === "ADD_HOLDING" || activityType === "REMOVE_HOLDING"
-                        ? t("field_average_cost")
-                        : t("field_price")}
+                        ? "Avg Cost"
+                        : "Price"}
                     </FormLabel>
                     <FormControl>
                       <MoneyInput {...field} />
@@ -253,10 +259,12 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
                 <FormItem>
                   <FormLabel className="text-base font-medium">
                     {activityType === "DIVIDEND"
-                      ? t("field_dividend_amount")
+                      ? "Dividend Amount"
                       : activityType === "INTEREST"
-                        ? t("field_interest_amount")
-                        : t("field_amount")}
+                        ? "Interest Amount"
+                        : isTaxActivity
+                          ? "Tax Amount"
+                          : "Amount"}
                   </FormLabel>
                   <FormControl>
                     <MoneyInput {...field} />
@@ -267,14 +275,49 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
             />
           )}
 
+          {/* Split Ratio */}
+          {needsSplitRatio && (
+            <FormField
+              control={control}
+              name="amount"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Split Ratio</FormLabel>
+                  <FormControl>
+                    <QuantityInput
+                      placeholder="Ex. 2 for 2:1 split, 0.5 for 1:2 split"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           {/* Fee */}
-          {needsFee && (
+          {!isFeeActivity && needsFee && (
             <FormField
               control={control}
               name="fee"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">{t("mobile_fee_optional")}</FormLabel>
+                  <FormLabel className="text-base font-medium">Fee (Optional)</FormLabel>
+                  <FormControl>
+                    <MoneyInput {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {isFeeActivity && (
+            <FormField
+              control={control}
+              name="fee"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel className="text-base font-medium">Fee Amount</FormLabel>
                   <FormControl>
                     <MoneyInput {...field} />
                   </FormControl>
@@ -291,7 +334,7 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
               name="currency"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="text-base font-medium">{t("field_currency")}</FormLabel>
+                  <FormLabel className="text-base font-medium">Activity Currency</FormLabel>
                   <FormControl>
                     <CurrencySelectorMobile onSelect={field.onChange} value={field.value} />
                   </FormControl>
@@ -307,10 +350,10 @@ export function MobileDetailsStep({ accounts, activityType }: MobileDetailsStepP
             name="comment"
             render={({ field }) => (
               <FormItem>
-                <FormLabel className="text-base font-medium">{t("mobile_description_optional")}</FormLabel>
+                <FormLabel className="text-base font-medium">Description (Optional)</FormLabel>
                 <FormControl>
                   <Textarea
-                    placeholder={t("mobile_description_placeholder")}
+                    placeholder="Add a note or comment..."
                     className="min-h-[100px] resize-none rounded-xl text-base sm:text-sm"
                     {...field}
                     value={field.value ?? ""}
@@ -347,17 +390,16 @@ interface MobileAccountSheetProps {
 }
 
 function MobileAccountSheet({ accounts, open, onOpenChange, onSelect }: MobileAccountSheetProps) {
-  const { t } = useTranslation("activity");
   const handleAccountSelect = (account: AccountSelectOption) => {
     onSelect(account.value);
   };
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="h-[70vh] p-0">
+      <SheetContent side="bottom" className="mx-1 h-[70vh] rounded-t-4xl p-0">
         <SheetHeader className="border-border border-b">
-          <SheetTitle>{t("select_account")}</SheetTitle>
-          <SheetDescription>{t("mobile_choose_account")}</SheetDescription>
+          <SheetTitle>Select Account</SheetTitle>
+          <SheetDescription>Choose the account for this transaction</SheetDescription>
         </SheetHeader>
         <ScrollArea className="h-[calc(70vh-5rem)] px-6 py-4">
           <div className="space-y-2">

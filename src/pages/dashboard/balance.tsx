@@ -2,7 +2,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useBalancePrivacy } from "@/hooks/use-balance-privacy";
 import NumberFlow from "@number-flow/react";
 import { useMemo } from "react";
-import i18n from "@/lib/i18n";
 
 interface BalanceProps {
   targetValue: number;
@@ -10,7 +9,6 @@ interface BalanceProps {
   displayCurrency?: boolean;
   displayDecimal?: boolean;
   isLoading?: boolean;
-  useCompactNotation?: boolean;
 }
 
 const Balance: React.FC<BalanceProps> = ({
@@ -19,13 +17,10 @@ const Balance: React.FC<BalanceProps> = ({
   displayCurrency = false,
   displayDecimal = true,
   isLoading = false,
-  useCompactNotation = false,
 }) => {
   const { isBalanceHidden } = useBalancePrivacy();
-  const locale = i18n.language || "en-US";
-
   const currencySymbol = useMemo(() => {
-    const formatter = new Intl.NumberFormat(locale, {
+    const formatter = new Intl.NumberFormat(undefined, {
       style: "currency",
       currency,
       currencyDisplay: "narrowSymbol",
@@ -37,34 +32,48 @@ const Balance: React.FC<BalanceProps> = ({
     const symbolPart = parts.find((part) => part.type === "currency");
 
     return symbolPart?.value ?? currency;
-  }, [currency, locale]);
+  }, [currency]);
+
+  const formattedValue = useMemo(() => {
+    const formatter = new Intl.NumberFormat(undefined, {
+      currency,
+      style: displayCurrency ? "currency" : "decimal",
+      currencyDisplay: "narrowSymbol",
+      minimumFractionDigits: displayDecimal ? 2 : 0,
+      maximumFractionDigits: displayDecimal ? 2 : 0,
+    });
+    return formatter.format(targetValue);
+  }, [currency, displayCurrency, displayDecimal, targetValue]);
 
   if (isLoading) {
     return <Skeleton className="h-9 w-48" />;
   }
 
   return (
-    <h1 className="font-heading text-3xl font-bold tracking-tight">
+    <h1 className="font-heading text-3xl font-bold tracking-tight" data-testid="portfolio-balance">
       {isBalanceHidden ? (
-        <span>
+        <span className="text-4x">
           {displayCurrency ? currencySymbol : ""}
-          ••••••
+          •••••••
         </span>
       ) : (
-        <NumberFlow
-          className="muted-fraction"
-          value={targetValue}
-          isolate={false}
-          locales={locale}
-          format={{
-            currency: currency,
-            style: displayCurrency ? "currency" : "decimal",
-            currencyDisplay: "narrowSymbol",
-            notation: useCompactNotation ? "compact" : "standard",
-            minimumFractionDigits: useCompactNotation ? 0 : (displayDecimal ? 2 : 0),
-            maximumFractionDigits: useCompactNotation ? 1 : (displayDecimal ? 2 : 0),
-          }}
-        />
+        <>
+          <NumberFlow
+            className="muted-fraction"
+            value={targetValue}
+            isolate={false}
+            format={{
+              currency: currency,
+              style: displayCurrency ? "currency" : "decimal",
+              currencyDisplay: "narrowSymbol",
+              minimumFractionDigits: displayDecimal ? 2 : 0,
+              maximumFractionDigits: displayDecimal ? 2 : 0,
+            }}
+          />
+          <span className="sr-only" data-testid="portfolio-balance-value">
+            {formattedValue}
+          </span>
+        </>
       )}
     </h1>
   );

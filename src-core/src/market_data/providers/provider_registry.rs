@@ -15,7 +15,7 @@ use crate::market_data::providers::marketdata_app_provider::MarketDataAppProvide
 use crate::market_data::providers::marketstack_provider::MarketstackProvider;
 use crate::market_data::providers::metal_price_api_provider::MetalPriceApiProvider;
 use crate::market_data::providers::yahoo_provider::YahooProvider;
-use crate::secrets::SecretManager;
+use crate::secrets::SecretStore;
 use log::{debug, info, warn};
 use std::collections::HashMap;
 use std::sync::Arc;
@@ -31,7 +31,9 @@ pub struct ProviderRegistry {
 impl ProviderRegistry {
     pub async fn new(
         provider_settings: Vec<MarketDataProviderSetting>,
+        secret_store: Arc<dyn SecretStore>,
     ) -> Result<Self, MarketDataError> {
+        #[allow(clippy::type_complexity)]
         let mut active_providers_with_priority: Vec<(
             i32,
             String,
@@ -51,7 +53,7 @@ impl ProviderRegistry {
             let provider_id_str = &setting.id;
 
             let api_key = if provider_id_str != DATA_SOURCE_YAHOO {
-                match SecretManager::get_secret(provider_id_str) {
+                match secret_store.get_secret(provider_id_str) {
                     Ok(key_opt) => key_opt,
                     Err(e) => {
                         warn!(
@@ -328,6 +330,12 @@ impl ProviderRegistry {
         &self,
         symbol: &str,
     ) -> Result<super::models::AssetProfile, MarketDataError> {
+        if symbol.starts_with("$CASH") {
+            if let Some(manual_profiler) = self.asset_profilers.get(DATA_SOURCE_MANUAL) {
+                return manual_profiler.get_asset_profile(symbol).await;
+            }
+        }
+
         for (profiler_id, profiler) in self.get_enabled_profilers() {
             match profiler.get_asset_profile(symbol).await {
                 Ok(profile) => return Ok(profile),
@@ -335,11 +343,6 @@ impl ProviderRegistry {
                     "Profiler '{}' failed to get asset profile for symbol '{}': {:?}. Trying next.",
                     profiler_id, symbol, e
                 ),
-            }
-        }
-        if symbol.starts_with("$CASH") {
-            if let Some(manual_profiler) = self.asset_profilers.get(DATA_SOURCE_MANUAL) {
-                return manual_profiler.get_asset_profile(symbol).await;
             }
         }
         Err(MarketDataError::NotFound(symbol.to_string()))

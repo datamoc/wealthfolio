@@ -61,7 +61,7 @@ export const OtherForm = ({ accounts }: { accounts: AccountSelectOption[] }) => 
                 <FormItem>
                   <FormLabel>{t("field_fee_amount")}</FormLabel>
                   <FormControl>
-                    <MoneyInput {...field} />
+                    <MoneyInput {...field} aria-label="Fee Amount" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -75,7 +75,7 @@ export const OtherForm = ({ accounts }: { accounts: AccountSelectOption[] }) => 
                 <FormItem>
                   <FormLabel>{t("field_tax_amount")}</FormLabel>
                   <FormControl>
-                    <MoneyInput {...field} />
+                    <MoneyInput {...field} aria-label="Tax Amount" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -101,6 +101,7 @@ export const OtherForm = ({ accounts }: { accounts: AccountSelectOption[] }) => 
                         <QuantityInput
                           placeholder={t("split_ratio_placeholder")}
                           {...field}
+                          aria-label="Split Ratio"
                         />
                       </FormControl>
                       <FormMessage />

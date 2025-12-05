@@ -3,37 +3,37 @@
  * These utilities help convert between the main app's internal types and the SDK's public types
  */
 
-import type { HostAPI as SDKHostAPI } from "@wealthfolio/addon-sdk";
 import type { EventCallback, UnlistenFn } from "@/adapters";
 import type {
-  Holding,
-  Activity,
   Account,
+  AccountValuation,
+  Activity,
   ActivityBulkMutationRequest,
   ActivityBulkMutationResult,
-  ActivityDetails,
   ActivityCreate,
-  ActivityUpdate,
+  ActivityDetails,
   ActivityImport,
   ActivitySearchResponse,
-  ExchangeRate,
+  ActivityUpdate,
+  Asset,
   ContributionLimit,
-  NewContributionLimit,
   DepositsCalculation,
+  ExchangeRate,
   Goal,
   GoalAllocation,
-  QuoteSummary,
-  Asset,
-  Quote,
-  UpdateAssetProfile,
-  MarketDataProviderInfo,
-  IncomeSummary,
-  AccountValuation,
-  PerformanceMetrics,
-  SimplePerformanceMetrics,
-  Settings,
+  Holding,
   ImportMappingData,
+  IncomeSummary,
+  MarketDataProviderInfo,
+  NewContributionLimit,
+  PerformanceMetrics,
+  Quote,
+  QuoteSummary,
+  Settings,
+  SimplePerformanceMetrics,
+  UpdateAssetProfile,
 } from "@/lib/types";
+import type { HostAPI as SDKHostAPI } from "@wealthfolio/addon-sdk";
 
 /**
  * Internal HostAPI interface that matches the actual command function signatures
@@ -115,9 +115,9 @@ export interface InternalHostAPI {
   searchActivities(
     page: number,
     pageSize: number,
-    filters: { accountId?: string; activityType?: string; symbol?: string },
+    filters: { accountIds?: string | string[]; activityTypes?: string | string[]; symbol?: string },
     searchKeyword: string,
-    sort: { id: string; desc: boolean },
+    sort?: { id: string; desc?: boolean },
   ): Promise<ActivitySearchResponse>;
   createActivity(activity: ActivityCreate): Promise<Activity>;
   updateActivity(activity: ActivityUpdate): Promise<Activity>;
@@ -126,10 +126,6 @@ export interface InternalHostAPI {
   // File operations
   openCsvFileDialog(): Promise<null | string | string[]>;
   openFileSaveDialog(fileContent: Uint8Array | Blob | string, fileName: string): Promise<unknown>;
-
-  // Storage operations (database-backed, included in backups)
-  getAddonData(key: string): Promise<string>;
-  setAddonData(key: string, value: string): Promise<void>;
 
   // Event listeners - Import
   listenImportFileDropHover<T>(handler: EventCallback<T>): Promise<UnlistenFn>;
@@ -259,12 +255,8 @@ export function createSDKHostAPIBridge(internalAPI: InternalHostAPI, addonId?: s
       openCsvDialog: internalAPI.openCsvFileDialog,
       openSaveDialog: internalAPI.openFileSaveDialog,
     },
-    storage: {
-      getData: internalAPI.getAddonData,
-      setData: internalAPI.setAddonData,
-    },
 
-    logger: createAddonLogger(addonId && addonId.trim() !== "" ? addonId : "unknown-addon"),
+    logger: createAddonLogger(addonId || "unknown-addon"),
 
     events: {
       import: {

@@ -1,6 +1,6 @@
 import { toast } from "@/components/ui/use-toast";
-import { ActivityType } from "@/lib/constants";
-import { Account, ActivityImport } from "@/lib/types";
+import { ActivityType, DataSource } from "@/lib/constants";
+import { Account, ActivityBulkMutationRequest, ActivityCreate } from "@/lib/types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Button,
@@ -14,9 +14,8 @@ import {
 } from "@wealthfolio/ui";
 import { useCallback, useEffect, useState } from "react";
 import { FormProvider, useForm, type Resolver, type SubmitHandler } from "react-hook-form";
-import { useTranslation } from "react-i18next";
 import { z } from "zod";
-import { useActivityImportMutations } from "../../import/hooks/use-activity-import-mutations";
+import { useActivityMutations } from "../../hooks/use-activity-mutations";
 import { BulkHoldingsForm } from "./bulk-holdings-form";
 import { bulkHoldingsFormSchema } from "./schemas";
 
@@ -29,8 +28,8 @@ interface BulkHoldingsModalProps {
 }
 
 export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModalProps) => {
-  const { t } = useTranslation("activity");
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
+  const { saveActivitiesMutation } = useActivityMutations();
 
   const form = useForm<BulkHoldingsFormValues>({
     resolver: zodResolver(bulkHoldingsFormSchema) as Resolver<BulkHoldingsFormValues>,
@@ -47,6 +46,7 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
           ticker: "",
           name: "",
           assetId: "",
+          assetDataSource: DataSource.YAHOO,
         },
       ],
     },
@@ -89,22 +89,8 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
     [form],
   );
 
-  const { confirmImportMutation } = useActivityImportMutations({
-    onSuccess: () => {
-      toast({
-        title: t("import_successful"),
-        description: t("holdings_imported_successfully"),
-        variant: "default",
-      });
-      form.reset();
-      setSelectedAccount(null);
-      onSuccess?.();
-      onClose();
-    },
-  });
-
   const handleSubmit: SubmitHandler<BulkHoldingsFormValues> = useCallback(
-    (data) => {
+    async (data) => {
       // Validate holdings data
       const validHoldings = data.holdings.filter(
         (holding) =>
@@ -115,31 +101,51 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
 
       if (!validHoldings.length) {
         toast({
-          title: t("no_valid_holdings"),
-          description: t("no_valid_holdings_desc"),
+          title: "No valid holdings",
+          description:
+            "Please add at least one valid holding with ticker, shares, and average cost.",
           variant: "destructive",
         });
         return;
       }
 
-      // Transform to ActivityImport format
-      const activitiesToImport: ActivityImport[] = validHoldings.map((holding) => ({
+      const activityDate =
+        data.activityDate instanceof Date ? data.activityDate : new Date(data.activityDate);
+      const currency = data.currency || selectedAccount?.currency || "USD";
+
+      const creates: ActivityCreate[] = validHoldings.map((holding) => ({
         accountId: data.accountId,
         activityType: ActivityType.ADD_HOLDING,
-        symbol: holding.ticker.toUpperCase().trim(),
+        activityDate: activityDate.toISOString(),
+        assetId: (holding.assetId || holding.ticker || "").toUpperCase().trim(),
+        assetDataSource: holding.assetDataSource ?? DataSource.YAHOO,
         quantity: Number(holding.sharesOwned),
         unitPrice: Number(holding.averageCost),
-        date: data.activityDate,
-        currency: data.currency || selectedAccount?.currency || "USD",
+        amount: Number(holding.sharesOwned) * Number(holding.averageCost),
+        currency,
         fee: 0,
-        isDraft: false,
-        isValid: true,
-        comment: data.comment || `Bulk import - ${validHoldings.length} holdings`,
+        isDraft: data.isDraft ?? false,
+        comment: data.comment?.trim() || undefined,
       }));
 
-      confirmImportMutation.mutate({ activities: activitiesToImport });
+      const request: ActivityBulkMutationRequest = { creates };
+
+      try {
+        await saveActivitiesMutation.mutateAsync(request);
+        toast({
+          title: "Holdings saved",
+          description: "Your holdings have been added to this account.",
+          variant: "success",
+        });
+        form.reset();
+        setSelectedAccount(null);
+        onSuccess?.();
+        onClose();
+      } catch {
+        // Error handling is managed by the mutation hook toast.
+      }
     },
-    [confirmImportMutation, selectedAccount],
+    [form, onClose, onSuccess, saveActivitiesMutation, selectedAccount],
   );
 
   const handleFormError = useCallback((errors: Record<string, any>) => {
@@ -148,14 +154,14 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
     const errorMessage = firstError?.message || "Please check the form for errors.";
 
     toast({
-      title: t("form_validation_failed"),
+      title: "Form validation failed",
       description: errorMessage,
       variant: "destructive",
     });
   }, []);
 
   const isSubmitDisabled =
-    confirmImportMutation.isPending ||
+    saveActivitiesMutation.isPending ||
     !hasValidHoldings ||
     !selectedAccount ||
     !form.formState.isValid;
@@ -164,9 +170,10 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-h-[90vh] max-w-6xl overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{t("portfolio")}</DialogTitle>
+          <DialogTitle>Portfolio</DialogTitle>
           <DialogDescription>
-            {t("bulk_holdings_desc")}
+            Quickly add multiple holdings to your portfolio. Enter your current positions with
+            ticker symbols, quantities, and average costs.
           </DialogDescription>
         </DialogHeader>
 
@@ -181,7 +188,7 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
               {Object.keys(form.formState.errors).length > 0 && (
                 <div className="border-destructive/50 bg-destructive/10 rounded-lg border p-4">
                   <h4 className="text-destructive mb-2 text-sm font-medium">
-                    {t("fix_errors")}:
+                    Please fix the following errors:
                   </h4>
                   <ul className="text-destructive/80 space-y-1 text-sm">
                     {form.formState.errors.accountId && (
@@ -199,10 +206,10 @@ export const BulkHoldingsModal = ({ open, onClose, onSuccess }: BulkHoldingsModa
 
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={onClose}>
-                  {t("cancel")}
+                  Cancel
                 </Button>
                 <Button type="submit" disabled={isSubmitDisabled}>
-                  {confirmImportMutation.isPending ? t("importing") : t("confirm")}
+                  {saveActivitiesMutation.isPending ? "Saving..." : "Confirm"}
                 </Button>
               </DialogFooter>
             </form>

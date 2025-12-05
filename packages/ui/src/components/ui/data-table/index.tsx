@@ -16,6 +16,7 @@ import * as React from "react";
 
 import { Icons } from "@/components/ui/icons";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 
 import type { DataTableFacetedFilterProps } from "./data-table-faceted-filter";
 import { DataTableToolbar } from "./data-table-toolbar";
@@ -26,16 +27,12 @@ interface DataTableProps<TData, TValue> {
   filters?: DataTableFacetedFilterProps<TData, TValue>[];
   defaultColumnVisibility?: VisibilityState;
   defaultSorting?: SortingState;
+  storageKey?: string;
   data: TData[];
   manualPagination?: boolean;
   scrollable?: boolean;
   showColumnToggle?: boolean;
-  translations?: {
-    searchPlaceholder?: string;
-    reset?: string;
-    columns?: string;
-    noResultsFound?: string;
-  };
+  toolbarActions?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -46,16 +43,19 @@ export function DataTable<TData, TValue>({
   manualPagination = false,
   defaultColumnVisibility,
   defaultSorting,
+  storageKey,
   scrollable = false,
   showColumnToggle = false,
-  translations = {},
+  toolbarActions,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({});
-  const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>(defaultColumnVisibility || {});
-  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = storageKey
+    ? usePersistentState<VisibilityState>(`${storageKey}:column-visibility`, defaultColumnVisibility || {})
+    : React.useState<VisibilityState>(defaultColumnVisibility || {});
+  const [columnFilters, setColumnFilters] = storageKey
+    ? usePersistentState<ColumnFiltersState>(`${storageKey}:column-filters`, [])
+    : React.useState<ColumnFiltersState>([]);
   const [sorting, setSorting] = React.useState<SortingState>(defaultSorting || []);
-
-  const { noResultsFound = "No results found." } = translations;
 
   const table = useReactTable({
     data,
@@ -90,7 +90,13 @@ export function DataTable<TData, TValue>({
   return (
     <div className="flex h-full flex-col">
       <div className="mb-2 shrink-0">
-        <DataTableToolbar table={table} searchBy={searchBy} filters={filters} showColumnToggle={showColumnToggle} translations={translations} />
+        <DataTableToolbar
+          table={table}
+          searchBy={searchBy}
+          filters={filters}
+          showColumnToggle={showColumnToggle}
+          actions={toolbarActions}
+        />
       </div>
       <div className={`min-h-0 flex-1 rounded-md border ${scrollable ? "overflow-auto" : ""}`}>
         <Table>
@@ -121,7 +127,7 @@ export function DataTable<TData, TValue>({
                 <TableCell colSpan={columns.length} className="h-24 text-center">
                   <div className="flex flex-col items-center justify-center">
                     <Icons.FileText className="text-muted-foreground mb-2 h-10 w-10" />
-                    <p className="text-muted-foreground text-sm">{noResultsFound}</p>
+                    <p className="text-muted-foreground text-sm">No results found.</p>
                   </div>
                 </TableCell>
               </TableRow>

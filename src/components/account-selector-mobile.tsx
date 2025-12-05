@@ -145,7 +145,7 @@ export const AccountSelectorMobile = forwardRef<HTMLButtonElement, AccountSelect
             {!iconOnly && "Add account"}
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[80vh] p-0">
+        <SheetContent side="bottom" className="mx-1 h-[80vh] rounded-t-4xl p-0">
           <SheetHeader className="border-border border-b px-6 py-4">
             <SheetTitle>{t('select_account')}</SheetTitle>
             <SheetDescription>{t('click_to_select_account')}</SheetDescription>

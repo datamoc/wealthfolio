@@ -1,26 +1,11 @@
 import { logger } from "@/adapters";
 import { type ClassValue, clsx } from "clsx";
 import { format, isValid, parse, parseISO } from "date-fns";
-import { enUS, fr, type Locale } from "date-fns/locale";
 import { twMerge } from "tailwind-merge";
 import { AccountValuation } from "./types";
-import i18n from "./i18n";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
-
-/**
- * Get the date-fns locale based on the current i18n language
- * @returns The appropriate date-fns locale object
- */
-export function getDateFnsLocale() {
-  const language = i18n.language || "en";
-  const locales: Record<string, Locale> = {
-    en: enUS,
-    fr: fr,
-  };
-  return locales[language] || enUS;
 }
 
 /**
@@ -147,7 +132,7 @@ export function formatDate(input: string | number | Date | null | undefined): st
   }
 
   if (date && isValid(date)) {
-    return format(date, "MMM d, yyyy", { locale: getDateFnsLocale() });
+    return format(date, "MMM d, yyyy");
   }
 
   logger.warn(`Failed to format invalid date input: ${String(input)}`);
@@ -234,44 +219,58 @@ export function formatDateTimeDisplay(date: Date | string | undefined): string {
   // Display format: YYYY/MM/DD HH:mm
   return format(value, "yyyy/MM/dd HH:mm");
 }
-export function formatAmount(amount: number, currency: string, displayCurrency = true, useCompactNotation = false) {
-  const locale = i18n.language || "en-US";
+const DECIMAL_FORMAT_OPTIONS: Intl.NumberFormatOptions = {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
 
-  // Handle pence (GBp) specially
-  if (currency === "GBp" || currency === "GBX") {
-    if (!displayCurrency) {
-      return new Intl.NumberFormat(locale, {
-        notation: useCompactNotation ? "compact" : "standard",
-        minimumFractionDigits: useCompactNotation ? 0 : 2,
-        maximumFractionDigits: useCompactNotation ? 1 : 2,
-      }).format(amount);
-    }
+const decimalFormatter = new Intl.NumberFormat("en-US", DECIMAL_FORMAT_OPTIONS);
+const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
 
-    // For pence, format as "123.45p" or "1,234.56p"
-    const formattedNumber = new Intl.NumberFormat(locale, {
-      notation: useCompactNotation ? "compact" : "standard",
-      minimumFractionDigits: useCompactNotation ? 0 : 2,
-      maximumFractionDigits: useCompactNotation ? 1 : 2,
-    }).format(amount);
+const getCurrencyFormatter = (currency: string) => {
+  const normalizedCurrency = currency?.toUpperCase?.() ?? "USD";
+  const cacheKey = normalizedCurrency;
 
-    return `${formattedNumber}p`;
+  if (currencyFormatterCache.has(cacheKey)) {
+    return currencyFormatterCache.get(cacheKey)!;
   }
 
-  return new Intl.NumberFormat(locale, {
-    style: displayCurrency ? "currency" : undefined,
-    currency: currency,
-    notation: useCompactNotation ? "compact" : "standard",
-    minimumFractionDigits: useCompactNotation ? 0 : 2,
-    maximumFractionDigits: useCompactNotation ? 1 : 2,
-  }).format(amount);
+  let formatter: Intl.NumberFormat;
+  try {
+    formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: normalizedCurrency,
+      ...DECIMAL_FORMAT_OPTIONS,
+    });
+  } catch {
+    formatter = decimalFormatter;
+  }
+
+  currencyFormatterCache.set(cacheKey, formatter);
+  return formatter;
+};
+
+export function formatAmount(amount: number, currency: string, displayCurrency = true) {
+  const rawCurrency = currency ?? "USD";
+  const isPenceCurrency = rawCurrency === "GBp" || rawCurrency === "GBX";
+
+  if (isPenceCurrency) {
+    const formattedNumber = decimalFormatter.format(amount);
+    return displayCurrency ? `${formattedNumber}p` : formattedNumber;
+  }
+
+  if (!displayCurrency) {
+    return decimalFormatter.format(amount);
+  }
+
+  return getCurrencyFormatter(rawCurrency).format(amount);
 }
 
 export function formatPercent(value: number | null | undefined) {
   if (value == null) return "-";
   try {
-    const locale = i18n.language || "en-US";
     // Use Intl.NumberFormat for correct percentage formatting (handles x100 and % sign)
-    return new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat("en-US", {
       style: "percent",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
@@ -295,11 +294,10 @@ export function formatQuantity(quantity: number | null | undefined): string {
     return "-";
   }
 
-  const locale = i18n.language || "en-US";
   // Use Intl.NumberFormat for consistent number formatting
   // Minimum fraction digits of 0 allows whole numbers to show without decimals
   // Maximum of 4 decimal places when needed
-  return new Intl.NumberFormat(locale, {
+  return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 0,
     maximumFractionDigits: 4,
     useGrouping: true,
@@ -365,4 +363,92 @@ export function calculatePerformanceMetrics(
   };
 
   return result;
+}
+
+/**
+ * Rounds a decimal number to a specified precision.
+ * @param value The number to round
+ * @param precision The number of decimal places (default: 6)
+ * @returns The rounded number, or 0 if the value is not finite
+ */
+export function roundDecimal(value: number, precision = 6): number {
+  if (!Number.isFinite(value)) {
+    return 0;
+  }
+  const factor = 10 ** precision;
+  return Math.round(value * factor) / factor;
+}
+
+/**
+ * Parses a string or number input as a decimal with specified precision.
+ * @param value The value to parse (string or number)
+ * @param precision The number of decimal places (default: 6)
+ * @returns The parsed and rounded number, or 0 if parsing fails
+ */
+export function parseDecimalInput(value: string | number, precision = 6): number {
+  const parsed =
+    typeof value === "number" ? value : typeof value === "string" ? Number.parseFloat(value) : NaN;
+  return Number.isFinite(parsed) ? roundDecimal(parsed, precision) : 0;
+}
+
+/**
+ * Parses a local datetime string in format "YYYY-MM-DDTHH:mm" to a Date object.
+ * @param value The datetime string to parse
+ * @returns A Date object, or current date if parsing fails
+ */
+export function parseLocalDateTime(value: string): Date {
+  if (!value) {
+    return new Date();
+  }
+
+  const [datePart, timePart = ""] = value.split("T");
+  const [year, month, day] = datePart.split("-").map((segment) => Number.parseInt(segment, 10));
+  const [hour = 0, minute = 0] = timePart.split(":").map((segment) => Number.parseInt(segment, 10));
+  const parsed = new Date(year, (month ?? 1) - 1, day ?? 1, hour, minute);
+  return Number.isNaN(parsed.getTime()) ? new Date() : parsed;
+}
+
+/**
+ * Converts an unknown value to a string suitable for numeric cell display.
+ * @param value The value to convert
+ * @returns A string representation of the number, or empty string if invalid
+ */
+export function getNumericCellValue(value: unknown): string {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value.toString() : "";
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  return "";
+}
+
+/**
+ * Converts an unknown value to a finite number or undefined.
+ * @param value The value to convert
+ * @returns A finite number if valid, undefined otherwise
+ */
+export function toFiniteNumberOrUndefined(value: unknown): number | undefined {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : undefined;
+  }
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number.parseFloat(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Converts an unknown value to a rounded number suitable for API payloads.
+ * @param value The value to convert
+ * @param precision The number of decimal places (default: 6)
+ * @returns A rounded number if valid, undefined otherwise
+ */
+export function toPayloadNumber(value: unknown, precision = 6): number | undefined {
+  const parsed = toFiniteNumberOrUndefined(value);
+  if (parsed === undefined) {
+    return undefined;
+  }
+  return roundDecimal(parsed, precision);
 }

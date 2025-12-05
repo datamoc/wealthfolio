@@ -10,15 +10,12 @@ import { useLatestValuations } from "@/hooks/use-latest-valuations";
 import { calculateGoalProgress } from "@/lib/portfolio-helper";
 import { Goal, GoalAllocation } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { AmountDisplay, formatPercent, Button } from "@wealthfolio/ui";
+import { AmountDisplay, formatPercent } from "@wealthfolio/ui";
 import { useMemo } from "react";
-import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 export function SavingGoals() {
-  const { t } = useTranslation("dashboard");
   const { isBalanceHidden } = useBalancePrivacy();
-  const navigate = useNavigate();
 
   const { accounts, isLoading: isLoadingAccounts, isError: isErrorAccounts } = useAccounts();
 
@@ -63,7 +60,7 @@ export function SavingGoals() {
     return (
       <Card className="w-full border-0 bg-transparent shadow-none">
         <CardHeader className="py-2">
-          <CardTitle className="text-md">{t("saving_goals")}</CardTitle>
+          <CardTitle className="text-md">Saving Goals</CardTitle>
         </CardHeader>
         <CardContent>
           <Card className="w-full shadow-sm">
@@ -85,15 +82,15 @@ export function SavingGoals() {
     return (
       <Card className="w-full border-0 bg-transparent shadow-none">
         <CardHeader className="py-2">
-          <CardTitle className="text-md">{t("saving_goals")}</CardTitle>
+          <CardTitle className="text-md">Saving Goals</CardTitle>
         </CardHeader>
         <CardContent>
           <Card className="w-full shadow-sm">
             <CardContent className="pt-6">
               <div className="text-destructive flex flex-col items-center justify-center py-6 text-center">
                 <Icons.AlertCircle className="mb-2 h-12 w-12" />
-                <p className="text-sm">{t("could_not_load_goals")}</p>
-                <p className="text-xs">{t("please_try_again_later")}</p>
+                <p className="text-sm">Could not load saving goals data.</p>
+                <p className="text-xs">Please try again later.</p>
               </div>
             </CardContent>
           </Card>
@@ -102,131 +99,99 @@ export function SavingGoals() {
     );
   }
 
-  if (!goalsProgress) {
+  const hasGoals = goals && goals.length > 0;
+
+  if (!hasGoals) {
     return (
-      <Card className="w-full border-0 bg-transparent pb-4 shadow-none">
-        <CardHeader className="py-2">
-          <CardTitle className="text-md">{t("saving_goals")}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <Card className="w-full shadow-xs">
-            <CardContent className="pt-6">
-              {goals?.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <Icons.Goal className="text-muted-foreground mb-2 h-12 w-12" />
-                  <p className="text-muted-foreground text-sm">{t("no_saving_goals_set")}</p>
-                  <p className="text-muted-foreground text-xs">
-                    {t("create_goal_to_track")}
-                  </p>
-                </div>
-              ) : (
-                <div className="text-muted-foreground flex flex-col items-center justify-center py-6 text-center">
-                  <p className="text-sm">{t("goal_data_not_available")}</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </CardContent>
-      </Card>
+      <div className="flex flex-wrap gap-4 pb-4">
+        <h2 className="text-md font-semibold">Saving Goals</h2>
+        <Card className="border-border/50 bg-success/10 w-full shadow-xs">
+          <CardContent className="px-4 py-6">
+            <div className="text-center">
+              <p className="text-sm">No saving goals set.</p>
+              <Link
+                to="/settings/goals"
+                className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
+              >
+                Create your first goal
+                <Icons.ChevronRight className="h-3 w-3" />
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   return (
     <div className="flex flex-wrap gap-4 pb-4">
-      <div className="flex w-full items-center justify-between">
-        <h2 className="text-md font-semibold">{t("saving_goals")}</h2>
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8"
-              onClick={() => navigate("/settings/goals")}
-              aria-label={t("manage_goals")}
-            >
-              <Icons.Settings className="h-4 w-4" />
-            </Button>
-          </TooltipTrigger>
-          <TooltipContent>
-            <p>{t("manage_goals")}</p>
-          </TooltipContent>
-        </Tooltip>
-      </div>
+      <h2 className="text-md font-semibold">Saving Goals</h2>
       <Card className="w-full shadow-xs">
-        <CardContent className="px-4 pt-6">
-          {goals && goals.length > 0 ? (
-            [...goals]
-              .sort((a, b) => a.targetAmount - b.targetAmount)
-              .map((goal) => {
-                const progressData = goalsProgress.find((p) => p.name === goal.title);
+        <CardContent className="bg-transparent px-4 pt-6">
+          {[...goals]
+            .sort((a, b) => a.targetAmount - b.targetAmount)
+            .slice(0, 5)
+            .map((goal) => {
+              const progressData = goalsProgress?.find((p) => p.name === goal.title);
 
-                const currentProgress = progressData?.progress ?? 0;
-                const currentValue = progressData?.currentValue ?? 0;
-                const currency =
-                  progressData?.currency ?? latestValuations?.[0]?.baseCurrency ?? "USD";
+              const currentProgress = progressData?.progress ?? 0;
+              const currentValue = progressData?.currentValue ?? 0;
+              const currency =
+                progressData?.currency ?? latestValuations?.[0]?.baseCurrency ?? "USD";
 
-                return (
-                  <Tooltip key={goal.id}>
-                    <TooltipTrigger asChild>
-                      <div className="mb-4 cursor-help items-center">
-                        <CardDescription className="text-muted-foreground mb-2 flex items-center text-sm font-light">
-                          {goal.title}
-                          {currentProgress >= 100 ? (
-                            <Icons.CheckCircle className="text-success ml-1 h-4 w-4" />
-                          ) : null}
-                        </CardDescription>
+              return (
+                <Tooltip key={goal.id}>
+                  <TooltipTrigger asChild>
+                    <div className="mb-4 cursor-help items-center">
+                      <CardDescription className="text-muted-foreground mb-2 flex items-center text-sm font-light">
+                        {goal.title}
+                        {currentProgress >= 100 ? (
+                          <Icons.CheckCircle className="text-success ml-1 h-4 w-4" />
+                        ) : null}
+                      </CardDescription>
 
-                        <Progress
-                          value={currentProgress * 100}
-                          className="[&>div]:bg-success h-2.5 w-full"
-                        />
-                      </div>
-                    </TooltipTrigger>
-                    <TooltipContent className="space-y-2">
-                      <h3 className="text-md text-muted-foreground font-bold">{goal.title}</h3>
-                      <ul className="list-inside list-disc text-xs">
-                        <li>
-                          {t("progress")}: <b>{formatPercent(currentProgress)}</b>
-                        </li>
-                        <li>
-                          {t("current_value")}:{" "}
-                          <b>
-                            <AmountDisplay
-                              value={currentValue}
-                              currency={currency}
-                              isHidden={isBalanceHidden}
-                            />
-                          </b>
-                        </li>
-                        <li>
-                          {t("target_value")}:{" "}
-                          <b>
-                            <AmountDisplay
-                              value={goal.targetAmount}
-                              currency={currency}
-                              isHidden={isBalanceHidden}
-                            />
-                          </b>
-                        </li>
-                      </ul>
-                      {!progressData && (
-                        <p className="text-muted-foreground text-xs italic">
-                          {t("progress_calculation_pending")}
-                        </p>
-                      )}
-                    </TooltipContent>
-                  </Tooltip>
-                );
-              })
-          ) : (
-            <div className="flex flex-col items-center justify-center py-6 text-center">
-              <Icons.Goal className="text-muted-foreground mb-2 h-12 w-12" />
-              <p className="text-muted-foreground text-sm">{t("no_saving_goals_set")}</p>
-              <p className="text-muted-foreground text-xs">
-                {t("create_goal_to_track")}
-              </p>
-            </div>
-          )}
+                      <Progress
+                        value={currentProgress * 100}
+                        className="[&>div]:bg-success h-2.5 w-full"
+                      />
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="space-y-2">
+                    <h3 className="text-md text-muted-foreground font-bold">{goal.title}</h3>
+                    <ul className="list-inside list-disc text-xs">
+                      <li>
+                        Progress: <b>{formatPercent(currentProgress)}</b>
+                      </li>
+                      <li>
+                        Current Value:{" "}
+                        <b>
+                          <AmountDisplay
+                            value={currentValue}
+                            currency={currency}
+                            isHidden={isBalanceHidden}
+                          />
+                        </b>
+                      </li>
+                      <li>
+                        Target Value:{" "}
+                        <b>
+                          <AmountDisplay
+                            value={goal.targetAmount}
+                            currency={currency}
+                            isHidden={isBalanceHidden}
+                          />
+                        </b>
+                      </li>
+                    </ul>
+                    {!progressData && (
+                      <p className="text-muted-foreground text-xs italic">
+                        Progress calculation pending or not applicable.
+                      </p>
+                    )}
+                  </TooltipContent>
+                </Tooltip>
+              );
+            })}
         </CardContent>
       </Card>
     </div>

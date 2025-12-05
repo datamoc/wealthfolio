@@ -72,16 +72,6 @@ impl SettingsRepositoryTrait for SettingsRepository {
             }
         }
 
-        // Detect Pro status based on feature availability
-        #[cfg(feature = "wealthfolio-pro")]
-        {
-            settings.is_pro = true;
-        }
-        #[cfg(not(feature = "wealthfolio-pro"))]
-        {
-            settings.is_pro = false;
-        }
-
         Ok(settings)
     }
 

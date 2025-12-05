@@ -6,7 +6,7 @@ use crate::assets::AssetRepositoryTrait;
 use crate::constants::{DECIMAL_PRECISION, PORTFOLIO_TOTAL_ACCOUNT_ID};
 use crate::errors::{CalculatorError, Error, Result};
 use crate::fx::fx_traits::FxServiceTrait;
-use crate::portfolio::snapshot::{AccountStateSnapshot, Position};
+use crate::portfolio::snapshot::{AccountStateSnapshot, Lot, Position};
 use crate::utils::time_utils::get_days_between;
 
 use async_trait::async_trait;
@@ -56,8 +56,11 @@ pub trait SnapshotServiceTrait: Send + Sync {
     ) -> Result<Vec<AccountStateSnapshot>>;
 
     /// Retrieves the most recent calculated **holdings** snapshot for a specific account.
-    /// Valuation fields will be zero or default.
-    fn get_latest_holdings_snapshot(&self, account_id: &str) -> Result<AccountStateSnapshot>;
+    /// Returns `Ok(None)` when no snapshot exists yet. Valuation fields will be zero or default.
+    fn get_latest_holdings_snapshot(
+        &self,
+        account_id: &str,
+    ) -> Result<Option<AccountStateSnapshot>>;
 
     /// Calculates and stores aggregated "TOTAL" portfolio snapshots based on individual account holdings.
     /// This should typically be run after `calculate_holdings_snapshots` has processed individual accounts.
@@ -398,30 +401,28 @@ impl SnapshotService {
                     "Force full calculation: Setting effective_start_date for account {} to {}. Deletion handled by overwrite methods.",
                     acc_id, effective_start_date
                 );
+            } else if let Some(latest_snapshot) = self
+                .snapshot_repository
+                .get_latest_snapshot_before_date(acc_id, calculation_end_date)?
+            {
+                // Re-evaluate the key-frame’s own date without duplicating its activities
+                let snapshot_day = latest_snapshot.snapshot_date;
+                let day_before = snapshot_day.pred_opt().unwrap_or(snapshot_day);
+
+                // fresh, empty state as of D-1
+                start_keyframes.insert(
+                    acc_id.clone(),
+                    Self::create_initial_snapshot(account, day_before),
+                );
+
+                effective_start_date = snapshot_day;
             } else {
-                if let Some(latest_snapshot) = self
-                    .snapshot_repository
-                    .get_latest_snapshot_before_date(acc_id, calculation_end_date)?
-                {
-                    // Re-evaluate the key-frame’s own date without duplicating its activities
-                    let snapshot_day = latest_snapshot.snapshot_date;
-                    let day_before = snapshot_day.pred_opt().unwrap_or(snapshot_day);
-
-                    // fresh, empty state as of D-1
-                    start_keyframes.insert(
-                        acc_id.clone(),
-                        Self::create_initial_snapshot(account, day_before),
-                    );
-
-                    effective_start_date = snapshot_day;
-                } else {
-                    effective_start_date =
-                        min_activity_date_for_account.unwrap_or(calculation_end_date);
-                    debug!(
-                        "No snapshot found for account {}. Starting from earliest activity: {} or end_date.",
-                        acc_id, effective_start_date
-                    );
-                }
+                effective_start_date =
+                    min_activity_date_for_account.unwrap_or(calculation_end_date);
+                debug!(
+                    "No snapshot found for account {}. Starting from earliest activity: {} or end_date.",
+                    acc_id, effective_start_date
+                );
             }
 
             if let Some(min_act_date) = min_activity_date_for_account {
@@ -503,7 +504,7 @@ impl SnapshotService {
                 .filter(|(id, _)| {
                     effective_start_dates
                         .get(*id)
-                        .map_or(false, |start_date| *start_date <= current_date)
+                        .is_some_and(|start_date| *start_date <= current_date)
                 })
                 .collect();
 
@@ -645,7 +646,7 @@ impl SnapshotService {
             overall_net_contribution_base_ccy += individual_snapshot.net_contribution_base;
 
             // 3. Aggregate Positions & Calculate Overall Cost Basis for TOTAL (in base_portfolio_currency)
-            for (_pos_asset_id, pos) in &individual_snapshot.positions {
+            for pos in individual_snapshot.positions.values() {
                 let agg_pos = aggregated_positions
                     .entry(pos.asset_id.clone())
                     .or_insert_with(|| Position {
@@ -656,7 +657,7 @@ impl SnapshotService {
                         average_cost: Decimal::ZERO,
                         total_cost_basis: Decimal::ZERO, // This will be in asset's currency (pos.currency)
                         currency: pos.currency.clone(),
-                        lots: VecDeque::new(), // Lots are generally not merged for TOTAL view
+                        lots: VecDeque::new(),
                         inception_date: pos.inception_date,
                         created_at: Utc::now(),
                         last_updated: Utc::now(),
@@ -664,6 +665,19 @@ impl SnapshotService {
 
                 agg_pos.quantity += pos.quantity;
                 agg_pos.total_cost_basis += pos.total_cost_basis; // Summing in asset's currency
+                if pos.inception_date < agg_pos.inception_date {
+                    agg_pos.inception_date = pos.inception_date;
+                }
+
+                if !pos.lots.is_empty() {
+                    let agg_position_id = agg_pos.id.clone();
+                    agg_pos
+                        .lots
+                        .extend(pos.lots.iter().cloned().map(|mut lot: Lot| {
+                            lot.position_id = agg_position_id.clone();
+                            lot
+                        }));
+                }
 
                 // Convert this specific position's total_cost_basis (in asset currency) to base_portfolio_currency
                 // and add to the portfolio's overall cost_basis.
@@ -698,6 +712,12 @@ impl SnapshotService {
 
         // Finalize average costs for aggregated positions
         for agg_pos in aggregated_positions.values_mut() {
+            if agg_pos.lots.len() > 1 {
+                let mut sorted_lots: Vec<_> = agg_pos.lots.drain(..).collect();
+                sorted_lots.sort_by_key(|lot| lot.acquisition_date);
+                agg_pos.lots = sorted_lots.into();
+            }
+
             if !agg_pos.quantity.is_zero() {
                 agg_pos.average_cost =
                     (agg_pos.total_cost_basis / agg_pos.quantity).round_dp(DECIMAL_PRECISION);
@@ -1088,7 +1108,10 @@ impl SnapshotServiceTrait for SnapshotService {
         Ok(reconstructed_snapshots)
     }
 
-    fn get_latest_holdings_snapshot(&self, account_id: &str) -> Result<AccountStateSnapshot> {
+    fn get_latest_holdings_snapshot(
+        &self,
+        account_id: &str,
+    ) -> Result<Option<AccountStateSnapshot>> {
         let today = Utc::now().naive_utc().date();
         // The date passed to get_latest_snapshot_before_date is exclusive, so use tomorrow to include today.
         let tomorrow = today.succ_opt().unwrap_or(today);
@@ -1096,7 +1119,7 @@ impl SnapshotServiceTrait for SnapshotService {
             .snapshot_repository
             .get_latest_snapshot_before_date(account_id, tomorrow)?
         {
-            Some(snapshot) => Ok(snapshot),
+            Some(snapshot) => Ok(Some(snapshot)),
             None => {
                 // It's possible no snapshot exists yet, which is not necessarily an error,
                 // but we should inform the caller.
@@ -1104,10 +1127,7 @@ impl SnapshotServiceTrait for SnapshotService {
                     "No snapshot found for account {} on or before {}",
                     account_id, today
                 );
-                Err(Error::Repository(format!(
-                    "No holdings snapshot found for account {}",
-                    account_id
-                )))
+                Ok(None)
             }
         }
     }

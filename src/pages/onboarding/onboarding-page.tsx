@@ -71,7 +71,7 @@ const OnboardingPage = () => {
             <img
               alt={t("step1_illustration_alt")}
               className="h-20 w-20 sm:h-24 sm:w-24"
-              src="/illustration2.png"
+              src="/illustration.png"
               style={{
                 aspectRatio: "1 / 1",
                 objectFit: "cover",

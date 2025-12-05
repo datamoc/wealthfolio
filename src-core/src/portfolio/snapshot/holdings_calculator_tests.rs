@@ -77,6 +77,10 @@ mod tests {
             unimplemented!("Not needed for tests")
         }
 
+        async fn delete(&self, _asset_id: &str) -> Result<()> {
+            Ok(())
+        }
+
         fn get_by_id(&self, asset_id: &str) -> Result<Asset> {
             self.assets
                 .get(asset_id)
@@ -92,7 +96,7 @@ mod tests {
             Ok(vec![]) // Not needed for these tests
         }
 
-        fn list_by_symbols(&self, symbols: &Vec<String>) -> Result<Vec<Asset>> {
+        fn list_by_symbols(&self, symbols: &[String]) -> Result<Vec<Asset>> {
             Ok(symbols
                 .iter()
                 .filter_map(|symbol| self.assets.get(symbol).cloned())
@@ -263,6 +267,7 @@ mod tests {
     }
 
     // --- Helper Functions ---
+    #[allow(clippy::too_many_arguments)]
     fn create_default_activity(
         id: &str,
         activity_type: ActivityType,

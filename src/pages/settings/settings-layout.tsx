@@ -5,6 +5,72 @@ import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SidebarNav } from "./sidebar-nav";
 
+<<<<<<< HEAD
+=======
+const sidebarNavItems = [
+  {
+    title: "General",
+    href: "general",
+    subtitle: "Currency and general preferences",
+    icon: <Icons.Settings className="h-5 w-5" />,
+  },
+  {
+    title: "Appearance",
+    href: "appearance",
+    subtitle: "Theme, typography, and density",
+    icon: <Icons.Monitor className="h-5 w-5" />,
+  },
+  {
+    title: "Accounts",
+    href: "accounts",
+    subtitle: "Investment and savings accounts",
+    icon: <Icons.CreditCard className="h-5 w-5" />,
+  },
+  {
+    title: "Limits",
+    href: "contribution-limits",
+    subtitle: "Contribution limits and rules",
+    icon: <Icons.TrendingUp className="h-5 w-5" />,
+  },
+  {
+    title: "Goals",
+    href: "goals",
+    subtitle: "Plan and track objectives",
+    icon: <Icons.Goal className="h-5 w-5" />,
+  },
+  {
+    title: "Securities",
+    href: "securities",
+    subtitle: "Manage security definitions",
+    icon: <Icons.BadgeDollarSign className="h-5 w-5" />,
+  },
+  {
+    title: "Market Data",
+    href: "market-data",
+    subtitle: "Providers and data update",
+    icon: <Icons.BarChart className="h-5 w-5" />,
+  },
+  {
+    title: "Add-ons",
+    href: "addons",
+    subtitle: "Extend Wealthfolio with features",
+    icon: <Icons.Package className="h-5 w-5" />,
+  },
+  {
+    title: "Data Export",
+    href: "exports",
+    subtitle: "Backup and export your data",
+    icon: <Icons.Download className="h-5 w-5" />,
+  },
+  {
+    title: "About",
+    href: "about",
+    subtitle: "About Wealthfolio",
+    icon: <Icons.InfoCircle className="h-5 w-5" />,
+  },
+];
+
+>>>>>>> upstream/main
 export default function SettingsLayout() {
   const location = useLocation();
   const navigate = useNavigate();

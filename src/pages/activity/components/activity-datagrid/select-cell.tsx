@@ -54,11 +54,10 @@ export function SelectCell({
   const cellRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (disabled) return;
     if (isFocused && !open && cellRef.current) {
       cellRef.current.focus();
     }
-  }, [disabled, isFocused, open]);
+  }, [isFocused, open]);
 
   const handleSelect = (selectedOption: SelectOption) => {
     onChange(selectedOption.value);
@@ -73,6 +72,26 @@ export function SelectCell({
   const selectedOption = options.find((option) => option.value === value);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (disabled) {
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        onNavigate?.("up");
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        onNavigate?.("down");
+      } else if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        onNavigate?.("left");
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        onNavigate?.("right");
+      } else if (e.key === "Tab") {
+        e.preventDefault();
+        onNavigate?.(e.shiftKey ? "left" : "right");
+      }
+      return;
+    }
+
     if (open) {
       if (e.key === "Escape") {
         e.preventDefault();
@@ -109,6 +128,10 @@ export function SelectCell({
   };
 
   const handleClick = () => {
+    if (disabled) {
+      onFocus?.();
+      return;
+    }
     onFocus?.();
     setOpen(true);
   };
@@ -116,22 +139,6 @@ export function SelectCell({
   const handleCellFocus = () => {
     onFocus?.();
   };
-
-  if (disabled) {
-    const selectedOption = options.find((option) => option.value === value);
-    return (
-      <div
-        className={cn(
-          "flex h-full w-full cursor-not-allowed items-center justify-between gap-2 px-2 py-1.5 text-xs text-muted-foreground",
-          className,
-        )}
-      >
-        <span className="flex-1">
-          {renderValue ? renderValue(value) : selectedOption?.label ?? value}
-        </span>
-      </div>
-    );
-  }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
@@ -143,14 +150,15 @@ export function SelectCell({
           onFocus={handleCellFocus}
           onKeyDown={handleKeyDown}
           className={cn(
-            "flex h-full w-full cursor-cell items-center justify-between gap-2 px-2 py-1.5 text-xs transition-colors outline-none",
+            "flex h-full w-full items-center justify-between gap-2 px-2 py-1.5 text-xs transition-colors outline-none",
+            disabled ? "text-muted-foreground cursor-not-allowed" : "cursor-cell",
             isFocused && "ring-primary ring-2 ring-inset",
             !value && !selectedOption && "text-muted-foreground",
             className,
           )}
         >
           <span className="flex-1">
-            {renderValue ? renderValue(value) : selectedOption?.label ?? value}
+            {renderValue ? renderValue(value) : (selectedOption?.label ?? value)}
           </span>
           <ChevronDown className="h-3 w-3 shrink-0 opacity-50" />
         </div>

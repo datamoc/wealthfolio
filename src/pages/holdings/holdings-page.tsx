@@ -1,45 +1,26 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle } from "@/components/ui/card";
 import { Icons } from "@/components/ui/icons";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetFooter,
-  SheetHeader,
-  SheetTitle,
-} from "@/components/ui/sheet";
-import { AmountDisplay, AnimatedToggleGroup } from "@wealthfolio/ui";
+import { EmptyPlaceholder, Page, PageContent, PageHeader } from "@wealthfolio/ui";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { AccountSelector } from "@/components/account-selector";
-import type { SwipablePageView } from "@/components/page";
-import { SwipablePage } from "@/components/page";
 import { useAccounts } from "@/hooks/use-accounts";
-import { useHapticFeedback } from "@/hooks/use-haptic-feedback";
 import { useHoldings } from "@/hooks/use-holdings";
-import { usePlatform } from "@/hooks/use-platform";
+import { usePersistentState } from "@/hooks/use-persistent-state";
 import { PORTFOLIO_ACCOUNT_ID } from "@/lib/constants";
-import { useSettingsContext } from "@/lib/settings-provider";
-import { Account, Holding, HoldingType, Instrument } from "@/lib/types";
-import { AccountAllocationChart } from "./components/account-allocation-chart";
-import { CashHoldingsWidget } from "./components/cash-holdings-widget";
-import { ClassesChart } from "./components/classes-chart";
-import { PortfolioComposition } from "./components/composition-chart";
-import { CountryChart } from "./components/country-chart";
-import { HoldingCurrencyChart } from "./components/currency-chart";
+import { Account, HoldingType } from "@/lib/types";
+import { useNavigate } from "react-router-dom";
 import { HoldingsMobileFilterSheet } from "./components/holdings-mobile-filter-sheet";
 import { HoldingsTable } from "./components/holdings-table";
 import { HoldingsTableMobile } from "./components/holdings-table-mobile";
-import { SectorsChart } from "./components/sectors-chart";
-
-// Define a type for the filter criteria
-type SheetFilterType = "class" | "sector" | "country" | "currency" | "account" | "composition";
 
 export const HoldingsPage = () => {
+<<<<<<< HEAD
   const { t } = useTranslation("holdings");
+=======
+  const navigate = useNavigate();
+>>>>>>> upstream/main
   const [selectedAccount, setSelectedAccount] = useState<Account | null>({
     id: PORTFOLIO_ACCOUNT_ID,
     name: t("all_portfolio"),
@@ -52,24 +33,13 @@ export const HoldingsPage = () => {
     updatedAt: new Date(),
   } as Account);
 
-  const { settings } = useSettingsContext();
-
   const { holdings, isLoading } = useHoldings(selectedAccount?.id ?? PORTFOLIO_ACCOUNT_ID);
   const { accounts } = useAccounts();
-  const { isMobile: isMobilePlatform } = usePlatform();
-  const triggerHaptic = useHapticFeedback();
-
-  const [isSheetOpen, setIsSheetOpen] = useState(false);
-  const [sheetTitle, setSheetTitle] = useState("");
-  const [sheetFilterType, setSheetFilterType] = useState<SheetFilterType | null>(null);
-  const [sheetFilterName, setSheetFilterName] = useState<string | null>(null);
-  const [sheetCompositionFilter, setSheetCompositionFilter] = useState<Instrument["id"] | null>(
-    null,
-  );
 
   // Mobile filter state
   const [selectedTypes, setSelectedTypes] = useState<string[]>([]);
   const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
+<<<<<<< HEAD
 
   const handleChartSectionClick = (
     type: SheetFilterType,
@@ -138,14 +108,22 @@ export const HoldingsPage = () => {
       return Number(bBase) - Number(aBase);
     });
   }, [holdings, sheetFilterType, sheetFilterName, sheetCompositionFilter]);
+=======
+  const [sortBy, setSortBy] = usePersistentState<"symbol" | "marketValue">(
+    "holdings-sort-by",
+    "marketValue",
+  );
+  const [showTotalReturn, setShowTotalReturn] = usePersistentState<boolean>(
+    "holdings-show-total-return",
+    true,
+  );
+>>>>>>> upstream/main
 
   const handleAccountSelect = (account: Account) => {
     setSelectedAccount(account);
   };
 
-  const { cashHoldings, nonCashHoldings, filteredNonCashHoldings } = useMemo(() => {
-    const cash =
-      holdings?.filter((holding) => holding.holdingType?.toLowerCase() === HoldingType.CASH) ?? [];
+  const { nonCashHoldings, filteredNonCashHoldings } = useMemo(() => {
     const nonCash =
       holdings?.filter((holding) => holding.holdingType?.toLowerCase() !== HoldingType.CASH) ?? [];
 
@@ -159,7 +137,7 @@ export const HoldingsPage = () => {
           )
         : nonCash;
 
-    return { cashHoldings: cash, nonCashHoldings: nonCash, filteredNonCashHoldings: filtered };
+    return { nonCashHoldings: nonCash, filteredNonCashHoldings: filtered };
   }, [holdings, selectedTypes]);
 
   const hasActiveFilters = useMemo(() => {
@@ -168,32 +146,36 @@ export const HoldingsPage = () => {
     return hasAccountFilter || hasTypeFilter;
   }, [selectedAccount, selectedTypes]);
 
-  const renderHoldingsView = () => (
-    <div className="space-y-4 p-2 lg:p-4">
-      <div className="hidden md:block">
-        <HoldingsTable holdings={filteredNonCashHoldings ?? []} isLoading={isLoading} />
-      </div>
-      <div className="block md:hidden">
-        <HoldingsTableMobile
-          holdings={nonCashHoldings ?? []}
-          isLoading={isLoading}
-          selectedTypes={selectedTypes}
-          setSelectedTypes={setSelectedTypes}
-          selectedAccount={selectedAccount}
-          accounts={accounts ?? []}
-          onAccountChange={handleAccountSelect}
-          showSearch={true}
-          showFilterButton={false}
-        />
-      </div>
+  // Check if there are no holdings at all (excluding cash holdings)
+  const hasNoHoldings = !isLoading && (!nonCashHoldings || nonCashHoldings.length === 0);
+
+  const renderEmptyState = () => (
+    <div className="flex items-center justify-center py-16">
+      <EmptyPlaceholder
+        icon={<Icons.TrendingUp className="text-muted-foreground h-10 w-10" />}
+        title="No holdings yet"
+        description="Get started by adding your first transaction or quickly import your existing holdings from a CSV file."
+      >
+        <div className="flex flex-col items-center gap-3 sm:flex-row">
+          <Button size="default" onClick={() => navigate("/activities/manage")}>
+            <Icons.Plus className="mr-2 h-4 w-4" />
+            Add Transaction
+          </Button>
+          <Button size="default" variant="outline" onClick={() => navigate("/import")}>
+            <Icons.Import className="mr-2 h-4 w-4" />
+            Import from CSV
+          </Button>
+        </div>
+      </EmptyPlaceholder>
     </div>
   );
 
-  const renderAnalyticsView = () => (
-    <div className="space-y-4 p-2 lg:p-4">
-      {/* Cash Holdings Widget */}
-      <CashHoldingsWidget cashHoldings={cashHoldings ?? []} isLoading={isLoading} />
+  const renderHoldingsView = () => {
+    if (hasNoHoldings) {
+      return renderEmptyState();
+    }
 
+<<<<<<< HEAD
       {/* Top row: Summary widgets */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <HoldingCurrencyChart
@@ -248,6 +230,36 @@ export const HoldingsPage = () => {
     { value: "holdings", label: t("holdings"), content: renderHoldingsView() },
     { value: "analytics", label: t("insights"), content: renderAnalyticsView() },
   ];
+=======
+    return (
+      <div className="space-y-4">
+        <div className="hidden md:block">
+          <HoldingsTable
+            holdings={filteredNonCashHoldings ?? []}
+            isLoading={isLoading}
+            showTotalReturn={showTotalReturn}
+            setShowTotalReturn={setShowTotalReturn}
+          />
+        </div>
+        <div className="block md:hidden">
+          <HoldingsTableMobile
+            holdings={nonCashHoldings ?? []}
+            isLoading={isLoading}
+            selectedTypes={selectedTypes}
+            setSelectedTypes={setSelectedTypes}
+            selectedAccount={selectedAccount}
+            accounts={accounts ?? []}
+            onAccountChange={handleAccountSelect}
+            showSearch={true}
+            showFilterButton={false}
+            sortBy={sortBy}
+            showTotalReturn={showTotalReturn}
+          />
+        </div>
+      </div>
+    );
+  };
+>>>>>>> upstream/main
 
   const filterButton = (
     <Button
@@ -263,12 +275,12 @@ export const HoldingsPage = () => {
     </Button>
   );
 
-  const renderActions = (currentView: string, onViewChange: (view: string) => void) => (
+  const headerActions = (
     <div className="flex items-center gap-2">
       {/* Mobile: Only show filter button */}
       <div className="md:hidden">{filterButton}</div>
 
-      {/* Desktop: Show account selector + toggle */}
+      {/* Desktop: Show account selector */}
       <div className="hidden md:flex md:items-center md:gap-2">
         <AccountSelector
           selectedAccount={selectedAccount}
@@ -277,17 +289,12 @@ export const HoldingsPage = () => {
           includePortfolio={true}
           className="h-9"
         />
-        <AnimatedToggleGroup
-          items={views.map((v) => ({ value: v.value, label: v.label }))}
-          value={currentView}
-          onValueChange={onViewChange}
-          className="max-w-full"
-        />
       </div>
     </div>
   );
 
   return (
+<<<<<<< HEAD
     <>
       <SwipablePage
         views={views}
@@ -298,6 +305,11 @@ export const HoldingsPage = () => {
         withPadding={false}
         onViewChange={triggerHaptic}
       />
+=======
+    <Page>
+      <PageHeader heading="Holdings" onBack={() => navigate(-1)} actions={headerActions} />
+      <PageContent>{renderHoldingsView()}</PageContent>
+>>>>>>> upstream/main
 
       {/* Mobile Filter Sheet */}
       <HoldingsMobileFilterSheet
@@ -308,7 +320,12 @@ export const HoldingsPage = () => {
         onAccountChange={handleAccountSelect}
         selectedTypes={selectedTypes}
         setSelectedTypes={setSelectedTypes}
+        sortBy={sortBy}
+        setSortBy={setSortBy}
+        showTotalReturn={showTotalReturn}
+        setShowTotalReturn={setShowTotalReturn}
       />
+<<<<<<< HEAD
 
       {/* Details Sheet */}
       <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
@@ -372,6 +389,9 @@ export const HoldingsPage = () => {
         </SheetContent>
       </Sheet>
     </>
+=======
+    </Page>
+>>>>>>> upstream/main
   );
 };
 

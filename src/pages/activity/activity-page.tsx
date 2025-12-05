@@ -5,7 +5,6 @@ import { ActivityType } from "@/lib/constants";
 import { QueryKeys } from "@/lib/query-keys";
 import { Account, ActivityDetails } from "@/lib/types";
 import { useQuery } from "@tanstack/react-query";
-import { useTranslation } from "react-i18next";
 import type { SortingState } from "@tanstack/react-table";
 import {
   Button,
@@ -36,7 +35,6 @@ import { useActivityMutations } from "./hooks/use-activity-mutations";
 import { useActivitySearch } from "./hooks/use-activity-search";
 
 const ActivityPage = () => {
-  const { t } = useTranslation("activity");
   const [showForm, setShowForm] = useState(false);
   const [selectedActivity, setSelectedActivity] = useState<Partial<ActivityDetails> | undefined>();
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
@@ -145,25 +143,25 @@ const ActivityPage = () => {
           <DropdownMenuTrigger asChild>
             <Button size="sm">
               <Icons.Plus className="mr-2 h-4 w-4" />
-              {t("add_activity")}
+              Add Activities
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
             <DropdownMenuItem asChild>
               <Link to={"/import"} className="flex cursor-pointer items-center py-2.5">
                 <Icons.Import className="mr-2 h-4 w-4" />
-                {t("import_activities")}
+                Import from CSV
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => setShowBulkHoldingsForm(true)} className="py-2.5">
               <Icons.Holdings className="mr-2 h-4 w-4" />
-              {t("add_holdings")}
+              Add Holdings
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={() => handleEdit(undefined)} className="py-2.5">
               <Icons.Activity className="mr-2 h-4 w-4" />
-              {t("add_transaction")}
+              Add Transaction
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -171,12 +169,12 @@ const ActivityPage = () => {
 
       {/* Mobile add button */}
       <div className="flex items-center gap-2 sm:hidden">
-        <Button size="icon" title={t("import_activities")} variant="outline" asChild>
+        <Button size="icon" title="Import" variant="outline" asChild>
           <Link to={"/import"}>
             <Icons.Import className="size-4" />
           </Link>
         </Button>
-        <Button size="icon" title={t("add_activity")} onClick={() => handleEdit(undefined)}>
+        <Button size="icon" title="Add" onClick={() => handleEdit(undefined)}>
           <Icons.Plus className="size-4" />
         </Button>
       </div>
@@ -185,8 +183,8 @@ const ActivityPage = () => {
 
   return (
     <Page>
-      <PageHeader heading={t("activities")} actions={headerActions} />
-      <PageContent>
+      <PageHeader heading="Activity" actions={headerActions} />
+      <PageContent className="pb-2 md:pb-4 lg:pb-5">
         <div className="flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden">
           {/* Unified Controls */}
           {isMobileViewport ? (
@@ -233,6 +231,8 @@ const ActivityPage = () => {
               activities={flatData}
               onRefetch={refetch}
               onEditActivity={handleEdit}
+              sorting={sorting}
+              onSortingChange={setSorting}
             />
           ) : (
             <ActivityTable

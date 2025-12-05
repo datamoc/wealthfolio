@@ -17,11 +17,14 @@
     ],
     "copyright": "2025 Teymz Inc.",
   "category": "Finance",
-  "createUpdaterArtifacts": "v1Compatible"
+  "createUpdaterArtifacts": "v1Compatible",
+  "iOS": {
+    "developmentTeam": "DYDJ2RNL5H"
+  }
   },
   "productName": "Wealthfolio",
   "mainBinaryName": "Wealthfolio",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "identifier": "com.teymz.wealthfolio",
   "plugins": {
     "updater": {
@@ -54,4 +57,5 @@
       "csp": null
   }
   }
+
 }

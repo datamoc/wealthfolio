@@ -1,31 +1,25 @@
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useSettingsContext } from "@/lib/settings-provider";
 import { updateSettings } from "@/commands/settings";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { QueryKeys } from "@/lib/query-keys";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "@/components/ui/use-toast";
-import { useTranslation } from "react-i18next";
+import { QueryKeys } from "@/lib/query-keys";
+import { useSettingsContext } from "@/lib/settings-provider";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function AutoUpdateSettings() {
   const { settings } = useSettingsContext();
   const queryClient = useQueryClient();
-  const { t } = useTranslation("settings");
 
   const updateSettingsMutation = useMutation({
     mutationFn: updateSettings,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: [QueryKeys.SETTINGS] });
-      toast({
-        title: t("auto_update_success_title"),
-        description: t("auto_update_success_description"),
-      });
     },
     onError: (error) => {
       toast({
-        title: t("auto_update_error_title"),
-        description: t("auto_update_error_description"),
+        title: "Error",
+        description: "Failed to update auto-update settings. Please try again.",
         variant: "destructive",
       });
       console.error("Failed to update settings:", error);
@@ -48,16 +42,17 @@ export function AutoUpdateSettings() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg">{t("auto_update_title")}</CardTitle>
+        <CardTitle className="text-lg">Automatic Updates</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex items-center justify-between">
           <div className="space-y-0.5">
             <Label htmlFor="auto-update-check" className="text-base">
-              {t("auto_update_enable")}
+              Enable automatic update checks
             </Label>
             <p className="text-muted-foreground text-xs">
-              {t("auto_update_description")}
+              When enabled, Wealthfolio will automatically check for updates when the application
+              starts. You can still manually check for updates from the Help menu.
             </p>
           </div>
           <Switch

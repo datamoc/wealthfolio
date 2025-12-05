@@ -22,7 +22,7 @@ Requirements:
 ## Start Wealthfolio (Recommended)
 
 For the best development experience with live reload and testing, start
-Wealthfolio in development mode:
+Wealthfolio in addon development mode:
 
 ```bash
 # Clone Wealthfolio repository (if not already done)
@@ -32,8 +32,8 @@ cd wealthfolio
 # Install dependencies
 pnpm install
 
-# Start in development mode
-pnpm tauri dev
+# Start in addon development mode
+VITE_ENABLE_ADDON_DEV_MODE=true pnpm tauri dev
 ```
 
 This enables:
@@ -43,6 +43,9 @@ This enables:
 - Automatic addon discovery
 - Console logging for development
 
+> **Note:** For browser-only development (without Tauri), you can use
+> `pnpm dev:addons` instead.
+
 ## Create New Addon
 
 ```bash
@@ -50,7 +53,7 @@ This enables:
 cd ~/Documents/WealthfolioAddons
 
 # Create addon using CLI
-npx @wealthfolio/create-addon hello-world-addon
+npx @wealthfolio/addon-dev-tools create hello-world-addon
 
 # Navigate and install
 cd hello-world-addon
@@ -184,7 +187,8 @@ pnpm bundle       # Bundle addon for distribution
 
 Verify in Wealthfolio:
 
-1. Open Wealthfolio (preferably in development mode with `pnpm tauri dev`)
+1. Open Wealthfolio in addon development mode with
+   `VITE_ENABLE_ADDON_DEV_MODE=true pnpm tauri dev`
 2. Check sidebar for "Hello World"
 3. Click to load addon page
 4. Check console for log message

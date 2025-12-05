@@ -42,6 +42,19 @@ const ActivityImportPage = () => {
   });
   const accounts = accountsData ?? [];
 
+  // Pre-select account from URL params
+  React.useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const accountParam = urlParams.get("account");
+
+    if (accountParam && accounts.length > 0 && !selectedAccount) {
+      const preSelectedAccount = accounts.find((acc) => acc.id === accountParam);
+      if (preSelectedAccount) {
+        setSelectedAccount(preSelectedAccount);
+      }
+    }
+  }, [accounts, selectedAccount]);
+
   // 1. CSV Parsing Hook - Focus on parsing and structure validation
   const {
     headers,
@@ -60,11 +73,6 @@ const ActivityImportPage = () => {
     setProcessedActivities([]);
     setActivities([]);
     resetParserStates();
-  };
-
-  // Cancel import and navigate to activities page
-  const cancelImport = () => {
-    navigate("/activities");
   };
 
   // Handle file selection
@@ -134,7 +142,6 @@ const ActivityImportPage = () => {
             isParsing={isParsing}
             errors={parsingErrors}
             onNext={goToNextStep}
-            onBack={cancelImport}
             rawData={rawData}
           />
         );

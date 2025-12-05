@@ -32,11 +32,9 @@ export function ImportQuotesSection({ showTitle = true }: ImportQuotesSectionPro
     isImporting,
     importProgress,
     error,
-    overwriteExisting,
     setFile,
     validateFile,
     importQuotes,
-    setOverwriteExisting,
     reset,
   } = useQuoteImport();
 
@@ -74,10 +72,8 @@ export function ImportQuotesSection({ showTitle = true }: ImportQuotesSectionPro
             file={file}
             isValidating={isValidating}
             error={error}
-            overwriteExisting={overwriteExisting}
             onFileSelect={setFile}
             onValidate={validateFile}
-            onOverwriteChange={setOverwriteExisting}
           />
         );
       case 2:

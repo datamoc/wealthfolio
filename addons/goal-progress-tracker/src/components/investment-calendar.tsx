@@ -1,8 +1,7 @@
+import { type Goal } from "@wealthfolio/addon-sdk";
 import { Card, CardContent } from "@wealthfolio/ui";
 import { useState } from "react";
 import { EditableValue } from "./editable-value";
-import { type Goal } from "@wealthfolio/addon-sdk";
-import { useTranslation } from "react-i18next";
 
 // Helper function to format currency with privacy support
 function formatCurrency(amount: number, isHidden: boolean = false): string {
@@ -92,14 +91,13 @@ function Tooltip({
   isVisible: boolean;
   isBalanceHidden?: boolean;
 }) {
-  const { t } = useTranslation();
   if (!isVisible || !data) return null;
 
   const statusText = data.filled
-    ? t("tooltip_completed")
+    ? "Completed"
     : data.isPartial
-      ? `${data.partialPercent.toFixed(1)}% ${t("tooltip_progress")}`
-      : t("tooltip_not_started");
+      ? `${data.partialPercent.toFixed(1)}% Progress`
+      : "Not Started";
 
   const statusColor = data.filled
     ? "text-green-600"
@@ -118,18 +116,18 @@ function Tooltip({
       <div className="bg-popover border-border w-64 rounded-md border p-3 text-sm shadow-md">
         <div className="space-y-3">
           <div className="space-y-1">
-            <h4 className="leading-none font-medium">{t("tooltip_step")} {data.stepIndex + 1}</h4>
+            <h4 className="leading-none font-medium">Step {data.stepIndex + 1}</h4>
             <p className="text-muted-foreground">
-              {t("tooltip_target")}: {formatCurrency(data.stepAmount, isBalanceHidden)}
+              Target: {formatCurrency(data.stepAmount, isBalanceHidden)}
             </p>
           </div>
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t("tooltip_status")}:</span>
+              <span className="text-muted-foreground">Status:</span>
               <span className={`font-medium ${statusColor}`}>{statusText}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-muted-foreground">{t("tooltip_step_size")}:</span>
+              <span className="text-muted-foreground">Step Size:</span>
               <span className="text-xs font-medium">
                 {formatCurrency(data.stepSize, isBalanceHidden)}
               </span>
@@ -169,7 +167,6 @@ function InvestmentCalendar({
   onStepSizeChange: (value: number) => void;
   isBalanceHidden?: boolean;
 }) {
-  const { t } = useTranslation();
   const [tooltipData, setTooltipData] = useState<TooltipData | null>(null);
   const [showTooltip, setShowTooltip] = useState(false);
 
@@ -252,14 +249,14 @@ function InvestmentCalendar({
               {/* Key Metrics Row */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <div className="text-center">
-                  <h4 className="text-muted-foreground mb-1 text-xs font-light">{t("metrics_current_amount")}</h4>
+                  <h4 className="text-muted-foreground mb-1 text-xs font-light">Current Amount</h4>
                   <p className="text-foreground text-xs">
                     {formatCurrency(currentAmount, isBalanceHidden)}
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <h4 className="text-muted-foreground mb-1 text-xs font-light">{t("metrics_target_amount")}</h4>
+                  <h4 className="text-muted-foreground mb-1 text-xs font-light">Target Amount</h4>
                   {selectedGoal ? (
                     <p className="text-foreground text-xs">
                       {formatCurrency(targetAmount, isBalanceHidden)}
@@ -276,14 +273,14 @@ function InvestmentCalendar({
                 </div>
 
                 <div className="text-center">
-                  <h4 className="text-muted-foreground mb-1 text-xs font-light">{t("metrics_progress")}</h4>
+                  <h4 className="text-muted-foreground mb-1 text-xs font-light">Progress</h4>
                   <p className="text-xs">
-                    {completedSteps}/{totalSteps} {t("metrics_steps")} ({progressPercent.toFixed(1)}%)
+                    {completedSteps}/{totalSteps} steps ({progressPercent.toFixed(1)}%)
                   </p>
                 </div>
 
                 <div className="text-center">
-                  <h4 className="text-muted-foreground mb-0 text-xs font-light">{t("metrics_step_size")}</h4>
+                  <h4 className="text-muted-foreground mb-0 text-xs font-light">Step Size</h4>
                   <EditableValue
                     value={stepSize}
                     onChange={onStepSizeChange}

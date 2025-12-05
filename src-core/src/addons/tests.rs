@@ -11,7 +11,7 @@ import { AlertsIcon } from './icons';
 
 export default function enable(ctx: AddonContext) {
   console.log('🚀 Hello World addon is being enabled!');
-  
+
   const addedItems: Array<{ remove: () => void }> = [];
 
   const sidebarItem = ctx.sidebar.addItem({
@@ -105,8 +105,8 @@ fn test_detect_addon_permissions() {
                 ctx.sidebar.addItem({ id: 'test' });
                 ctx.router.add({ path: '/test' });
                 ctx.onDisable(() => { console.log('disabled'); });
-                api.getHoldings();
-                data.getPortfolio();
+                ctx.api.portfolio.getHoldings();
+                ctx.api.portfolio.getHolding();
             "#
             .to_string(),
             is_main: true,
@@ -115,7 +115,7 @@ fn test_detect_addon_permissions() {
             name: "helper.js".to_string(),
             content: r#"
                 function helper() {
-                    return getMarketData('AAPL');
+                    return ctx.api.market.searchTicker('AAPL');
                 }
             "#
             .to_string(),
@@ -170,8 +170,8 @@ fn test_detect_addon_permissions() {
         "getHoldings should be detected"
     );
     assert!(
-        portfolio_functions.contains(&"getPortfolio"),
-        "getPortfolio should be detected"
+        portfolio_functions.contains(&"getHolding"),
+        "getHolding should be detected"
     );
 
     // Should detect market-data functions
@@ -190,8 +190,8 @@ fn test_detect_addon_permissions() {
         .map(|f| f.name.as_str())
         .collect();
     assert!(
-        market_functions.contains(&"getMarketData"),
-        "getMarketData should be detected"
+        market_functions.contains(&"searchTicker"),
+        "searchTicker should be detected"
     );
 }
 
@@ -220,7 +220,7 @@ fn test_addon_manifest_to_installed() {
     };
 
     let installed = manifest.to_installed(true).unwrap();
-    assert_eq!(installed.is_enabled(), true);
+    assert!(installed.is_enabled());
     assert!(installed.installed_at.is_some());
     assert_eq!(installed.source, Some("local".to_string()));
 }
@@ -360,8 +360,8 @@ fn test_permission_merging_during_installation() {
         content: r#"
                 // Use declared functions
                 ctx.sidebar.addItem({ id: 'test' });
-                ctx.getHoldings();
-                
+                ctx.api.portfolio.getHoldings();
+
                 // Use undeclared functions
                 ctx.router.add({ path: '/test' });
                 ctx.onDisable(() => {});
@@ -555,8 +555,8 @@ fn test_function_permission_serialization() {
     // Test deserialization
     let deserialized: FunctionPermission = serde_json::from_str(&serialized).unwrap();
     assert_eq!(deserialized.name, "testFunction");
-    assert_eq!(deserialized.is_declared, true);
-    assert_eq!(deserialized.is_detected, true);
+    assert!(deserialized.is_declared);
+    assert!(deserialized.is_detected);
     assert_eq!(
         deserialized.detected_at,
         Some("2023-01-01T00:00:00Z".to_string())
@@ -606,8 +606,8 @@ fn test_parse_manifest_json_metadata_service() {
     assert_eq!(permissions[0].purpose, "User interface access");
     assert_eq!(permissions[0].functions.len(), 2);
     assert_eq!(permissions[0].functions[0].name, "showNotification");
-    assert_eq!(permissions[0].functions[0].is_declared, true);
-    assert_eq!(permissions[0].functions[0].is_detected, false);
+    assert!(permissions[0].functions[0].is_declared);
+    assert!(!permissions[0].functions[0].is_detected);
 }
 
 #[cfg(test)]

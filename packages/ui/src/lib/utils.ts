@@ -7,47 +7,62 @@ export function cn(...inputs: ClassValue[]) {
 
 /**
  * Format amount with currency support, including special handling for pence (GBp/GBX)
- * Uses browser's locale for proper number formatting (e.g., French uses "800 000,00 €")
  */
-export function formatAmount(amount: number, currency: string, displayCurrency = true, locale?: string) {
-  const effectiveLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
+const DECIMAL_FORMAT_OPTIONS: Intl.NumberFormatOptions = {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+};
 
-  // Handle pence (GBp) specially
-  if (currency === "GBp" || currency === "GBX") {
-    if (!displayCurrency) {
-      return new Intl.NumberFormat(effectiveLocale, {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(amount);
-    }
+const decimalFormatter = new Intl.NumberFormat("en-US", DECIMAL_FORMAT_OPTIONS);
+const currencyFormatterCache = new Map<string, Intl.NumberFormat>();
 
-    // For pence, format as "123.45p" or "1,234.56p"
-    const formattedNumber = new Intl.NumberFormat(effectiveLocale, {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(amount);
+const getCurrencyFormatter = (currency: string) => {
+  const normalizedCurrency = currency?.toUpperCase?.() ?? "USD";
+  const cacheKey = normalizedCurrency;
 
-    return `${formattedNumber}p`;
+  if (currencyFormatterCache.has(cacheKey)) {
+    return currencyFormatterCache.get(cacheKey)!;
   }
 
-  return new Intl.NumberFormat(effectiveLocale, {
-    style: displayCurrency ? "currency" : undefined,
-    currency: currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(amount);
+  let formatter: Intl.NumberFormat;
+  try {
+    formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: normalizedCurrency,
+      ...DECIMAL_FORMAT_OPTIONS,
+    });
+  } catch {
+    formatter = decimalFormatter;
+  }
+
+  currencyFormatterCache.set(cacheKey, formatter);
+  return formatter;
+};
+
+export function formatAmount(amount: number, currency: string, displayCurrency = true) {
+  const rawCurrency = currency ?? "USD";
+  const isPenceCurrency = rawCurrency === "GBp" || rawCurrency === "GBX";
+
+  if (isPenceCurrency) {
+    const formattedNumber = decimalFormatter.format(amount);
+    return displayCurrency ? `${formattedNumber}p` : formattedNumber;
+  }
+
+  if (!displayCurrency) {
+    return decimalFormatter.format(amount);
+  }
+
+  return getCurrencyFormatter(rawCurrency).format(amount);
 }
 
 /**
  * Format percentage values with proper formatting
- * Uses browser's locale for proper number formatting (e.g., French uses "3,45 %" with space)
  */
-export function formatPercent(value: number | null | undefined, locale?: string) {
+export function formatPercent(value: number | null | undefined) {
   if (value == null) return "-";
   try {
-    const effectiveLocale = locale || (typeof navigator !== 'undefined' ? navigator.language : 'en-US');
     // Use Intl.NumberFormat for correct percentage formatting (handles x100 and % sign)
-    return new Intl.NumberFormat(effectiveLocale, {
+    return new Intl.NumberFormat("en-US", {
       style: "percent",
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,

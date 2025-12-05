@@ -1,6 +1,7 @@
+use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 
-use crate::config::Config;
+use crate::{auth::AuthManager, config::Config, events::EventBus, secrets::build_secret_store};
 use tracing_subscriber::prelude::*;
 use tracing_subscriber::{fmt, EnvFilter};
 use wealthfolio_core::{
@@ -25,11 +26,9 @@ use wealthfolio_core::{
         snapshot::{SnapshotRepository, SnapshotService, SnapshotServiceTrait},
         valuation::{ValuationRepository, ValuationService, ValuationServiceTrait},
     },
+    secrets::SecretStore,
     settings::{settings_repository::SettingsRepository, SettingsService, SettingsServiceTrait},
 };
-
-#[cfg(feature = "wealthfolio-pro")]
-use wealthfolio_core::sync::store;
 
 pub struct AppState {
     pub account_service: Arc<AccountService<Arc<db::DbPool>>>,
@@ -49,16 +48,27 @@ pub struct AppState {
     pub asset_service: Arc<dyn AssetServiceTrait + Send + Sync>,
     pub addons_root: String,
     pub data_root: String,
+    pub db_path: String,
     pub instance_id: String,
+    pub secret_store: Arc<dyn SecretStore>,
+    pub event_bus: EventBus,
+    pub auth: Option<Arc<AuthManager>>,
 }
 
 pub fn init_tracing() {
-    let fmt_layer = fmt::layer().json().with_current_span(false);
+    let log_format = std::env::var("WF_LOG_FORMAT").unwrap_or_else(|_| "text".to_string());
     let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    tracing_subscriber::registry()
-        .with(filter)
-        .with(fmt_layer)
-        .init();
+    let registry = tracing_subscriber::registry().with(filter);
+
+    if log_format.eq_ignore_ascii_case("json") {
+        registry
+            .with(fmt::layer().json().with_current_span(false))
+            .init();
+    } else {
+        registry
+            .with(fmt::layer().with_target(true).with_line_number(true))
+            .init();
+    }
 }
 
 pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
@@ -66,6 +76,26 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     std::env::set_var("DATABASE_URL", &config.db_path);
     let db_path = db::init(&config.db_path)?;
     tracing::info!("Database path in use: {}", db_path);
+    let data_root_path = std::path::Path::new(&db_path)
+        .parent()
+        .unwrap_or_else(|| std::path::Path::new("."))
+        .to_path_buf();
+
+    let resolved_secret_path = std::env::var("WF_SECRET_FILE")
+        .ok()
+        .map(PathBuf::from)
+        .unwrap_or_else(|| data_root_path.join("secrets.json"));
+    let file_store = build_secret_store(
+        resolved_secret_path.clone(),
+        Some(config.secret_key.as_str()),
+    )
+    .map_err(anyhow::Error::new)?;
+    let secret_store: Arc<dyn SecretStore> = Arc::new(file_store);
+    std::env::set_var(
+        "WF_SECRET_FILE",
+        resolved_secret_path.to_string_lossy().to_string(),
+    );
+
     let pool = db::create_pool(&db_path)?;
     db::run_migrations(&pool)?;
     let writer = write_actor::spawn_writer((*pool).clone());
@@ -78,14 +108,6 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     let settings_service = Arc::new(SettingsService::new(settings_repo, fx_service.clone()));
     let settings = settings_service.get_settings()?;
     let base_currency = Arc::new(RwLock::new(settings.base_currency));
-
-    // Ensure a device ID exists in the database for trigger stamping (origin/updated_version)
-    #[cfg(feature = "wealthfolio-pro")]
-    {
-        let mut conn = pool.get()?;
-        // Record the stable instance_id into sync_device so triggers can reference it
-        store::ensure_device_id(&mut conn, &settings.instance_id)?;
-    }
 
     let account_repo = Arc::new(AccountRepository::new(pool.clone(), writer.clone()));
     let transaction_executor = pool.clone();
@@ -100,7 +122,12 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
     let asset_repository = Arc::new(AssetRepository::new(pool.clone(), writer.clone()));
     let market_data_repository = Arc::new(MarketDataRepository::new(pool.clone(), writer.clone()));
     let market_data_service = Arc::new(
-        MarketDataService::new(market_data_repository.clone(), asset_repository.clone()).await?,
+        MarketDataService::new(
+            market_data_repository.clone(),
+            asset_repository.clone(),
+            secret_store.clone(),
+        )
+        .await?,
     );
 
     let asset_service = Arc::new(AssetService::new(
@@ -173,11 +200,16 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         ));
 
     // Determine data root directory (parent of DB path)
-    let data_root = std::path::Path::new(&db_path)
-        .parent()
-        .unwrap_or(std::path::Path::new("."))
-        .to_string_lossy()
-        .to_string();
+    let data_root = data_root_path.to_string_lossy().to_string();
+
+    let event_bus = EventBus::new(256);
+
+    let auth_manager = config
+        .auth
+        .as_ref()
+        .map(AuthManager::new)
+        .transpose()?
+        .map(Arc::new);
 
     Ok(Arc::new(AppState {
         account_service,
@@ -196,6 +228,10 @@ pub async fn build_state(config: &Config) -> anyhow::Result<Arc<AppState>> {
         asset_service,
         addons_root: config.addons_root.clone(),
         data_root,
+        db_path,
         instance_id: settings.instance_id,
+        secret_store,
+        event_bus,
+        auth: auth_manager,
     }))
 }

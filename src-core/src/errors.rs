@@ -19,6 +19,9 @@ pub enum Error {
     #[error("Asset operation failed: {0}")]
     Asset(String),
 
+    #[error("Constraint violation: {0}")]
+    ConstraintViolation(String),
+
     #[error("Failed to convert between currencies: {0}")]
     CurrencyConversionFailed(String),
     #[error("Currency '{0}' is not supported")]
@@ -190,12 +193,6 @@ impl From<r2d2::Error> for Error {
 impl From<diesel::ConnectionError> for Error {
     fn from(err: diesel::ConnectionError) -> Self {
         Error::Database(DatabaseError::ConnectionFailed(err))
-    }
-}
-
-impl From<keyring::Error> for Error {
-    fn from(err: keyring::Error) -> Self {
-        Error::Secret(err.to_string())
     }
 }
 

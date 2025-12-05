@@ -3,13 +3,13 @@ import { Icons } from "@/components/ui/icons";
 import { ProgressIndicator } from "@/components/ui/progress-indicator";
 import { usePlatform } from "@/hooks/use-platform";
 import { Account, CsvRowError } from "@/lib/types";
-import { useTranslation } from "react-i18next";
 import { AccountSelector } from "../../../../components/account-selector";
 import { AccountSelectorMobile } from "../../../../components/account-selector-mobile";
 import { CSVFileViewer } from "../components/csv-file-viewer";
 import { FileDropzone } from "../components/file-dropzone";
 import { HelpTooltip } from "../components/help-tooltip";
 import { ImportAlert } from "../components/import-alert";
+import { useNavigate } from "react-router-dom";
 
 interface AccountSelectionStepProps {
   selectedAccount: Account | null;
@@ -34,8 +34,16 @@ export const AccountSelectionStep = ({
   onNext,
   onBack,
 }: AccountSelectionStepProps) => {
-  const { t } = useTranslation("activity");
   const { isMobile } = usePlatform();
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    if (onBack) {
+      onBack();
+      return;
+    }
+    navigate(-1);
+  };
 
   // Check if there are any errors
   const hasErrors =
@@ -77,9 +85,9 @@ export const AccountSelectionStep = ({
     let isValid = true;
 
     if (Array.isArray(errors)) {
-      isValid = !errors.some((error) => error?.row === index);
+      isValid = !errors.some((error) => error && error.row === index);
       rowErrors = errors
-        .filter((error) => error?.row === index)
+        .filter((error) => error && error.row === index)
         .map((error) => error.message || "");
     } else if (errors && typeof errors === "object") {
       isValid = !errors[index] || errors[index].length === 0;
@@ -124,8 +132,8 @@ export const AccountSelectionStep = ({
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <div>
           <div className="mb-1 flex items-center">
-            <h2 className="font-semibold">{t("import_select_account")}</h2>
-            <HelpTooltip content={t("import_select_account_help")} />
+            <h2 className="font-semibold">Select Account</h2>
+            <HelpTooltip content="Make sure to select the account you want to import activities for" />
           </div>
           <div className="h-[120px]">
             {isMobile ? (
@@ -148,7 +156,7 @@ export const AccountSelectionStep = ({
                 ) : (
                   <>
                     <Icons.Briefcase className="text-muted-foreground h-8 w-8" />
-                    <p className="text-muted-foreground text-center text-sm">{t("import_no_account_selected")}</p>
+                    <p className="text-muted-foreground text-center text-sm">No account selected</p>
                     <AccountSelectorMobile
                       setSelectedAccount={setSelectedAccount}
                       includePortfolio={false}
@@ -168,8 +176,8 @@ export const AccountSelectionStep = ({
 
         <div>
           <div className="mb-1 flex items-center">
-            <h2 className="font-semibold">{t("import_upload_csv")}</h2>
-            <HelpTooltip content={t("import_upload_csv_help")} />
+            <h2 className="font-semibold">Upload CSV File</h2>
+            <HelpTooltip content="Upload a CSV file containing your investment activities. The file should include headers in the first row." />
           </div>
           <div className="h-[120px]">
             <FileDropzone
@@ -178,7 +186,7 @@ export const AccountSelectionStep = ({
               isLoading={isParsing}
               accept=".csv"
               isValid={fileValidationStatus === "valid"}
-              error={hasErrors ? t("import_file_contains_errors") : null}
+              error={hasErrors ? "File contains errors" : null}
             />
           </div>
         </div>
@@ -195,8 +203,8 @@ export const AccountSelectionStep = ({
         {fileValidationStatus === "invalid" && formattedData.length === 0 && (
           <ImportAlert
             variant="destructive"
-            title={t("import_invalid_csv")}
-            description={displayError ?? t("import_error_occurred")}
+            title="Invalid CSV Format"
+            description={displayError ?? "Unknown error"}
             icon={Icons.FileX}
           />
         )}
@@ -204,19 +212,19 @@ export const AccountSelectionStep = ({
 
       {/* Row 3: Action buttons */}
       <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={onBack} disabled={isParsing}>
-          {t("cancel")}
+        <Button variant="outline" onClick={handleBack} disabled={isParsing}>
+          Cancel
         </Button>
         <Button onClick={onNext} disabled={!canProceed}>
-          {isParsing ? t("import_validating") : t("mobile_next")}
+          {isParsing ? "Validating..." : "Next"}
           <Icons.ArrowRight className="ml-2 h-4 w-4" />
         </Button>
       </div>
       {/* Loading indicator */}
       <ProgressIndicator
-        title={t("import_reading_file")}
-        description={t("import_reading_file_desc")}
-        message={t("import_reading_file_msg")}
+        title="Reading the file"
+        description="Please wait while the application processes your data."
+        message="Reading the file..."
         isLoading={isParsing}
         open={isParsing}
       />

@@ -25,6 +25,7 @@ export function PortfolioUpdateTrigger({
   // Instantiate the mutation hooks inside the component
   const updatePortfolioMutation = useUpdatePortfolioMutation();
   const recalculatePortfolioMutation = useRecalculatePortfolioMutation();
+  const formattedLastCalculatedAt = lastCalculatedAt ? formatDateTime(lastCalculatedAt) : null;
 
   // Define handlers internally
   const handleUpdate = () => {
@@ -46,8 +47,8 @@ export function PortfolioUpdateTrigger({
               {t("as_of")}{" "}
               <Badge className="ml-1 font-medium" variant="secondary">
                 {/* Use lastCalculatedAt prop */}
-                {lastCalculatedAt
-                  ? `${formatDateTime(lastCalculatedAt).date} ${formatDateTime(lastCalculatedAt).time}`
+                {formattedLastCalculatedAt
+                  ? `${formattedLastCalculatedAt.date} ${formattedLastCalculatedAt.time}`
                   : "-"}
               </Badge>
             </h4>
@@ -64,7 +65,7 @@ export function PortfolioUpdateTrigger({
             ) : (
               <Icons.Refresh className="mr-2 h-4 w-4" />
             )}
-            {updatePortfolioMutation.isPending ? "Updating portfolio..." : "Update Portfolio"}
+            {updatePortfolioMutation.isPending ? "Updating market data..." : "Update market data"}
           </Button>
           <Button
             onClick={handleRecalculate}
@@ -78,7 +79,7 @@ export function PortfolioUpdateTrigger({
             ) : (
               <Icons.Refresh className="mr-2 h-4 w-4" />
             )}
-            {recalculatePortfolioMutation.isPending ? "Recalculating..." : "Recalculate"}
+            {recalculatePortfolioMutation.isPending ? "Recalculating..." : "Recalculate portfolio"}
           </Button>
         </div>
       </HoverCardContent>

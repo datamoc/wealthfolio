@@ -22,43 +22,9 @@ pub mod write_actor;
 pub use write_actor::WriteHandle;
 
 pub fn init(app_data_dir: &str) -> Result<String> {
-    // First, validate that app_data_dir path itself is correct
-    let app_data_path = Path::new(app_data_dir);
-
-    // Critical fix: Check if app_data_dir exists as a FILE (should be a directory)
-    if app_data_path.exists() && !app_data_path.is_dir() {
-        error!(
-            "App data path exists as a file instead of directory: {}. Attempting to fix...",
-            app_data_dir
-        );
-
-        // Try to remove the file
-        fs::remove_file(app_data_path).map_err(|e| {
-            error!("Failed to remove app data file: {}", e);
-            Error::Database(DatabaseError::Internal(format!(
-                "App data path '{}' is a file, not a directory. Failed to remove it: {}",
-                app_data_dir, e
-            )))
-        })?;
-
-        info!("Successfully removed app data file, will create as directory");
-    }
-
-    // Ensure app_data_dir exists as a directory
-    if !app_data_path.exists() {
-        fs::create_dir_all(app_data_path).map_err(|e| {
-            error!("Failed to create app data directory: {}", e);
-            Error::Database(DatabaseError::Internal(format!(
-                "Failed to create app data directory '{}': {}",
-                app_data_dir, e
-            )))
-        })?;
-        info!("Created app data directory: {}", app_data_dir);
-    }
-
     let db_path = get_db_path(app_data_dir);
 
-    // 2. Ensure database directory exists
+    // 1. Ensure directory exists
     let db_dir = Path::new(&db_path).parent().unwrap();
     if !db_dir.exists() {
         fs::create_dir_all(db_dir)?;
@@ -82,7 +48,7 @@ pub fn create_pool(db_path: &str) -> Result<Arc<DbPool>> {
         .connection_timeout(std::time::Duration::from_secs(30))
         .connection_customizer(Box::new(ConnectionCustomizer {}))
         .build(manager)
-        .map_err(|e| DatabaseError::PoolCreationFailed(e))?;
+        .map_err(DatabaseError::PoolCreationFailed)?;
     Ok(Arc::new(pool))
 }
 
@@ -121,26 +87,20 @@ pub fn get_db_path(input: &str) -> String {
 
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     {
-        let path_str = std::env::var("DATABASE_URL")
-            .ok()
-            .filter(|url| Path::new(url).is_absolute())
-            .unwrap_or_else(|| input.to_string());
-
-        let path = Path::new(&path_str);
-
-        // If it's a directory, append the default filename.
-        if path.is_dir() {
-            return path.join("app.db").to_str().unwrap().to_string();
+        // Desktop/server behavior:
+        // Prefer DATABASE_URL if provided and non-empty; otherwise, always
+        // treat `input` as the app data directory and append `app.db`.
+        if let Ok(url) = std::env::var("DATABASE_URL") {
+            if !url.trim().is_empty() {
+                return url;
+            }
         }
 
-        // If it has no extension and doesn't exist, treat it as a directory path.
-        // This allows creating a database in a new directory specified by DATABASE_URL.
-        if path.extension().is_none() && !path.exists() {
-            return path.join("app.db").to_str().unwrap().to_string();
-        }
-
-        // Otherwise, assume it's a full file path.
-        path_str
+        Path::new(input)
+            .join("app.db")
+            .to_str()
+            .unwrap()
+            .to_string()
     }
 }
 
@@ -337,77 +297,6 @@ pub fn restore_database_safe(app_data_dir: &str, backup_file_path: &str) -> Resu
     restore_database(app_data_dir, backup_file_path)
 }
 
-/// Recovers from a corrupted database by backing it up and removing it
-/// Returns the path to the backup file if successful
-pub fn recover_corrupted_database(db_path: &str) -> Result<String> {
-    info!("Attempting database recovery for: {}", db_path);
-
-    // Create timestamped backup of corrupted database
-    let db_file = Path::new(db_path);
-    let parent_dir = db_file
-        .parent()
-        .ok_or_else(|| Error::Database(DatabaseError::BackupFailed("No parent directory".to_string())))?;
-
-    let backup_dir = parent_dir.join("corrupted_backups");
-    fs::create_dir_all(&backup_dir).map_err(|e| {
-        error!("Failed to create corrupted backup directory: {}", e);
-        Error::Database(DatabaseError::BackupFailed(e.to_string()))
-    })?;
-
-    let timestamp = Local::now().format("%Y%m%d_%H%M%S");
-    let backup_file = format!(
-        "corrupted_{}.db",
-        timestamp
-    );
-    let backup_path = backup_dir.join(backup_file);
-    let backup_path_str = backup_path.to_str().unwrap().to_string();
-
-    info!("Backing up corrupted database to: {}", backup_path_str);
-
-    // Copy main database file if it exists
-    if db_file.exists() {
-        fs::copy(db_path, &backup_path).map_err(|e| {
-            error!("Failed to backup corrupted database: {}", e);
-            Error::Database(DatabaseError::BackupFailed(e.to_string()))
-        })?;
-    }
-
-    // Copy WAL file if it exists
-    let wal_source = format!("{}-wal", db_path);
-    let wal_target = format!("{}-wal", backup_path_str);
-    if Path::new(&wal_source).exists() {
-        fs::copy(&wal_source, &wal_target).ok(); // Non-fatal
-    }
-
-    // Copy SHM file if it exists
-    let shm_source = format!("{}-shm", db_path);
-    let shm_target = format!("{}-shm", backup_path_str);
-    if Path::new(&shm_source).exists() {
-        fs::copy(&shm_source, &shm_target).ok(); // Non-fatal
-    }
-
-    info!("Corrupted database backed up successfully");
-
-    // Now remove corrupted files to allow fresh database creation
-    if db_file.exists() {
-        try_remove_file_best_effort(db_path, "main database")?;
-    }
-
-    let wal_path = format!("{}-wal", db_path);
-    if Path::new(&wal_path).exists() {
-        try_remove_file_best_effort(&wal_path, "WAL")?;
-    }
-
-    let shm_path = format!("{}-shm", db_path);
-    if Path::new(&shm_path).exists() {
-        try_remove_file_best_effort(&shm_path, "SHM")?;
-    }
-
-    info!("Corrupted database files removed, ready for fresh initialization");
-
-    Ok(backup_path_str)
-}
-
 /// Gets a connection from the pool
 pub fn get_connection(pool: &Pool<ConnectionManager<SqliteConnection>>) -> Result<DbConnection> {
     Ok(pool.get()?)
@@ -511,7 +400,7 @@ fn copy_with_retries(
             }
         }
     }
-    let e = last_err.unwrap_or_else(|| io::Error::new(io::ErrorKind::Other, "unknown copy error"));
+    let e = last_err.unwrap_or_else(|| io::Error::other("unknown copy error"));
     error!("Failed to copy '{}' -> '{}': {}", src, dst, e);
     Err(Error::Database(DatabaseError::BackupFailed(e.to_string())))
 }
@@ -549,101 +438,5 @@ impl DbTransactionExecutor for Arc<DbPool> {
         E: Into<Error>,
     {
         (**self).execute(f)
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use std::env;
-    use tempfile::TempDir;
-
-    #[test]
-    fn test_get_db_path_appends_app_db_for_directory() {
-        // Create a temporary directory
-        let temp_dir = TempDir::new().unwrap();
-        let dir_path = temp_dir.path().to_str().unwrap();
-
-        // Test that get_db_path appends app.db to a directory path
-        let result = get_db_path(dir_path);
-        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db', got: {}", result);
-        assert!(result.contains(dir_path), "Expected path to contain directory path");
-    }
-
-    #[test]
-    fn test_get_db_path_with_database_url_directory() {
-        // Save the current DATABASE_URL if it exists
-        let original_url = env::var("DATABASE_URL").ok();
-
-        // Create a temporary directory
-        let temp_dir = TempDir::new().unwrap();
-        let dir_path = temp_dir.path().to_str().unwrap();
-
-        // Set DATABASE_URL to an absolute directory path
-        env::set_var("DATABASE_URL", dir_path);
-
-        // Test that get_db_path appends app.db when DATABASE_URL is an absolute directory
-        let result = get_db_path("/some/other/path");
-        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db' when DATABASE_URL is an absolute directory, got: {}", result);
-
-        // Clean up
-        if let Some(url) = original_url {
-            env::set_var("DATABASE_URL", url);
-        } else {
-            env::remove_var("DATABASE_URL");
-        }
-    }
-
-    #[test]
-    fn test_get_db_path_with_database_url_file() {
-        // Save the current DATABASE_URL if it exists
-        let original_url = env::var("DATABASE_URL").ok();
-
-        // Test with an absolute file path (has .db extension)
-        #[cfg(target_os = "windows")]
-        let file_path = "C:\\path\\to\\database.db";
-        #[cfg(not(target_os = "windows"))]
-        let file_path = "/path/to/database.db";
-
-        env::set_var("DATABASE_URL", file_path);
-
-        let result = get_db_path("/some/other/path");
-        assert_eq!(result, file_path, "Expected absolute DATABASE_URL with file extension to be used as-is");
-
-        // Clean up
-        if let Some(url) = original_url {
-            env::set_var("DATABASE_URL", url);
-        } else {
-            env::remove_var("DATABASE_URL");
-        }
-    }
-
-    #[test]
-    fn test_get_db_path_ignores_relative_database_url() {
-        // Save the current DATABASE_URL if it exists
-        let original_url = env::var("DATABASE_URL").ok();
-
-        // Set DATABASE_URL to a relative path (like in development .env)
-        env::set_var("DATABASE_URL", "../db/app.db");
-
-        // Test that relative DATABASE_URL is ignored and app_data_dir is used instead
-        let result = get_db_path("/absolute/app/data/dir");
-        assert!(result.contains("/absolute/app/data/dir"), "Expected relative DATABASE_URL to be ignored, got: {}", result);
-        assert!(result.ends_with("app.db"), "Expected path to end with 'app.db', got: {}", result);
-
-        // Clean up
-        if let Some(url) = original_url {
-            env::set_var("DATABASE_URL", url);
-        } else {
-            env::remove_var("DATABASE_URL");
-        }
-    }
-
-    #[test]
-    fn test_get_db_path_preserves_file_with_extension() {
-        // Test that paths with extensions are preserved
-        let file_path = "/path/to/custom.db";
-        let result = get_db_path(file_path);
-        assert_eq!(result, file_path, "Expected file path with extension to be preserved");
     }
 }

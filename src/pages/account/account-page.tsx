@@ -1,3 +1,4 @@
+import { getHoldings } from "@/commands/portfolio";
 import { HistoryChart } from "@/components/history-chart";
 import {
   Card,
@@ -13,8 +14,8 @@ import {
   PrivacyAmount,
 } from "@wealthfolio/ui";
 import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
 
+import { MobileActionsMenu } from "@/components/mobile-actions-menu";
 import { PrivacyToggle } from "@/components/privacy-toggle";
 import { Button } from "@/components/ui/button";
 import {
@@ -38,10 +39,19 @@ import {
 import { useAccounts } from "@/hooks/use-accounts";
 import { useValuationHistory } from "@/hooks/use-valuation-history";
 import { AccountType } from "@/lib/constants";
-import { Account, AccountValuation, DateRange, TimePeriod, TrackedItem } from "@/lib/types";
+import { QueryKeys } from "@/lib/query-keys";
+import {
+  Account,
+  AccountValuation,
+  DateRange,
+  Holding,
+  TimePeriod,
+  TrackedItem,
+} from "@/lib/types";
 import { calculatePerformanceMetrics, cn } from "@/lib/utils";
 import { PortfolioUpdateTrigger } from "@/pages/dashboard/portfolio-update-trigger";
 import { useCalculatePerformanceHistory } from "@/pages/performance/hooks/use-performance-data";
+import { useQuery } from "@tanstack/react-query";
 import { Icons, type Icon } from "@wealthfolio/ui";
 import { subMonths } from "date-fns";
 import { useNavigate, useParams } from "react-router-dom";
@@ -73,7 +83,6 @@ const getInitialDateRange = (): DateRange => ({
 const INITIAL_INTERVAL_CODE: TimePeriod = "3M";
 
 const AccountPage = () => {
-  const { t } = useTranslation("account");
   const { id = "" } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [dateRange, setDateRange] = useState<DateRange | undefined>(getInitialDateRange());
@@ -81,9 +90,22 @@ const AccountPage = () => {
     useState<TimePeriod>(INITIAL_INTERVAL_CODE);
   const [desktopSelectorOpen, setDesktopSelectorOpen] = useState(false);
   const [mobileSelectorOpen, setMobileSelectorOpen] = useState(false);
+  const [mobileActionsOpen, setMobileActionsOpen] = useState(false);
 
   const { accounts, isLoading: isAccountsLoading } = useAccounts();
   const account = useMemo(() => accounts?.find((acc) => acc.id === id), [accounts, id]);
+
+  // Query holdings to check if account has any assets
+  const { data: holdings, isLoading: isHoldingsLoading } = useQuery<Holding[], Error>({
+    queryKey: [QueryKeys.HOLDINGS, id],
+    queryFn: () => getHoldings(id),
+  });
+
+  // Check if account has any holdings (including cash)
+  const hasHoldings = useMemo(() => {
+    if (!holdings) return false;
+    return holdings.length > 0;
+  }, [holdings]);
 
   // Group accounts by type for the selector
   const accountsByType = useMemo(() => {
@@ -168,29 +190,74 @@ const AccountPage = () => {
   return (
     <Page>
       <PageHeader
-        heading={account?.name ?? t("account")}
-        text={account?.group ?? account?.currency}
         onBack={() => navigate(-1)}
         actions={
           <>
+            <div className="hidden items-center gap-2 sm:flex">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate(`/import?account=${id}`)}
+                title="Import CSV"
+              >
+                <Icons.Import className="h-4 w-4" />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => navigate(`/activities/manage?account=${id}`)}
+                title="Record Transaction"
+              >
+                <Icons.Plus className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="sm:hidden">
+              <MobileActionsMenu
+                open={mobileActionsOpen}
+                onOpenChange={setMobileActionsOpen}
+                title="Account Actions"
+                description="Manage this account"
+                actions={[
+                  {
+                    icon: "Import",
+                    label: "Import CSV",
+                    description: "Import transactions from file",
+                    onClick: () => navigate(`/import?account=${id}`),
+                  },
+                  {
+                    icon: "Plus",
+                    label: "Record Transaction",
+                    description: "Add a new activity manually",
+                    onClick: () => navigate(`/activities/manage?account=${id}`),
+                  },
+                ]}
+              />
+            </div>
+          </>
+        }
+      >
+        <div className="flex flex-col" data-tauri-drag-region="true">
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold md:text-xl">{account?.name ?? "Account"}</h1>
             {/* Desktop account selector */}
             <div className="hidden sm:block">
               <Popover open={desktopSelectorOpen} onOpenChange={setDesktopSelectorOpen}>
                 <PopoverTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
-                    className="h-9 w-9"
-                    aria-label={t("switch_account")}
+                    className="h-8 w-8 rounded-full"
+                    aria-label="Switch account"
                   >
-                    <Icons.ChevronDown className="h-4 w-4" />
+                    <Icons.ChevronDown className="text-muted-foreground size-5" />
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-[240px] p-0" align="end">
+                <PopoverContent className="w-[240px] p-0" align="start">
                   <Command>
-                    <CommandInput placeholder={t("search_accounts")} />
+                    <CommandInput placeholder="Search accounts..." />
                     <CommandList>
-                      <CommandEmpty>{t("no_accounts_found")}</CommandEmpty>
+                      <CommandEmpty>No accounts found.</CommandEmpty>
                       {accountsByType.map(([type, typeAccounts]) => (
                         <CommandGroup key={type} heading={type}>
                           {typeAccounts.map((acc) => {
@@ -229,18 +296,18 @@ const AccountPage = () => {
               <Sheet open={mobileSelectorOpen} onOpenChange={setMobileSelectorOpen}>
                 <SheetTrigger asChild>
                   <Button
-                    variant="outline"
+                    variant="ghost"
                     size="icon"
-                    className="h-9 w-9"
-                    aria-label={t("switch_account")}
+                    className="h-8 w-8 rounded-full"
+                    aria-label="Switch account"
                   >
-                    <Icons.ChevronDown className="h-4 w-4" />
+                    <Icons.ChevronDown className="text-muted-foreground h-5 w-5" />
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[80vh] p-0">
+                <SheetContent side="bottom" className="mx-1 h-[80vh] rounded-t-4xl p-0">
                   <SheetHeader className="border-border border-b px-6 py-4">
-                    <SheetTitle>{t("switch_account")}</SheetTitle>
-                    <SheetDescription>{t("choose_account_to_view")}</SheetDescription>
+                    <SheetTitle>Switch Account</SheetTitle>
+                    <SheetDescription>Choose an account to view</SheetDescription>
                   </SheetHeader>
                   <ScrollArea className="h-[calc(80vh-5rem)] px-6 py-4">
                     <div className="space-y-6">
@@ -287,72 +354,81 @@ const AccountPage = () => {
                 </SheetContent>
               </Sheet>
             </div>
-          </>
-        }
-      />
+          </div>
+          <p className="text-muted-foreground text-sm md:text-base">
+            {account?.group ?? account?.currency}
+          </p>
+        </div>
+      </PageHeader>
       <PageContent>
-        <div className="grid grid-cols-1 gap-4 pt-0 md:grid-cols-3">
-          <Card className="col-span-1 md:col-span-2">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
-              <CardTitle className="text-md">
-                <PortfolioUpdateTrigger lastCalculatedAt={currentValuation?.calculatedAt}>
-                  <div className="flex items-start gap-2">
-                    <div>
-                      <p className="pt-3 text-xl font-bold">
-                        <PrivacyAmount
-                          value={currentValuation?.totalValue ?? 0}
-                          currency={account?.currency ?? "USD"}
-                        />
-                      </p>
-                      <div className="flex space-x-3 text-sm">
-                        <GainAmount
-                          className="text-sm font-light"
-                          value={frontendGainLossAmount}
-                          currency={account?.currency ?? "USD"}
-                          displayCurrency={false}
-                        />
-                        <div className="border-muted-foreground my-1 border-r pr-2" />
-                        <GainPercent
-                          className="text-sm font-light"
-                          value={percentageToDisplay}
-                          animated={true}
+        {hasHoldings && !isHoldingsLoading ? (
+          <>
+            <div className="grid grid-cols-1 gap-4 pt-0 md:grid-cols-3">
+              <Card className="col-span-1 md:col-span-2">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0">
+                  <CardTitle className="text-md">
+                    <PortfolioUpdateTrigger lastCalculatedAt={currentValuation?.calculatedAt}>
+                      <div className="flex items-start gap-2">
+                        <div>
+                          <p className="pt-3 text-xl font-bold">
+                            <PrivacyAmount
+                              value={currentValuation?.totalValue ?? 0}
+                              currency={account?.currency ?? "USD"}
+                            />
+                          </p>
+                          <div className="flex space-x-3 text-sm">
+                            <GainAmount
+                              className="text-sm font-light"
+                              value={frontendGainLossAmount}
+                              currency={account?.currency ?? "USD"}
+                              displayCurrency={false}
+                            />
+                            <div className="border-muted-foreground my-1 border-r pr-2" />
+                            <GainPercent
+                              className="text-sm font-light"
+                              value={percentageToDisplay}
+                              animated={true}
+                            />
+                          </div>
+                        </div>
+                        <PrivacyToggle className="mt-3" />
+                      </div>
+                    </PortfolioUpdateTrigger>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="p-0">
+                  <div className="w-full p-0">
+                    <div className="flex w-full flex-col">
+                      <div className="h-[480px] w-full">
+                        <HistoryChart data={chartData} isLoading={false} />
+                        <IntervalSelector
+                          className="relative right-0 bottom-10 left-0 z-10"
+                          onIntervalSelect={handleIntervalSelect}
+                          isLoading={isValuationHistoryLoading}
+                          initialSelection={INITIAL_INTERVAL_CODE}
                         />
                       </div>
                     </div>
-                    <PrivacyToggle className="mt-3" />
                   </div>
-                </PortfolioUpdateTrigger>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="w-full p-0">
-                <div className="flex w-full flex-col">
-                  <div className="h-[480px] w-full">
-                    <HistoryChart data={chartData} isLoading={false} />
-                    <IntervalSelector
-                      className="relative right-0 bottom-10 left-0 z-10"
-                      onIntervalSelect={handleIntervalSelect}
-                      isLoading={isValuationHistoryLoading}
-                      initialSelection={INITIAL_INTERVAL_CODE}
-                    />
-                  </div>
-                </div>
+                </CardContent>
+              </Card>
+
+              <div className="flex flex-col space-y-4">
+                <AccountMetrics
+                  valuation={currentValuation}
+                  performance={accountPerformance}
+                  className="grow"
+                  isLoading={isDetailsLoading || isPerformanceHistoryLoading}
+                />
+                <AccountContributionLimit accountId={id} />
               </div>
-            </CardContent>
-          </Card>
+            </div>
 
-          <div className="flex flex-col space-y-4">
-            <AccountMetrics
-              valuation={currentValuation}
-              performance={accountPerformance}
-              className="grow"
-              isLoading={isDetailsLoading || isPerformanceHistoryLoading}
-            />
-            <AccountContributionLimit accountId={id} />
-          </div>
-        </div>
-
-        <AccountHoldings accountId={id} />
+            <AccountHoldings accountId={id} />
+          </>
+        ) : (
+          <AccountHoldings accountId={id} showEmptyState={true} />
+        )}
       </PageContent>
     </Page>
   );

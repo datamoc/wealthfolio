@@ -1,23 +1,25 @@
-import { useFormContext } from "react-hook-form";
-import { useTranslation } from "react-i18next";
-import { AccountSelectOption } from "../activity-form";
-import { FormField } from "@wealthfolio/ui";
-import { FormItem } from "@wealthfolio/ui";
-import { FormLabel } from "@wealthfolio/ui";
-import { FormControl } from "@wealthfolio/ui";
-import { FormMessage } from "@wealthfolio/ui";
-import { Select } from "@wealthfolio/ui";
-import { SelectContent } from "@wealthfolio/ui";
-import { SelectItem } from "@wealthfolio/ui";
-import { SelectTrigger } from "@wealthfolio/ui";
-import { SelectValue } from "@wealthfolio/ui";
+import TickerSearchInput from "@/components/ticker-search";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { CurrencyInput } from "@wealthfolio/ui";
-import { DatePickerInput } from "@wealthfolio/ui";
 import { Textarea } from "@/components/ui/textarea";
-import TickerSearchInput from "@/components/ticker-search";
 import { DataSource } from "@/lib/constants";
+import type { QuoteSummary } from "@/lib/types";
+import {
+  CurrencyInput,
+  DatePickerInput,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@wealthfolio/ui";
+import { useFormContext } from "react-hook-form";
+import { AccountSelectOption } from "../activity-form";
 
 export interface ConfigurationCheckboxProps {
   showCurrencyOption?: boolean;
@@ -28,7 +30,6 @@ export const ConfigurationCheckbox = ({
   showCurrencyOption = true,
   shouldShowSymbolLookup = true,
 }: ConfigurationCheckboxProps) => {
-  const { t } = useTranslation("activity");
   const { control } = useFormContext();
 
   return (
@@ -45,7 +46,7 @@ export const ConfigurationCheckbox = ({
                     htmlFor="use-lookup-checkbox"
                     className="text-muted-foreground hover:text-foreground cursor-pointer text-sm"
                   >
-                    {t("skip_symbol_lookup")}
+                    Skip Symbol Lookup
                   </label>
                   <Checkbox
                     id="use-lookup-checkbox"
@@ -74,7 +75,7 @@ export const ConfigurationCheckbox = ({
                     htmlFor="use-different-currency-checkbox"
                     className="text-muted-foreground hover:text-foreground cursor-pointer text-sm"
                   >
-                    {t("use_different_currency")}
+                    Use Different Currency
                   </label>
                   <Checkbox
                     id="use-different-currency-checkbox"
@@ -93,7 +94,6 @@ export const ConfigurationCheckbox = ({
 };
 
 export const CommonFields = ({ accounts }: { accounts: AccountSelectOption[] }) => {
-  const { t, i18n } = useTranslation("activity");
   const { control, watch } = useFormContext();
   const showCurrency = watch("showCurrencySelect");
 
@@ -104,11 +104,11 @@ export const CommonFields = ({ accounts }: { accounts: AccountSelectOption[] }) 
         name="accountId"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("field_account")}</FormLabel>
+            <FormLabel>Account</FormLabel>
             <FormControl>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <SelectTrigger>
-                  <SelectValue placeholder={t("select_account_placeholder")} />
+                <SelectTrigger aria-label="Account">
+                  <SelectValue placeholder="Select an account" />
                 </SelectTrigger>
                 <SelectContent className="max-h-[500px] overflow-y-auto">
                   {accounts.map((account) => (
@@ -129,7 +129,7 @@ export const CommonFields = ({ accounts }: { accounts: AccountSelectOption[] }) 
         name="activityDate"
         render={({ field }) => (
           <FormItem className="flex flex-col">
-            <FormLabel>{t("field_date")}</FormLabel>
+            <FormLabel>Date</FormLabel>
             <DatePickerInput
               onChange={(date: Date | undefined) => field.onChange(date)}
               value={field.value}
@@ -147,9 +147,9 @@ export const CommonFields = ({ accounts }: { accounts: AccountSelectOption[] }) 
           name="currency"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>{t("field_currency")}</FormLabel>
+              <FormLabel>Activity Currency</FormLabel>
               <FormControl>
-                <CurrencyInput {...field} language={i18n.language} />
+                <CurrencyInput {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -161,14 +161,15 @@ export const CommonFields = ({ accounts }: { accounts: AccountSelectOption[] }) 
         name="comment"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>{t("field_description")}</FormLabel>
+            <FormLabel>Description</FormLabel>
             <FormControl>
               <Textarea
-                placeholder={t("description_placeholder")}
+                placeholder="Add an optional description or comment for this transaction..."
                 className="resize-none"
                 rows={3}
                 {...field}
                 value={field.value || ""}
+                aria-label="Description"
               />
             </FormControl>
             <FormMessage />
@@ -186,21 +187,30 @@ export function AssetSymbolInput({
   field: { value?: string; onChange: (v: string) => void } & Record<string, unknown>;
   isManualAsset: boolean;
 }) {
-  const { t } = useTranslation("activity");
+  const { setValue } = useFormContext();
+
+  const handleTickerSelect = (symbol: string, quoteSummary?: QuoteSummary) => {
+    field.onChange(symbol);
+    // If the selected ticker is a custom/manual entry, automatically enable skip lookup
+    if (quoteSummary?.dataSource === DataSource.MANUAL) {
+      setValue("assetDataSource", DataSource.MANUAL);
+    }
+  };
 
   return (
     <FormItem className="-mt-2">
-      <FormLabel>{t("field_symbol")}</FormLabel>
+      <FormLabel>Symbol</FormLabel>
       <FormControl>
         {isManualAsset ? (
           <Input
-            placeholder={t("symbol_placeholder")}
+            placeholder="Enter symbol"
             className="h-10"
             {...field}
             onChange={(e) => field.onChange(e.target.value.toUpperCase())}
+            aria-label="Symbol"
           />
         ) : (
-          <TickerSearchInput onSelectResult={field.onChange} {...field} />
+          <TickerSearchInput onSelectResult={handleTickerSelect} {...field} aria-label="Symbol" />
         )}
       </FormControl>
       <FormMessage className="text-xs" />

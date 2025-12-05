@@ -90,7 +90,7 @@ export const SymbolSelectorMobile = forwardRef<HTMLButtonElement, SymbolSelector
             <Icons.Search className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="h-[85vh] p-0">
+        <SheetContent side="bottom" className="mx-1 h-[85vh] rounded-t-4xl p-0">
           <SheetHeader className="border-border border-b py-2">
             <SheetTitle>{t("select_symbol")}</SheetTitle>
             <SheetDescription>{t("search_for_stock")}</SheetDescription>

@@ -82,6 +82,11 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
 
     const currentCurrency = form.watch("baseCurrency");
 
+    const currencyOptions =
+      popularCurrencies.includes(currentCurrency) || !currentCurrency
+        ? popularCurrencies
+        : [...popularCurrencies.slice(0, -1), currentCurrency];
+
     function handleCurrencySelect(currencyCode: string) {
       form.setValue("baseCurrency", currencyCode, { shouldValidate: true, shouldDirty: true });
       setShowCurrencySearch(false);
@@ -110,8 +115,11 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
 
     async function onSubmit(data: OnboardingSettingsValues) {
       try {
-        await updateSettings({ baseCurrency: data.baseCurrency, theme: data.theme });
-        await updateSettings({ onboardingCompleted: true });
+        await updateSettings({
+          baseCurrency: data.baseCurrency,
+          theme: data.theme,
+          onboardingCompleted: true,
+        });
         onNext();
       } catch (error) {
         console.error("Failed to save onboarding settings:", error);
@@ -143,7 +151,7 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                         </div>
                         <FormControl>
                           <div className="grid grid-cols-3 gap-3 md:grid-cols-4">
-                            {popularCurrencies.map((curr) => (
+                            {currencyOptions.map((curr) => (
                               <button
                                 key={curr}
                                 type="button"
@@ -154,7 +162,9 @@ export const OnboardingStep2 = forwardRef<OnboardingStep2Handle, OnboardingStep2
                                     : "border-border hover:border-primary/50 hover:bg-accent"
                                 }`}
                               >
-                                {curr}
+                                <div className="flex flex-col items-start gap-1">
+                                  <span className="font-semibold">{curr}</span>
+                                </div>
                               </button>
                             ))}
                             <button

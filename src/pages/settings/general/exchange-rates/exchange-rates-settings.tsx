@@ -1,30 +1,34 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useExchangeRates } from "./use-exchange-rate";
-import { DataTable } from "@/components/ui/data-table";
-import { ColumnDef } from "@tanstack/react-table";
-import { ExchangeRate } from "@/lib/types";
-import { Skeleton } from "@/components/ui/skeleton";
-import { RateCell } from "./rate-cell";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { AddExchangeRateForm } from "./add-exchange-rate-form";
-import { Icons } from "@/components/ui/icons";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Link } from "react-router-dom";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { DataTable } from "@/components/ui/data-table";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Icons } from "@/components/ui/icons";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExchangeRate } from "@/lib/types";
 import { formatDate } from "@/lib/utils";
+import { ColumnDef } from "@tanstack/react-table";
+import { ActionConfirm } from "@wealthfolio/ui";
+import { useState } from "react";
+import { Link } from "react-router-dom";
+import { AddExchangeRateForm } from "./add-exchange-rate-form";
+import { RateCell } from "./rate-cell";
+import { useExchangeRates } from "./use-exchange-rate";
 
 export function ExchangeRatesSettings() {
-  const { t } = useTranslation("settings");
-  const { exchangeRates, isLoadingRates, updateExchangeRate, addExchangeRate, deleteExchangeRate } =
-    useExchangeRates();
+  const {
+    exchangeRates,
+    isLoadingRates,
+    updateExchangeRate,
+    addExchangeRate,
+    deleteExchangeRate,
+    isDeletingRate,
+  } = useExchangeRates();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
 
   const columns: ColumnDef<ExchangeRate>[] = [
     {
       accessorKey: "fromCurrency",
-      header: t("exchange_rates_from"),
+      header: "From",
       enableHiding: false,
       cell: ({ row }) => (
         <div>
@@ -35,7 +39,7 @@ export function ExchangeRatesSettings() {
     },
     {
       accessorKey: "toCurrency",
-      header: t("exchange_rates_to"),
+      header: "To",
       enableHiding: false,
       cell: ({ row }) => (
         <div>
@@ -46,19 +50,19 @@ export function ExchangeRatesSettings() {
     },
     {
       accessorKey: "source",
-      header: t("exchange_rates_source"),
+      header: "Source",
       enableHiding: false,
     },
     {
       accessorKey: "rate",
-      header: t("exchange_rates_rate"),
+      header: "Rate",
       enableHiding: false,
       cell: ({ row }) => <RateCell rate={row.original} onUpdate={updateExchangeRate} />,
       size: 180,
     },
     {
       accessorKey: "updatedAt",
-      header: t("exchange_rates_last_updated"),
+      header: "Last Updated",
       enableHiding: false,
       cell: ({ row }) => (
         <div className="text-muted-foreground text-sm">{formatDate(row.original.timestamp)}</div>
@@ -74,7 +78,7 @@ export function ExchangeRatesSettings() {
         >
           <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
             <Icons.Clock className="h-4 w-4" />
-            <span className="sr-only">{t("exchange_rates_view_history")}</span>
+            <span className="sr-only">View history</span>
           </Button>
         </Link>
       ),
@@ -83,38 +87,35 @@ export function ExchangeRatesSettings() {
       id: "actions",
       enableHiding: false,
       cell: ({ row }) => {
-        // Only show delete for Manual source
-        if (row.original.source !== "MANUAL") {
-          return null;
-        }
+        const rate = row.original;
+        const currencyPair = `${rate.fromCurrency}/${rate.toCurrency}`;
 
         return (
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button variant="ghost" size="sm">
+          <ActionConfirm
+            confirmTitle="Delete Exchange Rate"
+            confirmMessage={
+              <>
+                <p className="mb-2">
+                  Are you sure you want to delete the <strong>{currencyPair}</strong> exchange rate?
+                </p>
+                <p className="text-xs text-amber-600 dark:text-amber-400">
+                  <Icons.AlertTriangle className="mr-1 inline h-3 w-3" />
+                  If you have holdings or transactions in {rate.fromCurrency}, you may need to
+                  recreate this exchange rate for accurate portfolio calculations.
+                </p>
+              </>
+            }
+            handleConfirm={() => deleteExchangeRate(rate.id)}
+            isPending={isDeletingRate}
+            confirmButtonText="Delete"
+            confirmButtonVariant="destructive"
+            button={
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                 <Icons.Trash className="h-4 w-4" />
+                <span className="sr-only">Delete</span>
               </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-80" align="end">
-              <div className="grid gap-4">
-                <div className="space-y-2">
-                  <h4 className="leading-none font-medium">{t("exchange_rates_delete_title")}</h4>
-                  <p className="text-muted-foreground text-sm">
-                    {t("exchange_rates_delete_message")}
-                  </p>
-                </div>
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={() => deleteExchangeRate(row.original.id)}
-                  >
-                    {t("exchange_rates_delete_button")}
-                  </Button>
-                </div>
-              </div>
-            </PopoverContent>
-          </Popover>
+            }
+          />
         );
       },
     },
@@ -125,19 +126,19 @@ export function ExchangeRatesSettings() {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle className="text-lg">{t("exchange_rates_title")}</CardTitle>
+            <CardTitle className="text-lg">Exchange Rates</CardTitle>
             <CardDescription>
-              {t("exchange_rates_description")}
+              Manage exchange rates for currencies in your portfolio.
             </CardDescription>
           </div>
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
             <DialogTrigger asChild>
               <Button>
                 <Icons.PlusCircle className="mr-2 h-4 w-4" />
-                {t("exchange_rates_add_button")}
+                Add rate
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-h-[90vh] overflow-y-auto">
               <AddExchangeRateForm
                 onSubmit={(newRate) => {
                   addExchangeRate(newRate);
@@ -161,11 +162,11 @@ export function ExchangeRatesSettings() {
         ) : (
           <div className="flex flex-col items-center justify-center py-10 text-center">
             <Icons.DollarSign className="text-muted-foreground h-12 w-12" />
-            <h3 className="mt-4 text-lg font-semibold">{t("exchange_rates_empty_title")}</h3>
+            <h3 className="mt-4 text-lg font-semibold">No exchange rates defined yet</h3>
 
             <Button className="mt-4" onClick={() => setIsAddDialogOpen(true)}>
               <Icons.PlusCircle className="mr-2 h-4 w-4" />
-              {t("exchange_rates_add_button")}
+              Add rate
             </Button>
           </div>
         )}
