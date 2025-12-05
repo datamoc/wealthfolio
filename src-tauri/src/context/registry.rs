@@ -1,6 +1,7 @@
 use std::sync::{Arc, RwLock};
 use wealthfolio_core::{
-    self, accounts, activities, assets, fx, goals, limits, market_data, portfolio, settings,
+    self, accounts, activities, assets, finance_database, fx, goals, limits, market_data,
+    portfolio, settings,
 };
 pub struct ServiceContext {
     pub base_currency: Arc<RwLock<String>>,
@@ -20,6 +21,7 @@ pub struct ServiceContext {
     pub snapshot_service: Arc<dyn portfolio::snapshot::SnapshotServiceTrait>,
     pub holdings_service: Arc<dyn portfolio::holdings::HoldingsServiceTrait>,
     pub valuation_service: Arc<dyn portfolio::valuation::ValuationServiceTrait>,
+    pub finance_database_service: Arc<finance_database::FinanceDatabaseService>,
 }
 
 impl ServiceContext {
@@ -81,5 +83,9 @@ impl ServiceContext {
 
     pub fn valuation_service(&self) -> Arc<dyn portfolio::valuation::ValuationServiceTrait> {
         Arc::clone(&self.valuation_service)
+    }
+
+    pub fn finance_database_service(&self) -> Arc<finance_database::FinanceDatabaseService> {
+        Arc::clone(&self.finance_database_service)
     }
 }

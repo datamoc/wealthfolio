@@ -1,0 +1,6 @@
+# Ignore FinanceDatabase CSV files (large files, users should download themselves)
+*.csv
+
+# But keep the README and .gitkeep
+!.gitkeep
+!README.md
