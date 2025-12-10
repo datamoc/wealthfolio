@@ -6,7 +6,7 @@
   "step1_simple_feature1": "Ajoutez/supprimez des positions instantanément",
   "step1_simple_feature2": "Dépôts/retraits en espèces simples",
   "step1_simple_feature3": "Parfait pour les instantanés de portefeuille",
-  "step1_simple_feature4": "Les positions n'affectent pas le solde en espèces",
+  "step1_simple_feature4": "Les positions n’affectent pas le solde en espèces",
   "step1_complete_title": "Suivi complet",
   "step1_complete_subtitle": "Historique complet des transactions",
   "step1_complete_feature1": "Suivez chaque achat et vente",
@@ -24,5 +24,5 @@
   "step2_search_currencies": "Rechercher des devises...",
   "step2_no_currencies": "Aucune devise trouvée",
   "step3_heading": "Voici quelques actions pour tirer le meilleur parti de Wealthfolio",
-  "step3_tip": "💡 Astuce : Vous pouvez compléter ces étapes à votre rythme après l'intégration"
+  "step3_tip": "💡 Astuce : Vous pouvez compléter ces étapes à votre rythme après l’intégration"
 }
