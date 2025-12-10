@@ -67,6 +67,7 @@ export const QueryKeys = {
 
   // Real Estate (from addon)
   REAL_ESTATE_SUMMARY: "realEstateSummary",
+  REAL_ESTATE_PROPERTIES: "realEstateProperties",
 
   secrets: {
     apiKey: (providerId: string) => ["secrets", "apiKey", providerId],

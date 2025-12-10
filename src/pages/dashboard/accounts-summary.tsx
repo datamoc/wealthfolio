@@ -6,11 +6,13 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAccounts } from "@/hooks/use-accounts";
 import { useLatestValuations } from "@/hooks/use-latest-valuations";
+import { useRealEstateSummary } from "@/hooks/use-real-estate-summary";
 import { useSettingsContext } from "@/lib/settings-provider";
 import type { AccountValuation } from "@/lib/types";
 import { calculatePerformanceMetrics } from "@/lib/utils";
 import { GainAmount, GainPercent, PrivacyAmount } from "@wealthfolio/ui";
 import React, { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 
 interface AccountSummaryDisplayData {
@@ -29,6 +31,8 @@ interface AccountSummaryDisplayData {
   accountCount?: number;
   accounts?: AccountSummaryDisplayData[];
   displayInAccountCurrency?: boolean;
+  singularLabel?: string;
+  pluralLabel?: string;
 }
 
 const AccountSummarySkeleton = () => (
@@ -89,7 +93,7 @@ const AccountSummaryComponent = React.memo(
     const accountId = item.accountId;
 
     const subText = isGroup
-      ? `${item.accountCount} ${item.accountCount === 1 ? "account" : "accounts"}`
+      ? `${item.accountCount} ${item.accountCount === 1 ? item.singularLabel : item.pluralLabel}`
       : useAccountCurrency
         ? (item.accountCurrency ?? item.baseCurrency)
         : item.baseCurrency;
@@ -206,6 +210,7 @@ const AccountSummaryComponent = React.memo(
 AccountSummaryComponent.displayName = "AccountSummaryComponent";
 
 export const AccountsSummary = React.memo(() => {
+  const { t } = useTranslation("dashboard");
   const { accountsGrouped, setAccountsGrouped, settings } = useSettingsContext();
   const [expandedGroups, setExpandedGroups] = useState<Record<string, boolean>>({});
 
@@ -220,15 +225,17 @@ export const AccountsSummary = React.memo(() => {
 
   const { latestValuations, isLoading: isLoadingValuations } = useLatestValuations(accountIds);
 
+  const baseCurrency = settings?.baseCurrency ?? "USD";
+  const { data: realEstateSummary } = useRealEstateSummary(baseCurrency);
+
   const combinedAccountViews = useMemo((): AccountSummaryDisplayData[] => {
     if (!accounts) return [];
     const valuationMap = new Map<string, AccountValuation>();
     if (latestValuations) {
       latestValuations.forEach((val: AccountValuation) => valuationMap.set(val.accountId, val));
     }
-    return accounts.map((acc): AccountSummaryDisplayData => {
+    const accountViews = accounts.map((acc): AccountSummaryDisplayData => {
       const valuation = valuationMap.get(acc.id);
-      const baseCurrency = settings?.baseCurrency ?? "USD";
 
       if (!valuation) {
         return {
@@ -268,7 +275,32 @@ export const AccountsSummary = React.memo(() => {
         isGroup: false,
       };
     });
-  }, [accounts, latestValuations, settings?.baseCurrency]);
+
+    // Add real estate as a separate entry if there are any properties
+    if (realEstateSummary && realEstateSummary.propertyCount > 0) {
+      const realEstateEquity = realEstateSummary.totalEquity;
+      const realEstateAppreciation = realEstateSummary.totalAppreciation;
+      const realEstateAppreciationPercent = realEstateSummary.appreciationPercent;
+
+      accountViews.push({
+        accountName: t("real_estate"),
+        totalValueBaseCurrency: realEstateEquity,
+        baseCurrency,
+        totalGainLossAmountBaseCurrency: realEstateAppreciation,
+        totalGainLossPercent: realEstateAppreciationPercent,
+        // Also set account currency values so it displays correctly when displayInAccountCurrency is true
+        totalValueAccountCurrency: realEstateEquity,
+        totalGainLossAmountAccountCurrency: realEstateAppreciation,
+        accountType: "REAL_ESTATE",
+        accountGroup: null,
+        isGroup: false,
+        // accountCurrency will be undefined, so it will show baseCurrency as subtext
+        // No accountId so it won't be clickable
+      });
+    }
+
+    return accountViews;
+  }, [accounts, latestValuations, baseCurrency, realEstateSummary, t]);
 
   const toggleGroup = useCallback((groupName: string) => {
     setExpandedGroups((prev) => ({
@@ -293,7 +325,7 @@ export const AccountsSummary = React.memo(() => {
       return (
         <div className="border-destructive/30 bg-destructive/5 rounded-lg border p-4 md:p-5">
           <p className="text-destructive text-sm font-medium">
-            Error loading accounts: {errorAccounts?.message}
+            {t("error_loading_accounts")}: {errorAccounts?.message}
           </p>
         </div>
       );
@@ -302,12 +334,12 @@ export const AccountsSummary = React.memo(() => {
     if (!combinedAccountViews || combinedAccountViews.length === 0) {
       return (
         <div className="border-border/50 bg-success/10 rounded-lg border p-6 text-center md:p-8">
-          <p className="text-sm">No accounts found.</p>
+          <p className="text-sm">{t("no_accounts_found")}</p>
           <Link
             to="/settings/accounts"
             className="text-muted-foreground hover:text-foreground mt-2 inline-flex items-center gap-1 text-xs underline-offset-4 hover:underline"
           >
-            Add your first account
+            {t("add_first_account")}
             <Icons.ChevronRight className="h-3 w-3" />
           </Link>
         </div>
@@ -321,8 +353,8 @@ export const AccountsSummary = React.memo(() => {
       const standaloneAccounts: AccountSummaryDisplayData[] = [];
 
       combinedAccountViews.forEach((account) => {
-        const groupName = account.accountGroup ?? "Uncategorized";
-        if (groupName === "Uncategorized") {
+        const groupName = account.accountGroup ?? t("uncategorized");
+        if (groupName === t("uncategorized")) {
           standaloneAccounts.push(account);
         } else {
           if (!groups[groupName]) {
@@ -415,6 +447,8 @@ export const AccountsSummary = React.memo(() => {
             accountCount: groupAccounts.length,
             accounts: groupAccounts,
             displayInAccountCurrency: groupDisplaysAccountCurrency,
+            singularLabel: t("account"),
+            pluralLabel: t("accounts_plural"),
           });
         }
       });
@@ -504,14 +538,14 @@ export const AccountsSummary = React.memo(() => {
   return (
     <div className="mb-4 w-full space-y-0">
       <div className="flex flex-row items-center justify-between gap-2 pb-2">
-        <h2 className="text-md font-semibold tracking-tight">Accounts</h2>
+        <h2 className="text-md font-semibold tracking-tight">{t("accounts")}</h2>
         <Button
           variant="outline"
           className="hover:bg-success/10 rounded-lg bg-transparent transition-colors duration-150"
           size="sm"
           onClick={() => setAccountsGrouped(!accountsGrouped)}
-          aria-label={accountsGrouped ? "List view" : "Group view"}
-          title={accountsGrouped ? "Switch to list view" : "Switch to group view"}
+          aria-label={accountsGrouped ? t("list_view") : t("group_view")}
+          title={accountsGrouped ? t("switch_to_list_view") : t("switch_to_group_view")}
           disabled={isLoadingAccounts || combinedAccountViews.length === 0}
         >
           {accountsGrouped ? (
